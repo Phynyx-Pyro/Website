@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+.yarn/
+
+# Build output
+.next/
+.vinext/
+.build/
+out/
+dist/
+build/
+.deploy/
+.wrangler/
+next-env.d.ts
+*.tsbuildinfo
+
+# Environment / secrets
+.env*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+.cache/
+.eslintcache
+coverage/
+.vercel/
+
+# Local master-export reference (contains redundant files and private env data)
+x. COPY Phynyx_Pro_Rebranding_Strategy/
+
+# Prisma generated client
+prisma/generated/

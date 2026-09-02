@@ -1,0 +1,1 @@
+ALTER TABLE `growth_assessments` ADD `submission_type` text NOT NULL;
