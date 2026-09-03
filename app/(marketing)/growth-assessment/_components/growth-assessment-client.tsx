@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import Link from 'next/link'
 import { AnimatedSection } from '../../_components/animated-section'
 import { ArrowRight, ArrowLeft, CheckCircle2, Clock, Shield, AlertCircle } from 'lucide-react'
+import { getAssessmentAttribution } from '@/lib/assessment-attribution'
 
 type FormData = {
   firstName: string
@@ -45,14 +46,15 @@ export function GrowthAssessmentClient() {
   const canProceed1 = (form?.firstName?.trim?.()?.length ?? 0) > 0 && (form?.email?.trim?.()?.length ?? 0) > 0 && (form?.phone?.trim?.()?.length ?? 0) > 0
   const canProceed2 = (form?.businessName?.trim?.()?.length ?? 0) > 0 && (form?.industry?.trim?.()?.length ?? 0) > 0
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
     setSubmitting(true)
     setError('')
     try {
       const res = await fetch('/api/growth-assessment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, attribution: getAssessmentAttribution() }),
       })
       const result = (await res.json().catch(() => null)) as {
         message?: string
@@ -107,7 +109,21 @@ export function GrowthAssessmentClient() {
 
       {/* Form */}
       <section className="pb-20 md:pb-28">
-        <div className="mx-auto max-w-[600px] px-6">
+        <form
+          name="growth-assessment-full"
+          onSubmit={handleSubmit}
+          className="mx-auto max-w-[600px] px-6"
+        >
+          <input type="hidden" name="firstName" value={form.firstName} />
+          <input type="hidden" name="lastName" value={form.lastName} />
+          <input type="hidden" name="email" value={form.email} />
+          <input type="hidden" name="phone" value={form.phone} />
+          <input type="hidden" name="businessName" value={form.businessName} />
+          <input type="hidden" name="industry" value={form.industry} />
+          <input type="hidden" name="annualRevenue" value={form.annualRevenue} />
+          <input type="hidden" name="biggestChallenge" value={form.biggestChallenge} />
+          <input type="hidden" name="currentMarketing" value={form.currentMarketing} />
+          <input type="hidden" name="monthlyBudget" value={form.monthlyBudget} />
           {/* Progress */}
           <div className="flex items-center gap-2 mb-8">
             {[1, 2, 3].map((s) => (
@@ -142,7 +158,7 @@ export function GrowthAssessmentClient() {
                     <input type="tel" value={form?.phone ?? ''} onChange={(e) => update('phone', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink placeholder:text-warm/50 focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition" placeholder="(555) 123-4567" />
                   </div>
                 </div>
-                <button onClick={() => canProceed1 && setStep(2)} disabled={!canProceed1} className={`mt-8 w-full inline-flex items-center justify-center gap-2 rounded-lg px-7 py-3.5 text-[15px] font-semibold transition-colors ${canProceed1 ? 'bg-phoenix text-white hover:bg-ember' : 'bg-ink/10 text-ink/40 cursor-not-allowed'}`}>
+                <button type="button" onClick={() => canProceed1 && setStep(2)} disabled={!canProceed1} className={`mt-8 w-full inline-flex items-center justify-center gap-2 rounded-lg px-7 py-3.5 text-[15px] font-semibold transition-colors ${canProceed1 ? 'bg-phoenix text-white hover:bg-ember' : 'bg-ink/10 text-ink/40 cursor-not-allowed'}`}>
                   Continue <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
@@ -184,10 +200,10 @@ export function GrowthAssessmentClient() {
                   </div>
                 </div>
                 <div className="mt-8 flex gap-3">
-                  <button onClick={() => setStep(1)} className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg border border-ink/20 px-7 py-3.5 text-[15px] font-semibold text-ink hover:bg-ink hover:text-white transition-colors">
+                  <button type="button" onClick={() => setStep(1)} className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg border border-ink/20 px-7 py-3.5 text-[15px] font-semibold text-ink hover:bg-ink hover:text-white transition-colors">
                     <ArrowLeft className="h-4 w-4" /> Back
                   </button>
-                  <button onClick={() => canProceed2 && setStep(3)} disabled={!canProceed2} className={`flex-1 inline-flex items-center justify-center gap-2 rounded-lg px-7 py-3.5 text-[15px] font-semibold transition-colors ${canProceed2 ? 'bg-phoenix text-white hover:bg-ember' : 'bg-ink/10 text-ink/40 cursor-not-allowed'}`}>
+                  <button type="button" onClick={() => canProceed2 && setStep(3)} disabled={!canProceed2} className={`flex-1 inline-flex items-center justify-center gap-2 rounded-lg px-7 py-3.5 text-[15px] font-semibold transition-colors ${canProceed2 ? 'bg-phoenix text-white hover:bg-ember' : 'bg-ink/10 text-ink/40 cursor-not-allowed'}`}>
                     Continue <ArrowRight className="h-4 w-4" />
                   </button>
                 </div>
@@ -238,10 +254,10 @@ export function GrowthAssessmentClient() {
                 )}
 
                 <div className="mt-8 flex gap-3">
-                  <button onClick={() => setStep(2)} className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg border border-ink/20 px-7 py-3.5 text-[15px] font-semibold text-ink hover:bg-ink hover:text-white transition-colors">
+                  <button type="button" onClick={() => setStep(2)} className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg border border-ink/20 px-7 py-3.5 text-[15px] font-semibold text-ink hover:bg-ink hover:text-white transition-colors">
                     <ArrowLeft className="h-4 w-4" /> Back
                   </button>
-                  <button onClick={handleSubmit} disabled={submitting} className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white hover:bg-ember transition-colors disabled:opacity-50">
+                  <button type="submit" disabled={submitting} className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white hover:bg-ember transition-colors disabled:opacity-50">
                     {submitting ? 'Submitting...' : 'Submit Assessment'}
                   </button>
                 </div>
@@ -252,7 +268,7 @@ export function GrowthAssessmentClient() {
               </div>
             </AnimatedSection>
           )}
-        </div>
+        </form>
       </section>
     </main>
   )
