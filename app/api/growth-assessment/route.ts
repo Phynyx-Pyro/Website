@@ -153,7 +153,7 @@ export async function POST(request: Request) {
     }
 
     try {
-      await syncGrowthAssessmentToGhl({
+      const ghl = await syncGrowthAssessmentToGhl({
         submissionId: id,
         submittedAt: now.toISOString(),
         submissionType,
@@ -175,6 +175,20 @@ export async function POST(request: Request) {
         .update(growthAssessments)
         .set({ status: 'crm-synced', updatedAt: new Date() })
         .where(eq(growthAssessments.id, id))
+
+      return Response.json({
+        success: true,
+        id,
+        crmSynced: true,
+        fit: { path: fit.path },
+        bookingContact: {
+          contactId: ghl.contactId,
+          firstName,
+          lastName,
+          email,
+          phone,
+        },
+      })
     } catch (error) {
       await db
         .update(growthAssessments)
@@ -190,13 +204,6 @@ export async function POST(request: Request) {
         { status: 502 },
       )
     }
-
-    return Response.json({
-      success: true,
-      id,
-      crmSynced: true,
-      fit: { path: fit.path },
-    })
   } catch (error) {
     console.error('Growth assessment submission failed', error)
     return Response.json(

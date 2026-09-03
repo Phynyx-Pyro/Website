@@ -5,6 +5,10 @@ import Link from 'next/link'
 import { AnimatedSection } from '../../_components/animated-section'
 import { ArrowRight, ArrowLeft, CheckCircle2, Clock, Shield, AlertCircle, DollarSign } from 'lucide-react'
 import { getAssessmentAttribution } from '@/lib/assessment-attribution'
+import {
+  isBookingContact,
+  type BookingContact,
+} from '@/lib/ghl-booking'
 import { BookingCalendar } from './booking-calendar'
 
 type FormData = {
@@ -35,16 +39,23 @@ const initialForm: FormData = {
 
 type FitPath = 'calendar' | 'investment-context'
 
+type AssessmentResult = {
+  path: FitPath
+  bookingContact: BookingContact
+}
+
 const PREFILL_STORAGE_KEY = 'phynyx-growth-assessment-prefill'
 
 export function GrowthAssessmentClient() {
   const [step, setStep] = useState(1)
   const [form, setForm] = useState<FormData>(initialForm)
   const [submitting, setSubmitting] = useState(false)
-  const [resultPath, setResultPath] = useState<FitPath | null>(null)
+  const [assessmentResult, setAssessmentResult] =
+    useState<AssessmentResult | null>(null)
   const [investmentAccepted, setInvestmentAccepted] = useState(false)
   const [error, setError] = useState('')
   const resultHeadingRef = useRef<HTMLHeadingElement>(null)
+  const resultPath = assessmentResult?.path ?? null
 
   useEffect(() => {
     let parsed: Partial<FormData> | null = null
@@ -108,12 +119,19 @@ export function GrowthAssessmentClient() {
       const result = (await res.json().catch(() => null)) as {
         message?: string
         fit?: { path?: FitPath }
+        bookingContact?: unknown
       } | null
       if (!res.ok) throw new Error(result?.message ?? 'Submission failed')
       if (result?.fit?.path !== 'calendar' && result?.fit?.path !== 'investment-context') {
         throw new Error('We could not determine the next step. Please try again.')
       }
-      setResultPath(result.fit.path)
+      if (!isBookingContact(result.bookingContact)) {
+        throw new Error('We could not connect your assessment to the calendar. Please try again.')
+      }
+      setAssessmentResult({
+        path: result.fit.path,
+        bookingContact: result.bookingContact,
+      })
     } catch (e: any) {
       setError(e?.message ?? 'Something went wrong. Please try again.')
     } finally {
@@ -121,7 +139,8 @@ export function GrowthAssessmentClient() {
     }
   }
 
-  if (resultPath) {
+  if (assessmentResult) {
+    const { path: resultPath, bookingContact } = assessmentResult
     const showCalendar = resultPath === 'calendar' || investmentAccepted
 
     return (
@@ -137,9 +156,9 @@ export function GrowthAssessmentClient() {
                     : 'Let’s see if the numbers and the strategy make sense.'}
                 </h1>
                 <p className="mt-4 mx-auto max-w-[660px] text-[17px] leading-[1.65] text-warm">
-                  Thank you, {form.firstName || 'there'}. Choose a convenient time below for a focused discovery call with PhynyxPro.
+                  Thank you, {bookingContact.firstName || 'there'}. Choose a convenient time below for a focused discovery call with PhynyxPro.
                 </p>
-                <BookingCalendar />
+                <BookingCalendar contact={bookingContact} />
                 <Link href="/" className="mt-8 inline-flex items-center gap-2 text-[14px] font-semibold text-phoenix hover:underline">
                   Back to Home <ArrowRight className="h-4 w-4" />
                 </Link>

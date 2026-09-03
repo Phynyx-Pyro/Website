@@ -1,17 +1,20 @@
 'use client'
 
 import Script from 'next/script'
+import {
+  buildGhlBookingUrl,
+  type BookingContact,
+} from '@/lib/ghl-booking'
 
-export const BOOKING_URL =
-  'https://link.phynyxpro.com/widget/booking/NX2pJFAx51yOcaNIdNjL'
+export function BookingCalendar({ contact }: { contact: BookingContact }) {
+  const bookingUrl = buildGhlBookingUrl(contact)
 
-export function BookingCalendar() {
   return (
     <div className="mt-8">
       <div className="overflow-hidden rounded-2xl border border-ink/10 bg-white shadow-xl">
         <iframe
           id="NX2pJFAx51yOcaNIdNjL_1788462690940"
-          src={BOOKING_URL}
+          src={bookingUrl}
           allow="payment"
           title="Book your PhynyxPro discovery call"
           className="min-h-[780px] w-full"
@@ -27,7 +30,7 @@ export function BookingCalendar() {
       <p className="mt-4 text-center text-[13px] text-warm">
         Calendar not loading?{' '}
         <a
-          href={BOOKING_URL}
+          href={bookingUrl}
           target="_blank"
           rel="noreferrer"
           className="font-semibold text-phoenix hover:underline"
