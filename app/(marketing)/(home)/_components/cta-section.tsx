@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import { AnimatedSection } from '../../_components/animated-section'
 import { Clock, Lock, Ban, ArrowRight } from 'lucide-react'
+import { getAssessmentAttribution } from '@/lib/assessment-attribution'
 
 export function CtaSection() {
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '' })
@@ -10,7 +11,8 @@ export function CtaSection() {
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState('')
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
     if (!form?.firstName?.trim() || !form?.email?.trim()) return
     setSubmitting(true)
     setError('')
@@ -18,7 +20,7 @@ export function CtaSection() {
       const res = await fetch('/api/growth-assessment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, attribution: getAssessmentAttribution() }),
       })
       const data = (await res.json()) as { success?: boolean; message?: string }
       if (data?.success) {
@@ -67,7 +69,7 @@ export function CtaSection() {
                 <p className="mt-2 text-[15px] text-warm">We&apos;ll review your information and reach out within one business day.</p>
               </div>
             ) : (
-              <div className="rounded-2xl border border-white/12 bg-white p-6 lg:p-8 text-ink lift">
+              <form name="growth-assessment-quick" onSubmit={handleSubmit} className="rounded-2xl border border-white/12 bg-white p-6 lg:p-8 text-ink lift">
                 <div className="flex items-center justify-between">
                   <p className="text-[17px] lg:text-[19px] font-bold tracking-[-.02em]">Start your assessment</p>
                   <span className="text-[10px] lg:text-[11.5px] font-bold uppercase tracking-[.12em] text-warm">Step 1 of 3</span>
@@ -82,6 +84,7 @@ export function CtaSection() {
                     <span className="text-[12px] lg:text-[12.5px] font-semibold">First name</span>
                     <input
                       type="text"
+                      name="firstName"
                       placeholder="Andrew"
                       value={form?.firstName ?? ''}
                       onChange={(e: any) => setForm({ ...(form ?? {}), firstName: e?.target?.value ?? '' })}
@@ -92,6 +95,7 @@ export function CtaSection() {
                     <span className="text-[12px] lg:text-[12.5px] font-semibold">Last name</span>
                     <input
                       type="text"
+                      name="lastName"
                       placeholder="Higdon"
                       value={form?.lastName ?? ''}
                       onChange={(e: any) => setForm({ ...(form ?? {}), lastName: e?.target?.value ?? '' })}
@@ -103,6 +107,7 @@ export function CtaSection() {
                   <span className="text-[12px] lg:text-[12.5px] font-semibold">Work email</span>
                   <input
                     type="email"
+                    name="email"
                     placeholder="you@practice.com"
                     value={form?.email ?? ''}
                     onChange={(e: any) => setForm({ ...(form ?? {}), email: e?.target?.value ?? '' })}
@@ -113,6 +118,7 @@ export function CtaSection() {
                   <span className="text-[12px] lg:text-[12.5px] font-semibold">Phone number</span>
                   <input
                     type="tel"
+                    name="phone"
                     placeholder="(555) 123-4567"
                     value={form?.phone ?? ''}
                     onChange={(e: any) => setForm({ ...(form ?? {}), phone: e?.target?.value ?? '' })}
@@ -121,7 +127,7 @@ export function CtaSection() {
                 </label>
                 {error && <p className="mt-3 text-[13px] text-red-500">{error}</p>}
                 <button
-                  onClick={handleSubmit}
+                  type="submit"
                   disabled={submitting || !form?.firstName?.trim() || !form?.email?.trim()}
                   className="mt-5 lg:mt-6 flex w-full items-center justify-center gap-3 rounded-lg bg-phoenix py-4 text-[15px] font-semibold text-white hover:bg-ember transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -131,7 +137,7 @@ export function CtaSection() {
                 <p className="mt-3.5 lg:mt-4 text-center text-[11px] lg:text-[11.5px] text-warm">
                   Your information is used only to evaluate fit for a Growth Assessment.
                 </p>
-              </div>
+              </form>
             )}
           </AnimatedSection>
         </div>
