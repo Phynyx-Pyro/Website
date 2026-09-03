@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import Link from 'next/link'
 import { AnimatedSection } from '../../_components/animated-section'
-import { ArrowRight, ArrowLeft, CheckCircle2, Clock, Shield, AlertCircle } from 'lucide-react'
+import { ArrowRight, ArrowLeft, CheckCircle2, Clock, Shield, AlertCircle, DollarSign } from 'lucide-react'
 import { getAssessmentAttribution } from '@/lib/assessment-attribution'
+import { BookingCalendar } from './booking-calendar'
 
 type FormData = {
   firstName: string
@@ -32,12 +33,60 @@ const initialForm: FormData = {
   monthlyBudget: '',
 }
 
+type FitPath = 'calendar' | 'investment-context'
+
+const PREFILL_STORAGE_KEY = 'phynyx-growth-assessment-prefill'
+
 export function GrowthAssessmentClient() {
   const [step, setStep] = useState(1)
   const [form, setForm] = useState<FormData>(initialForm)
   const [submitting, setSubmitting] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
+  const [resultPath, setResultPath] = useState<FitPath | null>(null)
+  const [investmentAccepted, setInvestmentAccepted] = useState(false)
   const [error, setError] = useState('')
+  const resultHeadingRef = useRef<HTMLHeadingElement>(null)
+
+  useEffect(() => {
+    let parsed: Partial<FormData> | null = null
+
+    try {
+      const stored = window.sessionStorage.getItem(PREFILL_STORAGE_KEY)
+      if (!stored) return
+
+      parsed = JSON.parse(stored) as Partial<FormData>
+      window.sessionStorage.removeItem(PREFILL_STORAGE_KEY)
+    } catch {
+      try {
+        window.sessionStorage.removeItem(PREFILL_STORAGE_KEY)
+      } catch {
+        // Browser storage is optional; the assessment still works without it.
+      }
+    }
+
+    if (!parsed) return
+
+    const prefill = parsed
+    const frame = window.requestAnimationFrame(() => {
+      setForm((current) => ({
+        ...current,
+        firstName: typeof prefill.firstName === 'string' ? prefill.firstName : '',
+        lastName: typeof prefill.lastName === 'string' ? prefill.lastName : '',
+        email: typeof prefill.email === 'string' ? prefill.email : '',
+        phone: typeof prefill.phone === 'string' ? prefill.phone : '',
+      }))
+      setStep(2)
+    })
+
+    return () => window.cancelAnimationFrame(frame)
+  }, [])
+
+  useEffect(() => {
+    if (!resultPath) return
+
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    const frame = window.requestAnimationFrame(() => resultHeadingRef.current?.focus())
+    return () => window.cancelAnimationFrame(frame)
+  }, [resultPath, investmentAccepted])
 
   const update = (field: keyof FormData, value: string) => {
     setForm((prev) => ({ ...(prev ?? {}), [field]: value }))
@@ -58,9 +107,13 @@ export function GrowthAssessmentClient() {
       })
       const result = (await res.json().catch(() => null)) as {
         message?: string
+        fit?: { path?: FitPath }
       } | null
       if (!res.ok) throw new Error(result?.message ?? 'Submission failed')
-      setSubmitted(true)
+      if (result?.fit?.path !== 'calendar' && result?.fit?.path !== 'investment-context') {
+        throw new Error('We could not determine the next step. Please try again.')
+      }
+      setResultPath(result.fit.path)
     } catch (e: any) {
       setError(e?.message ?? 'Something went wrong. Please try again.')
     } finally {
@@ -68,19 +121,69 @@ export function GrowthAssessmentClient() {
     }
   }
 
-  if (submitted) {
+  if (resultPath) {
+    const showCalendar = resultPath === 'calendar' || investmentAccepted
+
     return (
       <main className="bg-ivory grain-subtle min-h-screen pt-32 pb-20">
-        <div className="mx-auto max-w-[600px] px-6 text-center">
+        <div className="mx-auto max-w-[920px] px-6 text-center" aria-live="polite">
           <AnimatedSection>
-            <CheckCircle2 className="h-16 w-16 text-phoenix mx-auto mb-6" />
-            <h1 className="text-[36px] font-bold text-ink">Assessment Received</h1>
-            <p className="mt-4 text-[17px] leading-[1.65] text-warm">
-              Thank you, {form?.firstName ?? 'there'}. We&apos;ve received your growth assessment request and will review it within one business day. If we believe PhynyxPro is a good fit, we&apos;ll reach out to schedule a 15-minute conversation.
-            </p>
-            <Link href="/" className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors">
-              Back to Home <ArrowRight className="h-4 w-4" />
-            </Link>
+            {showCalendar ? (
+              <>
+                <CheckCircle2 className="h-16 w-16 text-phoenix mx-auto mb-6" />
+                <h1 ref={resultHeadingRef} tabIndex={-1} className="text-[clamp(32px,5vw,48px)] font-bold leading-tight text-ink outline-none">
+                  {resultPath === 'calendar'
+                    ? 'Your business looks ready for the next step.'
+                    : 'Let’s see if the numbers and the strategy make sense.'}
+                </h1>
+                <p className="mt-4 mx-auto max-w-[660px] text-[17px] leading-[1.65] text-warm">
+                  Thank you, {form.firstName || 'there'}. Choose a convenient time below for a focused discovery call with PhynyxPro.
+                </p>
+                <BookingCalendar />
+                <Link href="/" className="mt-8 inline-flex items-center gap-2 text-[14px] font-semibold text-phoenix hover:underline">
+                  Back to Home <ArrowRight className="h-4 w-4" />
+                </Link>
+              </>
+            ) : (
+              <div className="mx-auto max-w-[720px] rounded-2xl bg-white p-7 md:p-10 shadow-xl">
+                <DollarSign className="h-14 w-14 text-phoenix mx-auto mb-5" />
+                <h1 ref={resultHeadingRef} tabIndex={-1} className="text-[clamp(30px,5vw,42px)] font-bold leading-tight text-ink outline-none">
+                  Before we book, let&apos;s make sure the investment fits.
+                </h1>
+                <p className="mt-4 text-[16px] leading-[1.65] text-warm">
+                  Based on what you shared, your business may be early for the full PhynyxPro system. That does not automatically mean we cannot help—but we want the costs to be completely clear before you schedule.
+                </p>
+
+                <div className="mt-7 grid gap-3 text-left sm:grid-cols-3">
+                  {[
+                    { label: 'One-time buildout', value: '$1,000' },
+                    { label: 'Monthly retainer', value: '$1,500/mo' },
+                    { label: 'Lead generation', value: '$1,500–$2,500/mo' },
+                  ].map((item) => (
+                    <div key={item.label} className="rounded-xl border border-ink/10 bg-ivory p-4">
+                      <p className="text-[12px] font-semibold uppercase tracking-[.08em] text-warm">{item.label}</p>
+                      <p className="mt-1.5 text-[20px] font-bold text-ink">{item.value}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <p className="mt-5 text-[14px] leading-[1.6] text-warm">
+                  Expected total: approximately <strong className="text-ink">$4,000–$5,000 in month one</strong>, then <strong className="text-ink">$3,000–$4,000 per month</strong>. The discovery call is still free and is simply to determine whether moving forward makes sense.
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => setInvestmentAccepted(true)}
+                  className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-phoenix px-7 py-4 text-[15px] font-semibold text-white shadow-lg transition-colors hover:bg-ember"
+                >
+                  I understand the investment — show me the calendar
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+                <Link href="/" className="mt-5 inline-flex text-[13px] font-semibold text-warm hover:text-ink">
+                  Not right now — return home
+                </Link>
+              </div>
+            )}
           </AnimatedSection>
         </div>
       </main>
@@ -125,7 +228,14 @@ export function GrowthAssessmentClient() {
           <input type="hidden" name="currentMarketing" value={form.currentMarketing} />
           <input type="hidden" name="monthlyBudget" value={form.monthlyBudget} />
           {/* Progress */}
-          <div className="flex items-center gap-2 mb-8">
+          <div
+            className="flex items-center gap-2 mb-8"
+            role="progressbar"
+            aria-label="Growth assessment progress"
+            aria-valuemin={1}
+            aria-valuemax={3}
+            aria-valuenow={step}
+          >
             {[1, 2, 3].map((s) => (
               <div key={s} className={`h-1.5 flex-1 rounded-full transition-colors ${
                 s <= step ? 'bg-phoenix' : 'bg-ink/10'
@@ -141,21 +251,21 @@ export function GrowthAssessmentClient() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-[13px] font-medium text-ink mb-1.5">First Name *</label>
-                      <input type="text" value={form?.firstName ?? ''} onChange={(e) => update('firstName', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink placeholder:text-warm/50 focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition" placeholder="Andrew" />
+                      <label htmlFor="assessment-first-name" className="block text-[13px] font-medium text-ink mb-1.5">First Name *</label>
+                      <input id="assessment-first-name" type="text" value={form?.firstName ?? ''} onChange={(e) => update('firstName', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink placeholder:text-warm/50 focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition" placeholder="Andrew" />
                     </div>
                     <div>
-                      <label className="block text-[13px] font-medium text-ink mb-1.5">Last Name</label>
-                      <input type="text" value={form?.lastName ?? ''} onChange={(e) => update('lastName', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink placeholder:text-warm/50 focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition" placeholder="Higdon" />
+                      <label htmlFor="assessment-last-name" className="block text-[13px] font-medium text-ink mb-1.5">Last Name</label>
+                      <input id="assessment-last-name" type="text" value={form?.lastName ?? ''} onChange={(e) => update('lastName', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink placeholder:text-warm/50 focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition" placeholder="Higdon" />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-[13px] font-medium text-ink mb-1.5">Email *</label>
-                    <input type="email" value={form?.email ?? ''} onChange={(e) => update('email', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink placeholder:text-warm/50 focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition" placeholder="andrew@example.com" />
+                    <label htmlFor="assessment-email" className="block text-[13px] font-medium text-ink mb-1.5">Email *</label>
+                    <input id="assessment-email" type="email" value={form?.email ?? ''} onChange={(e) => update('email', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink placeholder:text-warm/50 focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition" placeholder="andrew@example.com" />
                   </div>
                   <div>
-                    <label className="block text-[13px] font-medium text-ink mb-1.5">Phone *</label>
-                    <input type="tel" value={form?.phone ?? ''} onChange={(e) => update('phone', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink placeholder:text-warm/50 focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition" placeholder="(555) 123-4567" />
+                    <label htmlFor="assessment-phone" className="block text-[13px] font-medium text-ink mb-1.5">Phone *</label>
+                    <input id="assessment-phone" type="tel" value={form?.phone ?? ''} onChange={(e) => update('phone', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink placeholder:text-warm/50 focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition" placeholder="(555) 123-4567" />
                   </div>
                 </div>
                 <button type="button" onClick={() => canProceed1 && setStep(2)} disabled={!canProceed1} className={`mt-8 w-full inline-flex items-center justify-center gap-2 rounded-lg px-7 py-3.5 text-[15px] font-semibold transition-colors ${canProceed1 ? 'bg-phoenix text-white hover:bg-ember' : 'bg-ink/10 text-ink/40 cursor-not-allowed'}`}>
@@ -172,12 +282,12 @@ export function GrowthAssessmentClient() {
                 <h2 className="text-[22px] font-semibold text-ink mb-6">About your business</h2>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-[13px] font-medium text-ink mb-1.5">Business Name *</label>
-                    <input type="text" value={form?.businessName ?? ''} onChange={(e) => update('businessName', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink placeholder:text-warm/50 focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition" placeholder="Your Practice or Company" />
+                    <label htmlFor="assessment-business-name" className="block text-[13px] font-medium text-ink mb-1.5">Business Name *</label>
+                    <input id="assessment-business-name" type="text" value={form?.businessName ?? ''} onChange={(e) => update('businessName', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink placeholder:text-warm/50 focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition" placeholder="Your Practice or Company" />
                   </div>
                   <div>
-                    <label className="block text-[13px] font-medium text-ink mb-1.5">Industry *</label>
-                    <select value={form?.industry ?? ''} onChange={(e) => update('industry', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition">
+                    <label htmlFor="assessment-industry" className="block text-[13px] font-medium text-ink mb-1.5">Industry *</label>
+                    <select id="assessment-industry" value={form?.industry ?? ''} onChange={(e) => update('industry', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition">
                       <option value="">Select your industry</option>
                       <option value="chiropractic">Chiropractic</option>
                       <option value="dental">Dental</option>
@@ -188,8 +298,8 @@ export function GrowthAssessmentClient() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[13px] font-medium text-ink mb-1.5">Annual Revenue</label>
-                    <select value={form?.annualRevenue ?? ''} onChange={(e) => update('annualRevenue', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition">
+                    <label htmlFor="assessment-annual-revenue" className="block text-[13px] font-medium text-ink mb-1.5">Annual Revenue</label>
+                    <select id="assessment-annual-revenue" value={form?.annualRevenue ?? ''} onChange={(e) => update('annualRevenue', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition">
                       <option value="">Select range</option>
                       <option value="under-250k">Under $250K</option>
                       <option value="250k-500k">$250K – $500K</option>
@@ -218,8 +328,8 @@ export function GrowthAssessmentClient() {
                 <h2 className="text-[22px] font-semibold text-ink mb-6">Your growth context</h2>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-[13px] font-medium text-ink mb-1.5">Biggest challenge right now</label>
-                    <select value={form?.biggestChallenge ?? ''} onChange={(e) => update('biggestChallenge', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition">
+                    <label htmlFor="assessment-biggest-challenge" className="block text-[13px] font-medium text-ink mb-1.5">Biggest challenge right now</label>
+                    <select id="assessment-biggest-challenge" value={form?.biggestChallenge ?? ''} onChange={(e) => update('biggestChallenge', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition">
                       <option value="">Select one</option>
                       <option value="not-enough-leads">Not enough leads</option>
                       <option value="leads-not-converting">Leads aren&apos;t converting to appointments</option>
@@ -230,12 +340,12 @@ export function GrowthAssessmentClient() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[13px] font-medium text-ink mb-1.5">Current marketing approach</label>
-                    <textarea value={form?.currentMarketing ?? ''} onChange={(e) => update('currentMarketing', e?.target?.value ?? '')} rows={3} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink placeholder:text-warm/50 focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition resize-none" placeholder="What are you doing for marketing today? (Google Ads, social, referrals, etc.)" />
+                    <label htmlFor="assessment-current-marketing" className="block text-[13px] font-medium text-ink mb-1.5">Current marketing approach</label>
+                    <textarea id="assessment-current-marketing" value={form?.currentMarketing ?? ''} onChange={(e) => update('currentMarketing', e?.target?.value ?? '')} rows={3} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink placeholder:text-warm/50 focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition resize-none" placeholder="What are you doing for marketing today? (Google Ads, social, referrals, etc.)" />
                   </div>
                   <div>
-                    <label className="block text-[13px] font-medium text-ink mb-1.5">Monthly marketing budget</label>
-                    <select value={form?.monthlyBudget ?? ''} onChange={(e) => update('monthlyBudget', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition">
+                    <label htmlFor="assessment-monthly-budget" className="block text-[13px] font-medium text-ink mb-1.5">Monthly marketing budget</label>
+                    <select id="assessment-monthly-budget" value={form?.monthlyBudget ?? ''} onChange={(e) => update('monthlyBudget', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition">
                       <option value="">Select range</option>
                       <option value="under-1k">Under $1,000/mo</option>
                       <option value="1k-3k">$1,000 – $3,000/mo</option>
@@ -247,7 +357,7 @@ export function GrowthAssessmentClient() {
                 </div>
 
                 {error && (
-                  <div className="mt-4 flex items-center gap-2 text-[13px] text-red-600">
+                  <div role="alert" className="mt-4 flex items-center gap-2 text-[13px] text-red-600">
                     <AlertCircle className="h-4 w-4 shrink-0" />
                     {error}
                   </div>
