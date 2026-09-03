@@ -3,6 +3,7 @@ import './globals.css'
 import { Toaster } from '@/components/ui/sonner'
 import { SITE_URL } from '@/lib/site'
 import type { Metadata } from 'next'
+import Script from 'next/script'
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
@@ -58,6 +59,12 @@ export default function RootLayout({
       >
         {children}
         <Toaster />
+        <Script
+          id="ghl-external-tracking"
+          src="https://link.phynyxpro.com/js/external-tracking.js"
+          data-tracking-id="tk_82ef560d06d74a06987702f8cfae1770"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   )
