@@ -18,7 +18,7 @@ export function ClientLoginClient() {
           <div className="mt-10 rounded-2xl bg-white p-8 shadow-xl">
             <div className="flex items-center justify-center gap-2 mb-6">
               <div className="relative h-8 w-8">
-                <Image src="/images/pyro-icon.png" alt="PYRO" fill className="object-contain" />
+                <Image src="/images/pyro-icon.png" alt="PYRO" fill className="object-contain" style={{ objectFit: 'contain' }} />
               </div>
               <p className="text-[18px] font-bold text-ink">PYRO</p>
               <span className="text-[14px] text-warm">by PhynyxPro</span>

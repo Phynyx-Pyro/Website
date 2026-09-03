@@ -9,10 +9,16 @@ export function SiteFooter() {
         <div className="lg:col-span-4">
           <Link href="/" className="flex items-center gap-2.5">
             <div className="relative h-9 w-9">
-              <Image src="/images/pyro-icon.png" alt="PhynyxPro" fill className="object-contain" />
+              <Image src="/images/pyro-icon.png" alt="PhynyxPro" fill className="object-contain" style={{ objectFit: 'contain' }} />
             </div>
             <div className="relative h-7 w-[140px]">
-              <Image src="/images/phynyx-logo-white.png" alt="PhynyxPro" fill className="object-contain object-left" />
+              <Image
+                src="/images/phynyx-logo-white.png"
+                alt="PhynyxPro"
+                fill
+                className="object-contain object-left"
+                style={{ objectFit: 'contain', objectPosition: 'left' }}
+              />
             </div>
           </Link>
           <p className="mt-5 max-w-[300px] text-[14.5px] leading-[1.6] text-white/60">

@@ -67,6 +67,7 @@ export function PyroEmberClient() {
                         fill
                         priority
                         className="object-contain object-bottom"
+                        style={{ objectFit: 'contain', objectPosition: 'bottom' }}
                       />
                     </div>
                     {/* Name tag */}

@@ -9,7 +9,7 @@ export function TrustStrip() {
       <div className="mx-auto flex flex-col lg:flex-row max-w-[1320px] items-start lg:items-center justify-between px-5 lg:px-10 pb-10 pt-11 gap-6">
         <div className="flex items-center gap-3">
           <div className="relative h-5 w-5">
-            <Image src="/images/pyro-icon.png" alt="" fill className="object-contain" />
+            <Image src="/images/pyro-icon.png" alt="" fill className="object-contain" style={{ objectFit: 'contain' }} />
           </div>
           <p className="text-[12px] font-bold uppercase tracking-[.18em] text-white/70">
             Documented, not embellished
