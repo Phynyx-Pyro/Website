@@ -1,38 +1,46 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
+import { useRouter } from 'next/navigation'
 import { AnimatedSection } from '../../_components/animated-section'
 import { Clock, Lock, Ban, ArrowRight } from 'lucide-react'
-import { getAssessmentAttribution } from '@/lib/assessment-attribution'
+
+const PREFILL_STORAGE_KEY = 'phynyx-growth-assessment-prefill'
+const ATTRIBUTION_QUERY_KEYS = [
+  'utm_source',
+  'utm_medium',
+  'utm_campaign',
+  'utm_content',
+  'utm_term',
+  'gclid',
+  'fbclid',
+] as const
 
 export function CtaSection() {
+  const router = useRouter()
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '' })
   const [submitting, setSubmitting] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
-  const [error, setError] = useState('')
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!form?.firstName?.trim() || !form?.email?.trim()) return
     setSubmitting(true)
-    setError('')
+
     try {
-      const res = await fetch('/api/growth-assessment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, attribution: getAssessmentAttribution() }),
-      })
-      const data = (await res.json()) as { success?: boolean; message?: string }
-      if (data?.success) {
-        setSubmitted(true)
-      } else {
-        setError(data?.message ?? 'Something went wrong. Please try again.')
-      }
+      window.sessionStorage.setItem(PREFILL_STORAGE_KEY, JSON.stringify(form))
     } catch {
-      setError('Something went wrong. Please try again.')
-    } finally {
-      setSubmitting(false)
+      // Continue without prefill if browser storage is unavailable.
     }
+
+    const currentParams = new URLSearchParams(window.location.search)
+    const attributionParams = new URLSearchParams()
+    for (const key of ATTRIBUTION_QUERY_KEYS) {
+      const value = currentParams.get(key)
+      if (value) attributionParams.set(key, value)
+    }
+
+    const query = attributionParams.toString()
+    router.push(query ? `/growth-assessment?${query}` : '/growth-assessment')
   }
 
   return (
@@ -58,19 +66,8 @@ export function CtaSection() {
 
         <div className="lg:col-span-6">
           <AnimatedSection delay={200}>
-            {submitted ? (
-              <div className="rounded-2xl border border-white/12 bg-white p-8 text-ink text-center lift">
-                <div className="mx-auto w-16 h-16 rounded-full bg-phoenix/10 flex items-center justify-center mb-4">
-                  <svg className="w-8 h-8 text-phoenix" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <h3 className="text-[22px] font-bold">Assessment received</h3>
-                <p className="mt-2 text-[15px] text-warm">We&apos;ll review your information and reach out within one business day.</p>
-              </div>
-            ) : (
-              <form name="growth-assessment-quick" onSubmit={handleSubmit} className="rounded-2xl border border-white/12 bg-white p-6 lg:p-8 text-ink lift">
-                <div className="flex items-center justify-between">
+            <form name="growth-assessment-quick" onSubmit={handleSubmit} className="rounded-2xl border border-white/12 bg-white p-6 lg:p-8 text-ink lift">
+              <div className="flex items-center justify-between">
                   <p className="text-[17px] lg:text-[19px] font-bold tracking-[-.02em]">Start your assessment</p>
                   <span className="text-[10px] lg:text-[11.5px] font-bold uppercase tracking-[.12em] text-warm">Step 1 of 3</span>
                 </div>
@@ -125,20 +122,18 @@ export function CtaSection() {
                     className="mt-1.5 w-full rounded-lg border border-black/12 bg-ivory px-3.5 py-3 text-[14px] placeholder:text-warm/60 focus:outline-none focus:ring-2 focus:ring-phoenix/30"
                   />
                 </label>
-                {error && <p className="mt-3 text-[13px] text-red-500">{error}</p>}
                 <button
                   type="submit"
                   disabled={submitting || !form?.firstName?.trim() || !form?.email?.trim()}
                   className="mt-5 lg:mt-6 flex w-full items-center justify-center gap-3 rounded-lg bg-phoenix py-4 text-[15px] font-semibold text-white hover:bg-ember transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {submitting ? 'Submitting...' : 'Continue'}
+                  {submitting ? 'Continuing...' : 'Continue'}
                   {!submitting && <ArrowRight className="w-3.5 h-3.5" />}
                 </button>
-                <p className="mt-3.5 lg:mt-4 text-center text-[11px] lg:text-[11.5px] text-warm">
-                  Your information is used only to evaluate fit for a Growth Assessment.
-                </p>
-              </form>
-            )}
+              <p className="mt-3.5 lg:mt-4 text-center text-[11px] lg:text-[11.5px] text-warm">
+                Your information is used only to evaluate fit for a Growth Assessment.
+              </p>
+            </form>
           </AnimatedSection>
         </div>
       </div>
