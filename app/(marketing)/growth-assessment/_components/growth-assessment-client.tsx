@@ -282,7 +282,7 @@ export function GrowthAssessmentClient() {
               Book your <span className="text-phoenix">Patient Acquisition Diagnostic.</span>
             </h1>
             <p className="mt-5 max-w-[560px] mx-auto text-[17px] leading-[1.65] text-warm">
-              Start with a short fit check. Then choose a time for a roughly 45-minute working session focused on the gaps between lead, appointment request, confirmation, Day 1 show, and start of care.
+              Start with a 3-minute fit check. Then choose a time for a roughly 45-minute working session focused on the gaps between lead, appointment request, confirmation, Day 1 show, and start of care.
             </p>
             <div className="mt-6 flex items-center justify-center gap-6 text-[13px] text-warm">
               <span className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-phoenix" /> 3-minute fit check</span>
@@ -329,7 +329,7 @@ export function GrowthAssessmentClient() {
           <div
             className="flex items-center gap-2 mb-8"
             role="progressbar"
-            aria-label="Growth assessment progress"
+            aria-label="Patient Acquisition Diagnostic fit-check progress"
             aria-valuemin={1}
             aria-valuemax={3}
             aria-valuenow={step}

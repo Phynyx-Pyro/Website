@@ -3,11 +3,12 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { AnimatedSection } from '../../_components/animated-section'
+import { AssessmentCtaLink } from '../../_components/assessment-cta-link'
 import { ExternalLink, Lock } from 'lucide-react'
 
 export function ClientLoginClient() {
   return (
-    <main className="bg-ivory grain-subtle min-h-screen pt-32 pb-20 md:pt-40 md:pb-28">
+    <div className="bg-ivory grain-subtle min-h-screen pt-32 pb-20 md:pt-40 md:pb-28">
       <div className="mx-auto max-w-[500px] px-6 text-center">
         <AnimatedSection>
           <Lock className="h-12 w-12 text-phoenix mx-auto mb-6" />
@@ -24,15 +25,15 @@ export function ClientLoginClient() {
               <span className="text-[14px] text-warm">by PhynyxPro</span>
             </div>
             <a href="https://app.gohighlevel.com" target="_blank" rel="noopener noreferrer" className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors">
-              Open PYRO Dashboard <ExternalLink className="h-4 w-4" />
+              Open Client Login <ExternalLink className="h-4 w-4" />
             </a>
             <p className="mt-4 text-[13px] text-warm">
-              You&apos;ll be redirected to the PYRO platform. Use the credentials provided during onboarding.
+              You&apos;ll be redirected to the secure GoHighLevel login used for your PYRO workspace. Use the credentials provided during onboarding.
             </p>
           </div>
           <p className="mt-8 text-[14px] text-warm">
             Not a client yet?{' '}
-            <Link href="/growth-assessment?cta=client-login" className="text-phoenix font-medium hover:underline">Book a Growth Assessment</Link>
+            <AssessmentCtaLink placement="client_login_prospect" className="text-phoenix font-medium hover:underline">Book My Patient Acquisition Diagnostic</AssessmentCtaLink>
           </p>
           <p className="mt-3 text-[13px] text-warm">
             Need help?{' '}
@@ -40,6 +41,6 @@ export function ClientLoginClient() {
           </p>
         </AnimatedSection>
       </div>
-    </main>
+    </div>
   )
 }

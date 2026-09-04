@@ -1,13 +1,13 @@
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Fulfillment Policy — PhynyxPro',
+  title: 'Fulfillment Policy',
   description: 'Service fulfillment, cancellation, and refund policies for PhynyxPro services and the PYRO platform.',
 }
 
 export default function FulfillmentPage() {
   return (
-    <main className="bg-ivory grain-subtle min-h-screen pt-32 pb-20 md:pt-40 md:pb-28">
+    <div className="bg-ivory grain-subtle min-h-screen pt-32 pb-20 md:pt-40 md:pb-28">
       <div className="mx-auto max-w-[800px] px-6 lg:px-10">
         <h1 className="text-[36px] font-bold text-ink">Fulfillment Policy</h1>
         <p className="mt-2 text-[14px] text-warm">Last updated: September 1, 2026</p>
@@ -44,6 +44,6 @@ export default function FulfillmentPage() {
           </section>
         </div>
       </div>
-    </main>
+    </div>
   )
 }

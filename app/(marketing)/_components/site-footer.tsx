@@ -28,7 +28,7 @@ export function SiteFooter() {
           <p className="text-[11px] font-bold uppercase tracking-[.16em] text-white/45">System</p>
           <div className="mt-4 space-y-2.5 text-[14.5px] text-white/75">
             <Link href="/growth-system" className="block hover:text-flame transition-colors">Growth System</Link>
-            <Link href="/results" className="block hover:text-flame transition-colors">Results</Link>
+            <Link href="/results" className="block hover:text-flame transition-colors">Measurement</Link>
             <Link href="/pyro-ember" className="block hover:text-flame transition-colors">PYRO & Ember</Link>
           </div>
         </div>

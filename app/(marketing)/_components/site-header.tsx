@@ -18,7 +18,7 @@ const navLinks = [
       { label: 'Dental & Medspa', href: '/industries/dental-medspa' },
     ],
   },
-  { label: 'Results', href: '/results' },
+  { label: 'Measurement', href: '/results' },
   { label: 'PYRO & Ember', href: '/pyro-ember' },
   { label: 'About', href: '/about' },
 ]
@@ -75,8 +75,6 @@ export function SiteHeader() {
               {link?.children ? (
                 <div
                   className="relative"
-                  onMouseEnter={() => setDropdownOpen(true)}
-                  onMouseLeave={() => setDropdownOpen(false)}
                   onBlur={(event) => {
                     if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
                       setDropdownOpen(false)
@@ -92,7 +90,8 @@ export function SiteHeader() {
                     type="button"
                     aria-expanded={dropdownOpen}
                     aria-haspopup="menu"
-                    onClick={() => setDropdownOpen(true)}
+                    aria-controls="desktop-industries-menu"
+                    onClick={() => setDropdownOpen((open) => !open)}
                     className="flex items-center gap-1.5 hover:text-phoenix transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phoenix focus-visible:ring-offset-4 focus-visible:ring-offset-ivory"
                   >
                     {link?.label}
@@ -100,7 +99,7 @@ export function SiteHeader() {
                   </button>
                   {dropdownOpen && (
                     <div className="absolute top-full left-0 pt-2">
-                      <div role="menu" className="bg-white rounded-xl border border-black/10 py-2 px-1 min-w-[200px] lift-sm">
+                      <div id="desktop-industries-menu" role="menu" className="bg-white rounded-xl border border-black/10 py-2 px-1 min-w-[200px] lift-sm">
                         {link?.children?.map((child: any) => (
                           <Link
                             key={child?.href}
@@ -136,7 +135,7 @@ export function SiteHeader() {
         {/* Desktop CTA */}
         <AssessmentCtaLink
           placement="header_desktop"
-          industry={pathname === '/' ? 'chiropractic' : undefined}
+          industry={pathname === '/' || pathname === '/industries/chiropractic' ? 'chiropractic' : undefined}
           data-cta-placement="header-desktop"
           className="group hidden items-center gap-2.5 whitespace-nowrap rounded-lg bg-phoenix px-4 py-3.5 text-[13px] font-semibold text-white shadow-[0_12px_28px_-12px_rgba(212,85,42,.95)] transition-colors hover:bg-ember focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phoenix focus-visible:ring-offset-2 focus-visible:ring-offset-ivory lg:flex xl:px-5 xl:text-[14px]"
         >
@@ -192,7 +191,7 @@ export function SiteHeader() {
             <div className="pt-6">
               <AssessmentCtaLink
                 placement="header_mobile"
-                industry={pathname === '/' ? 'chiropractic' : undefined}
+                industry={pathname === '/' || pathname === '/industries/chiropractic' ? 'chiropractic' : undefined}
                 onClick={() => setMobileOpen(false)}
                 data-cta-placement="header-mobile"
                 className="flex w-full items-center justify-center gap-2.5 rounded-lg bg-phoenix px-4 py-4 text-center text-[14px] font-semibold text-white shadow-[0_14px_30px_-14px_rgba(212,85,42,.95)]"

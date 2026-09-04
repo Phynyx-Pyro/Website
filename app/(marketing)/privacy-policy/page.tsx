@@ -1,13 +1,13 @@
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy — PhynyxPro',
+  title: 'Privacy Policy',
   description: 'How PhynyxPro collects, uses, and protects your information.',
 }
 
 export default function PrivacyPolicyPage() {
   return (
-    <main className="bg-ivory grain-subtle min-h-screen pt-32 pb-20 md:pt-40 md:pb-28">
+    <div className="bg-ivory grain-subtle min-h-screen pt-32 pb-20 md:pt-40 md:pb-28">
       <div className="mx-auto max-w-[800px] px-6 lg:px-10">
         <h1 className="text-[36px] font-bold text-ink">Privacy Policy</h1>
         <p className="mt-2 text-[14px] text-warm">Last updated: September 3, 2026</p>
@@ -15,7 +15,7 @@ export default function PrivacyPolicyPage() {
         <div className="mt-10 space-y-8 text-[16px] leading-[1.7] text-ink/80">
           <section>
             <h2 className="text-[22px] font-semibold text-ink mb-3">Information We Collect</h2>
-            <p>When you submit a Growth Assessment form, contact form, or otherwise interact with PhynyxPro, we may collect your name, email address, phone number, business name, industry, and other information you voluntarily provide.</p>
+            <p>When you submit a Patient Acquisition Diagnostic fit-check form, contact form, or otherwise interact with PhynyxPro, we may collect your name, email address, phone number, business name, industry, and other information you voluntarily provide.</p>
           </section>
 
           <section>
@@ -49,6 +49,6 @@ export default function PrivacyPolicyPage() {
           </section>
         </div>
       </div>
-    </main>
+    </div>
   )
 }

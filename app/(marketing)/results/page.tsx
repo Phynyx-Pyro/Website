@@ -2,8 +2,8 @@ import { Metadata } from 'next'
 import { ResultsClient } from './_components/results-client'
 
 export const metadata: Metadata = {
-  title: 'Results — Documented Outcomes, Not Promises',
-  description: 'How PhynyxPro measures success: full-funnel attribution from advertising investment to revenue, with documented methodology.',
+  title: 'Measurement Framework',
+  description: 'See how PhynyxPro connects available campaign, response, appointment, and outcome data across the acquisition journey.',
 }
 
 export default function ResultsPage() {

@@ -1,13 +1,13 @@
 'use client'
 
 import Image from 'next/image'
-import Link from 'next/link'
 import { AnimatedSection } from '../../../_components/animated-section'
 import { ArrowRight, Wrench, Clock, Phone, CalendarCheck, BarChart3, Bot } from 'lucide-react'
+import { AssessmentCtaLink } from '../../../_components/assessment-cta-link'
 
 export function HomeServicesClient() {
   return (
-    <main>
+    <div>
       <section className="bg-ivory grain-subtle pt-32 pb-20 md:pt-40 md:pb-28">
         <div className="mx-auto max-w-[1200px] px-6 lg:px-10">
           <div className="grid lg:grid-cols-2 gap-10 items-center">
@@ -17,15 +17,19 @@ export function HomeServicesClient() {
                 <p className="text-[11px] font-bold uppercase tracking-[.16em] text-phoenix">Home Services</p>
               </div>
               <h1 className="text-[clamp(36px,5vw,64px)] font-bold leading-[1.05] tracking-tight text-ink">
-                Fill your calendar.<br />
-                <span className="text-phoenix">Not just your inbox.</span>
+                Connect the inquiry.<br />
+                <span className="text-phoenix">To scheduled work.</span>
               </h1>
               <p className="mt-6 max-w-[500px] text-[19px] leading-[1.65] text-warm">
-                Roofing, plumbing, HVAC — your business runs on booked jobs. The same system that converts patients for chiropractic practices converts customers for service businesses.
+                Roofing, plumbing, and HVAC businesses depend on timely handoffs from inquiry to estimate request, scheduled work, and recorded outcome. PhynyxPro connects that workflow.
               </p>
-              <Link href="/growth-assessment?cta=home-services-hero" className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors">
-                Book a Growth Assessment <ArrowRight className="h-4 w-4" />
-              </Link>
+              <AssessmentCtaLink
+                placement="home_services_hero"
+                data-cta-placement="home-services-hero"
+                className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors"
+              >
+                Book My Patient Acquisition Diagnostic <ArrowRight className="h-4 w-4" />
+              </AssessmentCtaLink>
             </AnimatedSection>
             <AnimatedSection delay={200}>
               <div className="relative rounded-xl overflow-hidden shadow-lift">
@@ -47,12 +51,12 @@ export function HomeServicesClient() {
           </AnimatedSection>
           <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { icon: Phone, title: 'Instant Lead Response', desc: 'Every inquiry gets a response in seconds — by Ember AI. No more missed calls turning into missed jobs.' },
-              { icon: CalendarCheck, title: 'Booked Estimates & Jobs', desc: 'Automated scheduling gets prospects on your calendar before they call a competitor.' },
-              { icon: Clock, title: '24/7 Availability', desc: 'Ember handles after-hours and weekend inquiries so you never lose a job to timing.' },
-              { icon: BarChart3, title: 'Know Your Numbers', desc: 'Full attribution from ad spend to booked revenue. Know exactly what each campaign produces.' },
-              { icon: Bot, title: 'AI Follow-Up', desc: 'Automated SMS and email sequences that re-engage leads who went quiet.' },
-              { icon: Wrench, title: 'Built for Service', desc: 'Not a generic marketing tool. Workflows designed for estimate requests, job scheduling, and service follow-up.' },
+              { icon: Phone, title: 'Prompt Lead Response', desc: 'Ember can support configured phone, SMS, and chat workflows, with staff handoff when needed.' },
+              { icon: CalendarCheck, title: 'Estimate & Job Requests', desc: 'Connected scheduling can offer approved availability and capture the next requested step.' },
+              { icon: Clock, title: 'After-Hours Coverage', desc: 'Configured workflows can acknowledge after-hours and weekend inquiries and route follow-up.' },
+              { icon: BarChart3, title: 'Connected Reporting', desc: 'Bring available ad, lead, booking, and recorded revenue data into one review path.' },
+              { icon: Bot, title: 'Approved Follow-Up', desc: 'Configured SMS and email sequences can re-engage eligible leads who have gone quiet.' },
+              { icon: Wrench, title: 'Service Workflows', desc: 'The workflow can be configured around estimate requests, job scheduling, and service follow-up.' },
             ].map((item, i) => (
               <AnimatedSection key={item?.title ?? i} delay={i * 80}>
                 <div className="rounded-xl bg-ivory p-6 shadow-lg hover:shadow-xl transition-shadow h-full">
@@ -69,16 +73,20 @@ export function HomeServicesClient() {
       <section className="bg-ivory grain-subtle py-20 md:py-28">
         <div className="mx-auto max-w-[1200px] px-6 lg:px-10 text-center">
           <AnimatedSection>
-            <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink">Ready to stop losing jobs to slow follow-up?</h2>
+            <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink">Ready to tighten the path from inquiry to scheduled work?</h2>
             <p className="mt-4 max-w-[500px] mx-auto text-[17px] leading-[1.65] text-warm">
-              A 30-minute growth assessment shows you where jobs are being lost and how the system fixes it.
+              Start with a 3-minute fit check. If there may be a match, continue to a roughly 45-minute working diagnostic using last month&apos;s acquisition numbers.
             </p>
-            <Link href="/growth-assessment?cta=home-services-footer" className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors">
-              Book a Growth Assessment <ArrowRight className="h-4 w-4" />
-            </Link>
+            <AssessmentCtaLink
+              placement="home_services_final"
+              data-cta-placement="home-services-final"
+              className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors"
+            >
+              Book My Patient Acquisition Diagnostic <ArrowRight className="h-4 w-4" />
+            </AssessmentCtaLink>
           </AnimatedSection>
         </div>
       </section>
-    </main>
+    </div>
   )
 }

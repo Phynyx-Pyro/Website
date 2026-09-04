@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import { SupportClient } from './_components/support-client'
 
 export const metadata: Metadata = {
-  title: 'Support — PhynyxPro',
+  title: 'Support',
   description: 'Get help with your PhynyxPro account, PYRO platform, or general inquiries.',
 }
 
