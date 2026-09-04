@@ -32,6 +32,17 @@ test('funnel event details allow only the fields defined for each event', async 
   )
 
   assert.deepEqual(
+    createFunnelEventDetail('investment_context_acknowledged', {
+      path: 'investment-context',
+      email: 'private@example.com',
+    }),
+    {
+      event: 'phynyx_investment_context_acknowledged',
+      path: 'investment-context',
+    },
+  )
+
+  assert.deepEqual(
     createFunnelEventDetail('qualification_result', {
       path: 'investment-context',
       phone: '555-123-4567',
@@ -54,6 +65,12 @@ test('funnel event details reject invalid placement and path values', async () =
   )
   assert.equal(
     createFunnelEventDetail('calendar_view', { path: 'booked' }),
+    null,
+  )
+  assert.equal(
+    createFunnelEventDetail('investment_context_acknowledged', {
+      path: 'calendar',
+    }),
     null,
   )
 })

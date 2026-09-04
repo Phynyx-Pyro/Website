@@ -1,41 +1,44 @@
-import { Metadata } from 'next'
+import { buildPageMetadata } from '@/lib/page-metadata'
 
-export const metadata: Metadata = {
+export const metadata = buildPageMetadata({
   title: 'Fulfillment Policy',
   description: 'Service fulfillment, cancellation, and refund policies for PhynyxPro services and the PYRO platform.',
-}
+  path: '/fulfillment',
+})
 
 export default function FulfillmentPage() {
   return (
     <div className="bg-ivory grain-subtle min-h-screen pt-32 pb-20 md:pt-40 md:pb-28">
       <div className="mx-auto max-w-[800px] px-6 lg:px-10">
         <h1 className="text-[36px] font-bold text-ink">Fulfillment Policy</h1>
-        <p className="mt-2 text-[14px] text-warm">Last updated: September 1, 2026</p>
+        <p className="mt-2 text-[14px] text-warm">Last updated: September 4, 2026</p>
 
         <div className="mt-10 space-y-8 text-[16px] leading-[1.7] text-ink/80">
+          <p>Unless otherwise stated in the client agreement, the following standard fulfillment terms apply. The signed client agreement controls to the extent any provision differs.</p>
+
           <section>
             <h2 className="text-[22px] font-semibold text-ink mb-3">Service Delivery</h2>
-            <p>PhynyxPro services are delivered digitally. Upon engagement, clients receive access to the PYRO platform, onboarding materials, and their assigned account team. Onboarding typically begins within 5 business days of agreement execution.</p>
+            <p>PhynyxPro services are delivered digitally according to the scope, prerequisites, and timing in the signed client agreement. Implementation estimates begin after required access, inputs, and approvals have been received; third-party reviews or dependencies may affect live-launch timing.</p>
           </section>
 
           <section>
             <h2 className="text-[22px] font-semibold text-ink mb-3">PYRO Platform Access</h2>
-            <p>PYRO platform access is provided on a monthly subscription basis. Access is activated upon the first payment and continues for the duration of the subscription period.</p>
+            <p>Platform access, billing intervals, activation requirements, and access duration are defined in the signed client agreement.</p>
           </section>
 
           <section>
             <h2 className="text-[22px] font-semibold text-ink mb-3">Cancellation</h2>
-            <p>Clients may cancel services with 30 days written notice. PYRO platform subscriptions can be cancelled at the end of any billing period. Managed service engagements follow the cancellation terms outlined in the individual service agreement.</p>
+            <p>Cancellation rights, notice requirements, termination dates, and any continuing obligations are governed by the signed client agreement.</p>
           </section>
 
           <section>
             <h2 className="text-[22px] font-semibold text-ink mb-3">Refunds</h2>
-            <p>PYRO platform fees are non-refundable for the current billing period. Managed service fees may be eligible for prorated refunds based on work completed, at PhynyxPro&apos;s discretion. Advertising spend passed through to platforms (Google, Meta, etc.) is non-refundable once spent.</p>
+            <p>Refund eligibility is governed by the signed client agreement. Advertising spend and other amounts already paid or committed to third-party platforms may be non-refundable once spent or committed.</p>
           </section>
 
           <section>
             <h2 className="text-[22px] font-semibold text-ink mb-3">Data Export</h2>
-            <p>Upon cancellation, clients may request an export of their data from the PYRO platform. We will provide data export within 30 days of the request. After 60 days post-cancellation, client data may be permanently deleted.</p>
+            <p>Where provided by the signed client agreement, clients may request an export of eligible data from the PYRO platform. Export format, timing, retention, and deletion are subject to that agreement, platform capabilities, and applicable law.</p>
           </section>
 
           <section>

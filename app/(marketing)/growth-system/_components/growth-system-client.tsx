@@ -7,11 +7,11 @@ import { AssessmentCtaLink } from '../../_components/assessment-cta-link'
 import { Target, MessageSquare, BarChart3, ArrowRight, Zap, Calendar, TrendingUp, Users, Bot, LineChart } from 'lucide-react'
 
 const pipeline = [
-  { label: 'Attract', icon: Target, desc: 'Campaigns reach relevant audiences' },
-  { label: 'Respond', icon: MessageSquare, desc: 'Ember can respond and route' },
-  { label: 'Request', icon: Calendar, desc: 'Appointment request is captured' },
-  { label: 'Track', icon: LineChart, desc: 'Available attribution is recorded' },
-  { label: 'Reactivate', icon: Users, desc: 'Reach eligible past leads' },
+  { label: 'Lead', icon: Target, desc: 'Campaign source and inquiry are recorded' },
+  { label: 'Request', icon: MessageSquare, desc: 'A scheduling request is captured' },
+  { label: 'Confirmed', icon: Calendar, desc: 'A booked time is recorded separately' },
+  { label: 'Show', icon: LineChart, desc: 'Attendance is verified as its own outcome' },
+  { label: 'Outcome', icon: Users, desc: 'The business records the next result' },
   { label: 'Improve', icon: TrendingUp, desc: 'Team reviews and adjusts' },
 ]
 
@@ -30,6 +30,19 @@ export function GrowthSystemClient() {
             <p className="mt-6 max-w-[560px] text-[19px] leading-[1.65] text-warm">
               Most agencies sell isolated tactics. PhynyxPro connects advertising, follow-up, and operations so the team can coordinate them around shared data.
             </p>
+            <div className="mt-8 flex flex-col items-start gap-4">
+              <AssessmentCtaLink placement="growth_system_hero" className="inline-flex items-center gap-2 rounded-lg bg-ink px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg transition-colors hover:bg-coal">
+                Book My Acquisition Diagnostic <ArrowRight className="h-4 w-4" />
+              </AssessmentCtaLink>
+              <div className="max-w-[620px] rounded-xl border border-ink/10 bg-white/65 px-4 py-3">
+                <p className="text-[14px] font-semibold text-ink">
+                  A standard core build is planned for 7–10 days after complete onboarding.
+                </p>
+                <p className="mt-1 text-[12px] leading-[1.55] text-warm">
+                  The window begins after required access, inputs, and approvals are complete. A2P/carrier registration, delayed client inputs or approvals, and other third-party dependencies can move the live-launch date.
+                </p>
+              </div>
+            </div>
           </AnimatedSection>
         </div>
       </section>
@@ -40,7 +53,7 @@ export function GrowthSystemClient() {
           <AnimatedSection>
             <p className="text-[11px] font-bold uppercase tracking-[.16em] text-warm mb-3">Visibility Across the Journey</p>
             <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink max-w-[600px]">
-              From first impression to booked appointment — and beyond.
+              Keep requests, confirmations, and outcomes distinct.
             </h2>
           </AnimatedSection>
 
@@ -117,10 +130,10 @@ export function GrowthSystemClient() {
               </div>
               <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink">Convert</h2>
               <p className="mt-5 text-[17px] leading-[1.65] text-warm">
-                CRM, automated follow-up, and appointment workflows that help move interest toward a booking. Ember can respond promptly on connected channels, with human handoff when needed.
+                CRM, approved response workflows, and appointment coordination that keep a request distinct from a confirmed booking. Ember can respond on connected channels, with human handoff when needed.
               </p>
               <ul className="mt-6 space-y-3">
-                {['CRM pipeline management', 'Automated SMS & email follow-up', 'Ember AI receptionist workflows', 'Appointment booking workflows'].map((item) => (
+                {['CRM pipeline management', 'Transactional request coordination and reminders', 'Ember AI receptionist workflows', 'Request and confirmation workflows'].map((item) => (
                   <li key={item} className="flex items-start gap-3 text-[15px] text-ink">
                     <Zap className="h-4 w-4 text-phoenix mt-1 shrink-0" />
                     {item}
@@ -132,7 +145,7 @@ export function GrowthSystemClient() {
             <AnimatedSection className="lg:col-span-7 order-1 lg:order-2" delay={150}>
               <div className="relative rounded-xl overflow-hidden shadow-lift bg-ivory">
                 <div className="aspect-[16/10] relative flex items-end justify-center bg-gradient-to-br from-ivory to-linen">
-                  <Image src="/images/ember-human-transparent.png" alt="Ember handling lead qualification and appointment booking" width={500} height={500} className="h-full w-auto object-contain object-bottom" />
+                  <Image src="/images/ember-human-transparent.png" alt="Ember supporting lead qualification and appointment requests" width={500} height={500} className="h-full w-auto object-contain object-bottom" />
                 </div>
                 <div className="absolute bottom-4 right-4 w-[260px] rounded-xl bg-night/90 backdrop-blur-md p-4 shadow-xl">
                   <div className="flex items-center gap-2 mb-3">
@@ -141,7 +154,7 @@ export function GrowthSystemClient() {
                   </div>
                   <div className="space-y-2">
                     <div className="rounded-lg bg-white/10 px-3 py-2 text-[12px] text-white/80">Hi! I&apos;d like to schedule an appointment.</div>
-                    <div className="rounded-lg bg-phoenix/20 px-3 py-2 text-[12px] text-phoenix/90">I can help you find an available appointment. Would you prefer morning or afternoon?</div>
+                    <div className="rounded-lg bg-phoenix/20 px-3 py-2 text-[12px] text-phoenix/90">I can capture your scheduling preference for the team. Would you prefer morning or afternoon?</div>
                   </div>
                 </div>
               </div>
@@ -180,10 +193,10 @@ export function GrowthSystemClient() {
               </div>
               <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-white">Operate & Improve</h2>
               <p className="mt-5 text-[17px] leading-[1.65] text-white/70">
-                Ember, database reactivation, systems coaching, and reporting that connects available campaign data with recorded outcomes.
+                Ember, systems coaching, reporting, and permission-based reactivation for contacts with recorded channel consent and no opt-out—connecting available campaign data with recorded outcomes.
               </p>
               <ul className="mt-6 space-y-3">
-                {['PYRO CRM & automation platform', 'Ember AI voice & chat receptionist', 'Database reactivation campaigns', 'Connected attribution reporting'].map((item) => (
+                {['PYRO CRM & automation platform', 'Ember AI voice & chat receptionist', 'Permission-based database reactivation', 'Connected attribution reporting'].map((item) => (
                   <li key={item} className="flex items-start gap-3 text-[15px] text-white/90">
                     <Zap className="h-4 w-4 text-phoenix mt-1 shrink-0" />
                     {item}
@@ -201,7 +214,7 @@ export function GrowthSystemClient() {
           <AnimatedSection>
             <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink">The system is the advantage.</h2>
             <p className="mt-5 max-w-[580px] mx-auto text-[17px] leading-[1.65] text-warm">
-              Isolated tactics create fragmented workflows. When advertising, follow-up, and operations share the same data and strategy, the three functions are easier to coordinate and improve.
+              Isolated tactics create fragmented workflows. When advertising, response, and appointment operations share the same data and strategy, the three functions are easier to coordinate and improve.
             </p>
           </AnimatedSection>
           <AnimatedSection delay={200}>

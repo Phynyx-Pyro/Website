@@ -8,8 +8,9 @@ import { ArrowRight, ArrowDown, BarChart3, DollarSign, Users, Calendar, Trending
 const funnelSteps = [
   { label: 'Advertising Investment', icon: DollarSign, desc: 'What you spend on campaigns' },
   { label: 'Leads Generated', icon: Users, desc: 'People who express interest' },
-  { label: 'Appointment Requests', icon: Calendar, desc: 'Inquiries that become bookings' },
-  { label: 'Appointments Attended', icon: ShieldCheck, desc: 'People who actually show up' },
+  { label: 'Appointment Requests', icon: Calendar, desc: 'Inquiries that take a scheduling step' },
+  { label: 'Confirmed Appointments', icon: ShieldCheck, desc: 'Requests with a booked time recorded' },
+  { label: 'Appointments Attended', icon: Eye, desc: 'Confirmed appointments recorded as attended' },
   { label: 'Recorded Customers / Outcomes', icon: TrendingUp, desc: 'Recorded care or service outcomes' },
   { label: 'Revenue Context', icon: BarChart3, desc: 'Recorded revenue associated with available source data' },
 ]
@@ -99,8 +100,9 @@ export function ResultsClient() {
               { title: 'Advertising Spend', desc: 'Available spend by connected platform and campaign.' },
               { title: 'Lead Volume & Source', desc: 'Available source and campaign records for captured leads.' },
               { title: 'Response Time', desc: 'Response-time records for inquiries on connected channels.' },
-              { title: 'Appointment Conversion', desc: 'Leads that became appointment requests, and the percentage that booked.' },
-              { title: 'Show Rate', desc: 'How many booked appointments were actually attended.' },
+              { title: 'Request Rate', desc: 'How many captured leads took an appointment-request step.' },
+              { title: 'Confirmation Rate', desc: 'How many appointment requests became confirmed bookings.' },
+              { title: 'Show Rate', desc: 'How many confirmed appointments were recorded as attended.' },
               { title: 'Revenue Context', desc: 'Recorded revenue associated with available source and campaign data.' },
             ].map((item, i) => (
               <AnimatedSection key={item?.title ?? i} delay={i * 80}>

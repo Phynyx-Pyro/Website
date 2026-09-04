@@ -104,7 +104,7 @@ export function IndustriesHubClient() {
                     <AssessmentCtaLink
                       placement="industries_other_card"
                       industry="other-service"
-                      data-cta-placement="industries-other-card"
+                      data-cta-placement="industries_other_card"
                       className="group block h-full"
                     >
                       {card}
@@ -130,7 +130,7 @@ export function IndustriesHubClient() {
             </p>
             <AssessmentCtaLink
               placement="industries_final"
-              data-cta-placement="industries-final"
+              data-cta-placement="industries_final"
               className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors"
             >
               Book My Acquisition Diagnostic <ArrowRight className="h-4 w-4" />

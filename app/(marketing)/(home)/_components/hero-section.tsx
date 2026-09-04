@@ -61,7 +61,7 @@ export function HeroSection() {
                 <AssessmentCtaLink
                   placement="homepage_hero"
                   industry="chiropractic"
-                  data-cta-placement="homepage-hero"
+                  data-cta-placement="homepage_hero"
                   className="group inline-flex items-center gap-3 rounded-lg bg-ink px-6 py-4 text-[14px] font-semibold text-white transition-colors hover:bg-coal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phoenix focus-visible:ring-offset-2 focus-visible:ring-offset-ivory sm:text-[15px]"
                 >
                   Book My Patient Acquisition Diagnostic

@@ -9,6 +9,7 @@ export type FunnelEventPayloads = {
   assessment_start: { entryPoint: string }
   assessment_step_complete: { step: 1 | 2 | 3 }
   qualification_result: { path: 'calendar' | 'investment-context' }
+  investment_context_acknowledged: { path: 'investment-context' }
   calendar_view: { path: 'calendar' | 'investment-context' }
 }
 
@@ -34,6 +35,10 @@ export type FunnelEventDetail =
   | {
       event: 'phynyx_calendar_view'
       path: 'calendar' | 'investment-context'
+    }
+  | {
+      event: 'phynyx_investment_context_acknowledged'
+      path: 'investment-context'
     }
 
 declare global {
@@ -87,6 +92,14 @@ export function createFunnelEventDetail<Name extends FunnelEventName>(
       const path = (payload as FunnelEventPayloads['calendar_view']).path
       return isQualificationPath(path)
         ? { event: 'phynyx_calendar_view', path }
+        : null
+    }
+    case 'investment_context_acknowledged': {
+      const path = (
+        payload as FunnelEventPayloads['investment_context_acknowledged']
+      ).path
+      return path === 'investment-context'
+        ? { event: 'phynyx_investment_context_acknowledged', path }
         : null
     }
   }

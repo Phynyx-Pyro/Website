@@ -53,9 +53,9 @@ export function SupportClient() {
         <div className="mx-auto max-w-[500px] px-6 text-center">
           <AnimatedSection>
             <CheckCircle2 className="h-16 w-16 text-phoenix mx-auto mb-6" />
-            <h1 className="text-[36px] font-bold text-ink">Request received</h1>
+            <h1 className="text-[36px] font-bold text-ink">Inquiry recorded</h1>
             <p className="mt-4 text-[17px] leading-[1.65] text-warm">
-              Thank you, {form?.name ?? 'there'}. Your request has been recorded with the email you provided.
+              Thank you, {form?.name ?? 'there'}. Your inquiry has been recorded with the email you provided. This confirmation does not indicate that it has been reviewed.
             </p>
             <Link href="/" className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors">
               Back to Home
@@ -72,9 +72,12 @@ export function SupportClient() {
         <AnimatedSection>
           <div className="text-center mb-10">
             <HelpCircle className="h-12 w-12 text-phoenix mx-auto mb-4" />
-            <h1 className="text-[36px] font-bold text-ink">Support</h1>
+            <h1 className="text-[36px] font-bold text-ink">Contact PhynyxPro</h1>
             <p className="mt-3 text-[17px] leading-[1.65] text-warm">
-              Have a question about your account, the PYRO platform, or how PhynyxPro works? Submit a support request.
+              Use this form to record a general question about your account, the PYRO platform, or PhynyxPro. It is not an emergency or guaranteed-response channel.
+            </p>
+            <p className="mt-3 text-[14px] leading-[1.6] text-warm">
+              Current clients with an urgent operational issue should use the contact route listed in their signed client agreement.
             </p>
           </div>
         </AnimatedSection>
@@ -120,11 +123,11 @@ export function SupportClient() {
 
             <button type="submit" disabled={!canSubmit || submitting} className={`mt-6 w-full inline-flex items-center justify-center gap-2 rounded-lg px-7 py-3.5 text-[15px] font-semibold transition-colors ${canSubmit && !submitting ? 'bg-phoenix text-white hover:bg-ember' : 'bg-ink/10 text-ink/40 cursor-not-allowed'}`}>
               <Send className="h-4 w-4" />
-              {submitting ? 'Submitting...' : 'Submit Support Request'}
+              {submitting ? 'Submitting...' : 'Submit Inquiry'}
             </button>
 
             <p className="mt-4 text-[12px] text-warm text-center">
-              Your information is handled according to our{' '}
+              Submitting this form records your inquiry only; it does not record marketing consent, subscribe you to marketing communications, or guarantee a response time. Your information is handled according to our{' '}
               <Link href="/privacy-policy" className="font-medium text-phoenix hover:underline">Privacy Policy</Link>.
             </p>
           </form>

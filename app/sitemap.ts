@@ -1,6 +1,8 @@
 import { MetadataRoute } from 'next'
 import { SITE_URL } from '@/lib/site'
 
+const LAST_CONTENT_REVIEW = new Date('2026-09-04T00:00:00.000Z')
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const pages = [
     '',
@@ -21,7 +23,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return pages.map((path: string) => ({
     url: `${SITE_URL}${path}`,
-    lastModified: new Date(),
+    lastModified: LAST_CONTENT_REVIEW,
     changeFrequency: path === '' ? 'weekly' : 'monthly',
     priority: path === '' ? 1 : path?.includes('/industries/') ? 0.7 : 0.8,
   }))

@@ -18,13 +18,19 @@ import { trackFunnelEvent } from '@/lib/funnel-events'
 type AssessmentCtaLinkProps = Omit<ComponentProps<typeof Link>, 'href'> & {
   placement: string
   industry?: AssessmentIndustry
+  audience?: 'healthcare'
 }
 
-function addIndustry(href: string, industry?: AssessmentIndustry) {
-  if (!industry) return href
+function addAssessmentContext(
+  href: string,
+  industry?: AssessmentIndustry,
+  audience?: 'healthcare',
+) {
+  if (!industry && !audience) return href
   const [pathname, query = ''] = href.split('?')
   const params = new URLSearchParams(query)
-  params.set('industry', industry)
+  if (industry) params.set('industry', industry)
+  if (audience) params.set('audience', audience)
   return `${pathname}?${params.toString()}`
 }
 
@@ -41,6 +47,7 @@ function getServerLocationSnapshot() {
 export function AssessmentCtaLink({
   placement,
   industry,
+  audience,
   onClick,
   ...props
 }: AssessmentCtaLinkProps) {
@@ -60,7 +67,7 @@ export function AssessmentCtaLink({
   }, [currentSearch, landingPath, locationSnapshot])
 
   const href = locationSnapshot
-    ? addIndustry(
+    ? addAssessmentContext(
         buildAssessmentHref(
           currentSearch,
           placement,
@@ -68,13 +75,19 @@ export function AssessmentCtaLink({
           sessionAttribution,
         ),
         industry,
+        audience,
       )
-    : buildAssessmentStartHref(placement, industry)
+    : addAssessmentContext(
+        buildAssessmentStartHref(placement, industry),
+        undefined,
+        audience,
+      )
 
   return (
     <Link
       {...props}
       href={href}
+      data-cta-placement={placement}
       onClick={(event) => {
         trackFunnelEvent('diagnostic_cta_click', { placement })
         onClick?.(event)

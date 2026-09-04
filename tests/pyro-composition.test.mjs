@@ -40,14 +40,15 @@ test('Ember is centered, faded, and responsive above the SMS workflow', async ()
 test('homepage workflow disclosure belongs to the horizontal workflow figure', async () => {
   const source = await readFile(homepagePyroUrl, 'utf8')
   const disclosure =
-    'Illustrative workflow. Scripts, escalation rules, and calendar logic are configured for the practice.'
+    'Illustrative workflow — not a promise of availability or autonomous booking. Scripts, escalation rules, calendar logic, and confirmation behavior are configured for each business.'
 
   assert.equal(source.split(disclosure).length - 1, 1)
   assert.ok(source.indexOf('<figure') < source.indexOf('<figcaption'))
-  assert.ok(source.indexOf('<ol') < source.indexOf('<figcaption'))
+  assert.ok(source.indexOf('<figcaption') < source.indexOf('<ol'))
   assert.match(
     source,
-    /<figcaption className="[^"]*order-1[^"]*lg:order-2[^"]*lg:text-center[^"]*">/,
+    /<figcaption className="[^"]*border-l[^"]*border-flame\/45[^"]*">/,
   )
+  assert.match(source, /not a promise of availability or autonomous booking/i)
   assert.doesNotMatch(source, /Example workflow shown for explanation/)
 })

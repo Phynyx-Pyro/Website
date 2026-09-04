@@ -7,17 +7,17 @@ import { Waveform } from '../../_components/waveform'
 import { ArrowRight, Bot, Phone, MessageSquare, CalendarCheck, BarChart3, Database, Clock, Shield, Headphones } from 'lucide-react'
 
 const features = [
-  { icon: Phone, title: 'AI Voice Agent', desc: 'Ember can support configured inbound-call coverage, gather approved details, and route appointment requests.' },
-  { icon: MessageSquare, title: 'AI Chat & SMS', desc: 'Configured SMS and chat workflows can qualify and nurture conversations, with defined staff handoff rules.' },
-  { icon: CalendarCheck, title: 'Automated Booking', desc: 'Connect approved calendars so Ember can offer available times, submit booking requests, and support confirmations.' },
-  { icon: Database, title: 'Database Reactivation', desc: 'Run approved outreach to eligible existing contacts through personalized, automated workflows.' },
+  { icon: Phone, title: 'AI Voice Agent', desc: 'Ember can support configured inbound-call workflows, gather approved details, and route appointment requests.' },
+  { icon: MessageSquare, title: 'AI Chat & SMS', desc: 'Configured inbound and transactional SMS and chat workflows can gather approved details and coordinate appointment requests, with defined staff handoff rules.' },
+  { icon: CalendarCheck, title: 'Appointment Coordination', desc: 'Connect approved calendars and scheduling rules so Ember can capture preferences or appointment requests; the configured calendar or staff workflow handles confirmation.' },
+  { icon: Database, title: 'Database Reactivation', desc: 'Permission-based outreach can be configured only for eligible existing contacts with recorded channel consent and no opt-out.' },
   { icon: BarChart3, title: 'CRM & Pipeline', desc: 'Track connected leads from first touch through recorded appointment outcomes in one working view.' },
   { icon: Shield, title: 'Attribution Engine', desc: 'Connect available campaign, contact, and outcome data so the team can review where inquiries move or stall.' },
 ]
 
 const chatDemo = [
   { from: 'prospect', text: 'Hi, I saw your ad. Do you have any openings this week?' },
-  { from: 'ember', text: 'Welcome! Yes, we have several openings. To help find the best time for you — are you looking for a morning or afternoon appointment?' },
+  { from: 'ember', text: 'Welcome! I can capture a scheduling preference for the team. Are you looking for a morning or afternoon appointment?' },
   { from: 'prospect', text: 'Afternoon works better. Thursday or Friday if possible.' },
   { from: 'ember', text: 'I can submit a request for Thursday afternoon or Friday afternoon. Which would you prefer?' },
   { from: 'prospect', text: 'Thursday afternoon, please.' },
@@ -38,7 +38,7 @@ export function PyroEmberClient() {
                 Your AI receptionist.
               </h1>
               <p className="mt-6 max-w-[480px] text-[19px] leading-[1.65] text-white/70">
-                PYRO coordinates response, qualification, booking, reminders, and reporting. Ember is the AI receptionist inside PYRO, handling approved conversations and handing off to staff when human judgment is needed.
+                PYRO coordinates response, qualification, appointment requests, confirmations, reminders, and reporting. Ember is the AI receptionist inside PYRO, handling approved conversations and handing off to staff when human judgment is needed.
               </p>
               <div className="mt-8" aria-hidden="true">
                 <Waveform className="opacity-60" />

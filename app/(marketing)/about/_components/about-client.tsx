@@ -123,7 +123,7 @@ export function AboutClient() {
             </p>
             <AssessmentCtaLink
               placement="about_final"
-              data-cta-placement="about-final"
+              data-cta-placement="about_final"
               className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors"
             >
               Book My Acquisition Diagnostic <ArrowRight className="h-4 w-4" />

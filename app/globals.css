@@ -156,7 +156,7 @@
 }
 
 @media (max-width: 1023px) {
-  body:has([data-cta-placement="homepage-mobile-sticky"]) footer {
+  body:has([data-cta-placement="homepage_mobile_sticky"]) footer {
     padding-bottom: 4.75rem;
   }
 }

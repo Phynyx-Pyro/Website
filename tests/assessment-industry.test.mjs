@@ -80,6 +80,27 @@ test('combined dental-medspa CTAs do not force a dental prefill', async () => {
     headerSource,
     /pathname\.startsWith\(["']\/industries\/home-services["']\)\) return ["']home-services["']/,
   )
+  assert.match(
+    headerSource,
+    /pathname\.startsWith\(\s*["']\/industries\/dental-medspa["'],?\s*\)/,
+  )
+  assert.equal(headerSource.match(/audience=\{healthcareAudience\}/g)?.length, 2)
   assert.equal(chiropracticPageSource.match(/industry=["']chiropractic["']/g)?.length, 2)
   assert.equal(homeServicesPageSource.match(/industry=["']home-services["']/g)?.length, 2)
+})
+
+test('an explicit non-healthcare selection overrides broad audience context', async () => {
+  const source = await readFile(
+    new URL(
+      '../app/(marketing)/growth-assessment/_components/growth-assessment-client.tsx',
+      import.meta.url,
+    ),
+    'utf8',
+  )
+
+  assert.match(
+    source,
+    /const healthcareContext = selectedIndustry\s*\?\s*isHealthcareAssessmentIndustry\(selectedIndustry\)\s*:\s*healthcareAudience/,
+  )
+  assert.match(source, /!selectedIndustry && healthcareAudience/)
 })

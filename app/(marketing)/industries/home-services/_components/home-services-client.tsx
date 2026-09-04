@@ -26,7 +26,7 @@ export function HomeServicesClient() {
               <AssessmentCtaLink
                 placement="home_services_hero"
                 industry="home-services"
-                data-cta-placement="home-services-hero"
+                data-cta-placement="home_services_hero"
                 className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors"
               >
                 Book My Acquisition Diagnostic <ArrowRight className="h-4 w-4" />
@@ -53,10 +53,10 @@ export function HomeServicesClient() {
           <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               { icon: Phone, title: 'Prompt Lead Response', desc: 'Ember can support configured phone, SMS, and chat workflows, with staff handoff when needed.' },
-              { icon: CalendarCheck, title: 'Estimate & Job Requests', desc: 'Connected scheduling can offer approved availability and capture the next requested step.' },
-              { icon: Clock, title: 'After-Hours Coverage', desc: 'Configured workflows can acknowledge after-hours and weekend inquiries and route follow-up.' },
-              { icon: BarChart3, title: 'Connected Reporting', desc: 'Bring available ad, lead, booking, and recorded revenue data into one review path.' },
-              { icon: Bot, title: 'Approved Follow-Up', desc: 'Configured SMS and email sequences can re-engage eligible leads who have gone quiet.' },
+              { icon: CalendarCheck, title: 'Estimate & Job Requests', desc: 'Connected scheduling can capture the next requested step against configured rules; staff or the connected calendar confirms availability.' },
+              { icon: Clock, title: 'After-Hours Inquiry Handling', desc: 'Configured workflows can acknowledge after-hours and weekend inquiries and route follow-up.' },
+              { icon: BarChart3, title: 'Connected Reporting', desc: 'Bring available ad, lead, request, confirmed appointment, and recorded revenue data into one review path.' },
+              { icon: Bot, title: 'Permission-Based Follow-Up', desc: 'Re-engagement can be configured only for eligible contacts with recorded channel consent and no opt-out.' },
               { icon: Wrench, title: 'Service Workflows', desc: 'The workflow can be configured around estimate requests, job scheduling, and service follow-up.' },
             ].map((item, i) => (
               <AnimatedSection key={item?.title ?? i} delay={i * 80}>
@@ -81,7 +81,7 @@ export function HomeServicesClient() {
             <AssessmentCtaLink
               placement="home_services_final"
               industry="home-services"
-              data-cta-placement="home-services-final"
+              data-cta-placement="home_services_final"
               className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors"
             >
               Book My Acquisition Diagnostic <ArrowRight className="h-4 w-4" />

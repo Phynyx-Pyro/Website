@@ -25,7 +25,8 @@ export function DentalMedspaClient() {
               </p>
               <AssessmentCtaLink
                 placement="dental_medspa_hero"
-                data-cta-placement="dental-medspa-hero"
+                audience="healthcare"
+                data-cta-placement="dental_medspa_hero"
                 className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors"
               >
                 Book My Patient Acquisition Diagnostic <ArrowRight className="h-4 w-4" />
@@ -53,10 +54,10 @@ export function DentalMedspaClient() {
             {[
               { icon: Star, title: 'High-Consideration Appointments', desc: 'Keep cosmetic, elective, and consultation inquiries visible through the next recorded step.' },
               { icon: Clock, title: 'Prompt Response', desc: 'Ember can support approved conversation flows and route staff handoffs on connected channels.' },
-              { icon: Phone, title: 'After-Hours Coverage', desc: 'Configured workflows can acknowledge off-hours inquiries and capture an appointment request for follow-up.' },
+              { icon: Phone, title: 'After-Hours Inquiry Handling', desc: 'Configured workflows can acknowledge off-hours inquiries and capture an appointment request for follow-up.' },
               { icon: CalendarCheck, title: 'Confirmation & Reminders', desc: 'Approved confirmation and reminder sequences support the team’s attendance workflow.' },
               { icon: BarChart3, title: 'Treatment-Path Visibility', desc: 'Connect available source and campaign data with appointment status and recorded treatment outcomes.' },
-              { icon: Bot, title: 'Eligible-Patient Reactivation', desc: 'Approved outreach can re-engage eligible existing contacts based on the practice’s chosen criteria.' },
+              { icon: Bot, title: 'Eligible-Patient Reactivation', desc: 'Permission-based outreach can be configured for eligible existing contacts with recorded channel consent and no opt-out.' },
             ].map((item, i) => (
               <AnimatedSection key={item?.title ?? i} delay={i * 80}>
                 <div className="rounded-xl bg-ivory p-6 shadow-lg hover:shadow-xl transition-shadow h-full">
@@ -73,13 +74,14 @@ export function DentalMedspaClient() {
       <section className="bg-ivory grain-subtle py-20 md:py-28">
         <div className="mx-auto max-w-[1200px] px-6 lg:px-10 text-center">
           <AnimatedSection>
-            <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink">Ready to map the path to a booked appointment?</h2>
+            <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink">Ready to map the path from request to confirmed appointment?</h2>
             <p className="mt-4 max-w-[500px] mx-auto text-[17px] leading-[1.65] text-warm">
               Start with a 3-minute fit check. If there may be a match, continue to a working diagnostic using last month&apos;s spend, leads, appointment requests, visits, and recorded outcomes.
             </p>
             <AssessmentCtaLink
               placement="dental_medspa_final"
-              data-cta-placement="dental-medspa-final"
+              audience="healthcare"
+              data-cta-placement="dental_medspa_final"
               className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors"
             >
               Book My Patient Acquisition Diagnostic <ArrowRight className="h-4 w-4" />

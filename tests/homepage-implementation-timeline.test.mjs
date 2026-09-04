@@ -66,3 +66,33 @@ test('homepage renders the renamed implementation timeline component', async () 
   const pyro = source.indexOf('<PyroSection />')
   assert.ok(growthSystem >= 0 && growthSystem < timeline && timeline < pyro)
 })
+
+test('growth-system hero repeats the qualified launch timeline and normalized CTA', async () => {
+  const source = await readFile(
+    new URL(
+      '../app/(marketing)/growth-system/_components/growth-system-client.tsx',
+      import.meta.url,
+    ),
+    'utf8',
+  )
+  const normalizedSource = source.replace(/\s+/g, ' ')
+
+  for (const copy of [
+    'A standard core build is planned for 7–10 days after complete onboarding.',
+    'The window begins after required access, inputs, and approvals are complete.',
+    'A2P/carrier registration',
+    'delayed client inputs or approvals',
+    'third-party dependencies can move the live-launch date',
+  ]) {
+    assert.ok(
+      normalizedSource.includes(copy),
+      `Missing required growth-system timeline qualification: ${copy}`,
+    )
+  }
+
+  assert.match(source, /placement="growth_system_hero"/)
+  const stages = ['Lead', 'Request', 'Confirmed', 'Show', 'Outcome', 'Improve']
+  const positions = stages.map((stage) => source.indexOf(`label: '${stage}'`))
+  assert.ok(positions.every((position) => position >= 0))
+  assert.deepEqual(positions, [...positions].sort((left, right) => left - right))
+})

@@ -48,10 +48,13 @@ type FitPath = 'calendar' | 'investment-context'
 
 type AssessmentResult = {
   path: FitPath
-  bookingContact: BookingContact
+  bookingContact: BookingContact | null
 }
 
-function getJourneyCopy(industry: AssessmentIndustry | undefined) {
+function getJourneyCopy(
+  industry: AssessmentIndustry | undefined,
+  healthcareAudience = false,
+) {
   if (industry === 'chiropractic') {
     return {
       stages: 'lead, appointment request, confirmation, Day 1 show, and start of care',
@@ -69,7 +72,8 @@ function getJourneyCopy(industry: AssessmentIndustry | undefined) {
   if (
     industry === 'dental' ||
     industry === 'medspa' ||
-    industry === 'other-healthcare'
+    industry === 'other-healthcare' ||
+    healthcareAudience
   ) {
     return {
       stages: 'lead, appointment request, confirmation, visit, and practice-recorded outcome',
@@ -91,6 +95,8 @@ export function GrowthAssessmentClient() {
   const [assessmentResult, setAssessmentResult] =
     useState<AssessmentResult | null>(null)
   const [investmentAccepted, setInvestmentAccepted] = useState(false)
+  const [acknowledgingInvestment, setAcknowledgingInvestment] = useState(false)
+  const [healthcareAudience, setHealthcareAudience] = useState(false)
   const [website, setWebsite] = useState('')
   const [error, setError] = useState('')
   const submissionIdRef = useRef('')
@@ -102,11 +108,16 @@ export function GrowthAssessmentClient() {
   const resultHeadingRef = useRef<HTMLHeadingElement>(null)
   const resultPath = assessmentResult?.path ?? null
   const selectedIndustry = parseAssessmentIndustry(form.industry)
-  const healthcareContext = isHealthcareAssessmentIndustry(selectedIndustry)
+  const healthcareContext = selectedIndustry
+    ? isHealthcareAssessmentIndustry(selectedIndustry)
+    : healthcareAudience
   const diagnosticName = healthcareContext
     ? 'Patient Acquisition Diagnostic'
     : 'Acquisition Diagnostic'
-  const journeyCopy = getJourneyCopy(selectedIndustry)
+  const journeyCopy = getJourneyCopy(
+    selectedIndustry,
+    !selectedIndustry && healthcareAudience,
+  )
 
   const markAssessmentStarted = useCallback(() => {
     if (assessmentStartedRef.current) return
@@ -152,9 +163,11 @@ export function GrowthAssessmentClient() {
     const frame = window.requestAnimationFrame(() => {
       if (industryPrefillAppliedRef.current) return
       industryPrefillAppliedRef.current = true
+      const searchParams = new URLSearchParams(window.location.search)
       const requestedIndustry = parseAssessmentIndustry(
-        new URLSearchParams(window.location.search).get('industry'),
+        searchParams.get('industry'),
       )
+      setHealthcareAudience(searchParams.get('audience') === 'healthcare')
       if (!requestedIndustry) return
 
       setForm((current) => (
@@ -178,7 +191,32 @@ export function GrowthAssessmentClient() {
   }
 
   const canProceed1 = (form?.firstName?.trim?.()?.length ?? 0) > 0 && (form?.email?.trim?.()?.length ?? 0) > 0 && (form?.phone?.trim?.()?.length ?? 0) > 0
-  const canProceed2 = (form?.businessName?.trim?.()?.length ?? 0) > 0 && (form?.industry?.trim?.()?.length ?? 0) > 0
+  const canProceed2 =
+    (form?.businessName?.trim?.()?.length ?? 0) > 0 &&
+    (form?.industry?.trim?.()?.length ?? 0) > 0 &&
+    (form?.annualRevenue?.trim?.()?.length ?? 0) > 0
+
+  const claimCalendarHandoff = async (investmentContextAcknowledged = false) => {
+    const bookingResponse = await fetch('/api/booking-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ investmentContextAcknowledged }),
+    })
+    const bookingResult = (await bookingResponse.json().catch(() => null)) as {
+      message?: string
+      bookingContact?: unknown
+    } | null
+    const bookingContact = bookingResult?.bookingContact
+
+    if (!bookingResponse.ok || !isBookingContact(bookingContact)) {
+      throw new Error(
+        bookingResult?.message ??
+          'We could not connect your assessment to the calendar. Please try again.',
+      )
+    }
+
+    return bookingContact
+  }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -222,20 +260,8 @@ export function GrowthAssessmentClient() {
         trackFunnelEvent('qualification_result', { path: result.fit.path })
       }
 
-      const bookingResponse = await fetch('/api/booking-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: '{}',
-      })
-      const bookingResult = (await bookingResponse.json().catch(() => null)) as {
-        message?: string
-        bookingContact?: unknown
-      } | null
-      const bookingContact = bookingResult?.bookingContact
-
-      if (!bookingResponse.ok || !isBookingContact(bookingContact)) {
-        throw new Error('We could not connect your assessment to the calendar. Please try again.')
-      }
+      const bookingContact =
+        result.fit.path === 'calendar' ? await claimCalendarHandoff() : null
       setAssessmentResult({
         path: result.fit.path,
         bookingContact,
@@ -247,9 +273,35 @@ export function GrowthAssessmentClient() {
     }
   }
 
+  const handleInvestmentAcknowledgement = async () => {
+    setAcknowledgingInvestment(true)
+    setError('')
+
+    try {
+      const bookingContact = await claimCalendarHandoff(true)
+      setAssessmentResult((current) =>
+        current ? { ...current, bookingContact } : current,
+      )
+      setInvestmentAccepted(true)
+      trackFunnelEvent('investment_context_acknowledged', {
+        path: 'investment-context',
+      })
+    } catch (acknowledgementError: unknown) {
+      setError(
+        acknowledgementError instanceof Error
+          ? acknowledgementError.message
+          : 'We could not record your acknowledgement. Please try again.',
+      )
+    } finally {
+      setAcknowledgingInvestment(false)
+    }
+  }
+
   if (assessmentResult) {
     const { path: resultPath, bookingContact } = assessmentResult
-    const showCalendar = resultPath === 'calendar' || investmentAccepted
+    const showCalendar = Boolean(
+      bookingContact && (resultPath === 'calendar' || investmentAccepted),
+    )
 
     return (
       <div className="bg-ivory grain-subtle min-h-screen pt-32 pb-20">
@@ -264,9 +316,11 @@ export function GrowthAssessmentClient() {
                     : 'Let’s review the investment context together.'}
                 </h1>
                 <p className="mt-4 mx-auto max-w-[660px] text-[17px] leading-[1.65] text-warm">
-                  Thank you, {bookingContact.firstName || 'there'}. Choose a convenient time below for the working diagnostic. Bring last month&apos;s {journeyCopy.metrics}.
+                  Thank you, {bookingContact?.firstName || 'there'}. Choose a convenient time below for the working diagnostic. Bring last month&apos;s {journeyCopy.metrics}.
                 </p>
-                <BookingCalendar contact={bookingContact} qualificationPath={resultPath} />
+                {bookingContact && (
+                  <BookingCalendar contact={bookingContact} qualificationPath={resultPath} />
+                )}
                 <Link href="/" className="mt-8 inline-flex items-center gap-2 text-[14px] font-semibold text-phoenix hover:underline">
                   Back to Home <ArrowRight className="h-4 w-4" />
                 </Link>
@@ -307,12 +361,20 @@ export function GrowthAssessmentClient() {
 
                 <button
                   type="button"
-                  onClick={() => setInvestmentAccepted(true)}
-                  className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-phoenix px-7 py-4 text-[15px] font-semibold text-white shadow-lg transition-colors hover:bg-ember"
+                  onClick={handleInvestmentAcknowledgement}
+                  disabled={acknowledgingInvestment}
+                  className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-phoenix px-7 py-4 text-[15px] font-semibold text-white shadow-lg transition-colors hover:bg-ember disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  I understand — show diagnostic times
+                  {acknowledgingInvestment
+                    ? 'Recording acknowledgement…'
+                    : 'I understand — show diagnostic times'}
                   <ArrowRight className="h-4 w-4" />
                 </button>
+                {error && (
+                  <p role="alert" className="mt-4 text-[13px] text-red-600">
+                    {error}
+                  </p>
+                )}
                 <Link href="/" className="mt-5 inline-flex text-[13px] font-semibold text-warm hover:text-ink">
                   Not right now — return home
                 </Link>
@@ -458,14 +520,14 @@ export function GrowthAssessmentClient() {
                     </select>
                   </div>
                   <div>
-                    <label htmlFor="assessment-annual-revenue" className="block text-[13px] font-medium text-ink mb-1.5">Annual Revenue</label>
-                    <select id="assessment-annual-revenue" value={form?.annualRevenue ?? ''} onChange={(e) => update('annualRevenue', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition">
+                    <label htmlFor="assessment-annual-revenue" className="block text-[13px] font-medium text-ink mb-1.5">Annual business revenue (last 12 months) *</label>
+                    <select id="assessment-annual-revenue" required value={form?.annualRevenue ?? ''} onChange={(e) => update('annualRevenue', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition">
                       <option value="">Select range</option>
                       <option value="under-250k">Under $250K</option>
-                      <option value="250k-500k">$250K – $500K</option>
-                      <option value="500k-1m">$500K – $1M</option>
-                      <option value="1m-5m">$1M – $5M</option>
-                      <option value="5m-plus">$5M+</option>
+                      <option value="250k-500k">$250K – $499,999</option>
+                      <option value="500k-1m">$500K – $999,999</option>
+                      <option value="1m-5m">$1M – $4,999,999</option>
+                      <option value="5m-plus">$5M or more</option>
                     </select>
                   </div>
                 </div>
@@ -513,14 +575,14 @@ export function GrowthAssessmentClient() {
                     <textarea id="assessment-current-marketing" value={form?.currentMarketing ?? ''} onChange={(e) => update('currentMarketing', e?.target?.value ?? '')} rows={3} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink placeholder:text-warm/50 focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition resize-none" placeholder="What are you doing for marketing today? (Google Ads, social, referrals, etc.)" />
                   </div>
                   <div>
-                    <label htmlFor="assessment-monthly-budget" className="block text-[13px] font-medium text-ink mb-1.5">Monthly marketing budget</label>
-                    <select id="assessment-monthly-budget" value={form?.monthlyBudget ?? ''} onChange={(e) => update('monthlyBudget', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition">
+                    <label htmlFor="assessment-monthly-budget" className="block text-[13px] font-medium text-ink mb-1.5">Planned monthly marketing budget *</label>
+                    <select id="assessment-monthly-budget" required value={form?.monthlyBudget ?? ''} onChange={(e) => update('monthlyBudget', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition">
                       <option value="">Select range</option>
                       <option value="under-1k">Under $1,000/mo</option>
-                      <option value="1k-3k">$1,000 – $3,000/mo</option>
-                      <option value="3k-5k">$3,000 – $5,000/mo</option>
-                      <option value="5k-10k">$5,000 – $10,000/mo</option>
-                      <option value="10k-plus">$10,000+/mo</option>
+                      <option value="1k-3k">$1,000 – $2,999/mo</option>
+                      <option value="3k-5k">$3,000 – $4,999/mo</option>
+                      <option value="5k-10k">$5,000 – $9,999/mo</option>
+                      <option value="10k-plus">$10,000/mo or more</option>
                     </select>
                   </div>
                 </div>
@@ -536,7 +598,7 @@ export function GrowthAssessmentClient() {
                   <button type="button" onClick={() => setStep(2)} className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg border border-ink/20 px-7 py-3.5 text-[15px] font-semibold text-ink hover:bg-ink hover:text-white transition-colors">
                     <ArrowLeft className="h-4 w-4" /> Back
                   </button>
-                  <button type="submit" disabled={submitting} className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white hover:bg-ember transition-colors disabled:opacity-50">
+                  <button type="submit" disabled={submitting || !form.monthlyBudget} className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white hover:bg-ember transition-colors disabled:cursor-not-allowed disabled:opacity-50">
                     {submitting ? 'Checking fit...' : 'Complete Fit Check'}
                   </button>
                 </div>

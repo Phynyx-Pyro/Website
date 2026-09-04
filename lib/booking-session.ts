@@ -1,4 +1,4 @@
-import { and, eq, gt, isNull, lt } from 'drizzle-orm'
+import { and, eq, gt, gte, isNull, lt, ne, or } from 'drizzle-orm'
 import { getDb } from '@/db'
 import { bookingHandoffs, growthAssessments } from '@/db/schema'
 import { hashText } from './public-form-security'
@@ -52,12 +52,100 @@ export async function issueBookingSession(submissionId: string, requestUrl: stri
   return serializeBookingCookie(token, requestUrl)
 }
 
-export async function claimBookingSession(token: string) {
+type ClaimableBookingContact = {
+  submissionId: string
+  contactId: string
+  firstName: string
+  lastName: string
+  email: string
+  phone: string
+  fitPath: string | null
+}
+
+export async function claimBookingSession(
+  token: string,
+  beforeClaim?: (contact: ClaimableBookingContact) => Promise<void>,
+) {
   if (!/^[0-9a-f]{64}$/.test(token)) return null
 
   const tokenHash = await hashText(token)
   const now = new Date()
   const db = getDb()
+  const [handoff] = await db
+    .select({ submissionId: bookingHandoffs.submissionId })
+    .from(bookingHandoffs)
+    .where(
+      and(
+        eq(bookingHandoffs.tokenHash, tokenHash),
+        isNull(bookingHandoffs.claimedAt),
+        gt(bookingHandoffs.expiresAt, now),
+      ),
+    )
+    .limit(1)
+
+  if (!handoff) return null
+
+  const [assessment] = await db
+    .select({
+      contactId: growthAssessments.ghlContactId,
+      firstName: growthAssessments.firstName,
+      lastName: growthAssessments.lastName,
+      email: growthAssessments.email,
+      phone: growthAssessments.phone,
+      fitPath: growthAssessments.fitPath,
+      createdAt: growthAssessments.createdAt,
+      updatedAt: growthAssessments.updatedAt,
+    })
+    .from(growthAssessments)
+    .where(
+      and(
+        eq(growthAssessments.id, handoff.submissionId),
+        eq(growthAssessments.status, 'crm-synced'),
+      ),
+    )
+    .limit(1)
+
+  if (!assessment?.contactId) return null
+
+  // Once another assessment for this CRM contact starts writing metadata,
+  // an older handoff must fail closed even if that newer write stops before
+  // advancing the CRM's final submission marker. A later-created assessment
+  // or an older assessment retried after this assessment finished syncing
+  // both count. Using the assessment's sync timestamp keeps the guard intact
+  // when an exact retry issues a replacement handoff token later.
+  const [supersedingAssessment] = await db
+    .select({ id: growthAssessments.id })
+    .from(growthAssessments)
+    .where(
+      and(
+        or(
+          eq(growthAssessments.ghlContactId, assessment.contactId),
+          and(
+            eq(growthAssessments.email, assessment.email),
+            eq(growthAssessments.phone, assessment.phone),
+          ),
+        ),
+        ne(growthAssessments.id, handoff.submissionId),
+        or(
+          gte(growthAssessments.createdAt, assessment.createdAt),
+          gte(growthAssessments.updatedAt, assessment.updatedAt),
+        ),
+      ),
+    )
+    .limit(1)
+
+  if (supersedingAssessment) return null
+
+  const bookingContact = {
+    submissionId: handoff.submissionId,
+    contactId: assessment.contactId,
+    firstName: assessment.firstName,
+    lastName: assessment.lastName,
+    email: assessment.email,
+    phone: assessment.phone,
+    fitPath: assessment.fitPath,
+  }
+
   const [claimed] = await db
     .update(bookingHandoffs)
     .set({ claimedAt: now })
@@ -72,30 +160,23 @@ export async function claimBookingSession(token: string) {
 
   if (!claimed) return null
 
-  const [assessment] = await db
-    .select({
-      contactId: growthAssessments.ghlContactId,
-      firstName: growthAssessments.firstName,
-      lastName: growthAssessments.lastName,
-      email: growthAssessments.email,
-      phone: growthAssessments.phone,
-    })
-    .from(growthAssessments)
-    .where(
-      and(
-        eq(growthAssessments.id, claimed.submissionId),
-        eq(growthAssessments.status, 'crm-synced'),
-      ),
-    )
-    .limit(1)
-
-  if (!assessment?.contactId) return null
-
-  return {
-    contactId: assessment.contactId,
-    firstName: assessment.firstName,
-    lastName: assessment.lastName,
-    email: assessment.email,
-    phone: assessment.phone,
+  try {
+    await beforeClaim?.(bookingContact)
+    return bookingContact
+  } catch (error) {
+    // The claim is a short reservation while required external work runs. If
+    // that work fails, release only this reservation so the visitor can retry;
+    // concurrent requests cannot both reach the external write.
+    await db
+      .update(bookingHandoffs)
+      .set({ claimedAt: null })
+      .where(
+        and(
+          eq(bookingHandoffs.tokenHash, tokenHash),
+          eq(bookingHandoffs.claimedAt, now),
+        ),
+      )
+      .returning({ submissionId: bookingHandoffs.submissionId })
+    throw error
   }
 }

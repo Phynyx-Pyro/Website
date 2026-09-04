@@ -85,15 +85,15 @@ export function ChiropracticClient() {
                 The system that closes the gap.
               </h2>
               <p className="mt-5 text-[17px] leading-[1.65] text-warm">
-                PhynyxPro connects paid acquisition with response, qualification, booking, reminders, and reporting. When an inquiry arrives by phone, chat, or form, PYRO coordinates the workflow and Ember can handle the approved conversation. Connected records make it easier to review appointment requests, shows, and starts.
+                PhynyxPro connects paid acquisition with response, qualification, appointment requests, staff confirmation, reminders, and reporting. When an inquiry arrives by phone, chat, or form, PYRO coordinates the workflow and Ember can handle the approved conversation. Connected records make it easier to review requests, confirmed appointments, shows, and starts.
               </p>
               <ul className="mt-6 space-y-3">
                 {[
                   'Managed advertising built around agreed audiences and offers',
                   'Ember AI for configured response windows and channels',
-                  'Automated follow-up with defined staff handoffs',
+                  'Transactional appointment coordination with defined staff handoffs',
                   'PYRO pipeline and recorded-outcome reporting',
-                  'Optional reactivation for eligible patient lists',
+                  'Permission-based reactivation for patient lists with recorded channel consent and no opt-out',
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-3 text-[15px] text-ink">
                     <Zap className="h-4 w-4 text-phoenix mt-1 shrink-0" />
@@ -120,7 +120,7 @@ export function ChiropracticClient() {
           <AnimatedSection>
             <Bot className="h-10 w-10 text-phoenix mx-auto mb-4" />
             <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-white">
-              Meet Ember. Your after-hours front desk.
+              Meet Ember. Configured help for after-hours inquiries.
             </h2>
             <p className="mt-4 max-w-[520px] mx-auto text-[17px] leading-[1.65] text-white/70">
               When an inquiry arrives after hours, Ember can respond, gather approved details, and route an appointment request. PYRO records the known outcome, and your team can take over when human judgment is needed.

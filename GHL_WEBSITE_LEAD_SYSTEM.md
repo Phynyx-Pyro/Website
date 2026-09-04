@@ -21,6 +21,11 @@ workflows, tags, and fields.
 
 ## Implementation status
 
+This section records the last known external state, not an authorization to
+deploy the current repository candidate. Re-read the production UI and attach
+current evidence before launch; external configuration may have changed since
+the observations below.
+
 - The pipeline, its ten stages, all listed tags, both custom-field folders, and
   their fields have been created in the Phynyx location without changing legacy
   assets.
@@ -55,6 +60,10 @@ workflows, tags, and fields.
    out, Won, Lost, or `automation:pause`.
 7. Do not send marketing SMS or email until consent language, evidence, and
    suppression rules have been approved and tested.
+
+The first principle is a launch invariant, not a capability guaranteed by the
+published API. The production activation gate below must be satisfied before
+the team claims strict one-contact/one-open-opportunity behavior.
 
 ## Pipeline
 
@@ -142,7 +151,7 @@ represent the current sales state; tags should not duplicate every stage.
 | --- | --- |
 | Website Submission ID, form, conversion/CTA, assessment, fit, first landing/referrer, and attribution snapshot fields | Written by the website sync |
 | Source, form, intent, automation-version, and one current fit tag | Written by the website sync |
-| Investment Context Acknowledged | Created, but requires a verified server-side write from the visitor's explicit continue click |
+| Investment Context Acknowledged | Reset to `No` during every assessment sync before enrollment, then changed to `Yes` only after the visitor's explicit investment-context continue click; both values, the production field token, and workflow behavior must be revalidated before launch |
 | Email/SMS consent fields | Created but intentionally blank; blank means “not captured,” never permission granted |
 | Decision Timeframe and Next Action opportunity fields | Created for the sales process; not website-populated |
 | Appointment and operations tags | Created for planned workflows 01–08; not currently applied automatically |
@@ -157,7 +166,8 @@ The website should retain and pass the following evidence with every assessment:
 - CTA origin
 - original referrer
 - UTM source, medium, campaign, content, and term
-- `gclid`, `fbclid`, and `msclkid` when present
+- `gclid`, `fbclid`, `msclkid`, `dclid`, `gbraid`, `wbraid`, `ttclid`,
+  `twclid`, and `li_fat_id` when present
 - a non-PII website session ID
 - the deterministic qualification result and the inputs that produced it
 - email/SMS consent choice, timestamp, disclosure version, and source page once
@@ -165,8 +175,14 @@ The website should retain and pass the following evidence with every assessment:
 
 Keep raw attribution in the Website Attribution Snapshot for auditability while
 also placing high-value dimensions in dedicated fields for filters and reports.
-First-touch fields are write-once; the snapshot can reflect the latest
-submission.
+First-touch landing and original-referrer fields are write-once. Conversion
+page and CTA origin describe the current submission, and the snapshot can
+reflect that latest submission. CTA origins are stable underscore-delimited
+placement tokens rather than visible labels. The session ID is a random,
+non-PII correlation value and must not contain contact or business data.
+The server accepts only the explicit current and deployed-v1 CTA token allowlist
+in `lib/assessment-attribution.ts`; unknown syntactically valid buckets are
+discarded instead of creating new reporting dimensions.
 
 The current dedicated reportable first-touch fields are landing page and
 referrer. UTM values and click IDs are retained in the attribution snapshot and
@@ -174,11 +190,39 @@ assessment note, but are not yet individual GoHighLevel report columns. Add
 dedicated first-touch UTM Source, Medium, and Campaign fields before relying on
 native GoHighLevel campaign reporting.
 
-The Investment Context Acknowledged field is reserved but the current website
-does not yet write it when the visitor accepts the investment gate. Consent
-fields also remain intentionally unpopulated until approved consent controls
-exist. Decision Timeframe and Next Action are downstream sales fields, not
-website intake fields.
+The website resets Investment Context Acknowledged to `No` before writing the
+current submission's workflow-enrollment signal. This prevents a `Yes` from an
+older assessment being treated as evidence for a later one. Only the explicit
+continue action on the current investment path changes it to `Yes`, before
+calendar access is returned. That write first verifies the handoff's submission
+ID still matches the contact's current Website Submission ID; an older token
+fails closed after a newer assessment enrolls. Consent fields remain
+intentionally unpopulated until approved consent controls exist. Decision
+Timeframe and Next Action are downstream sales fields, not website intake
+fields.
+
+HighLevel does not document a conditional custom-field update. The current
+submission check and acknowledgement write are therefore separate requests.
+The durable same-identity serialization required by the release gate must cover
+both assessment metadata sync and acknowledgement, not only contact/opportunity
+creation, before overlapping submissions can be treated as race-safe.
+
+As defense in depth, the website rejects a persisted older retry before any CRM
+work when a newer row has the same normalized email and phone. Calendar
+handoffs also fail closed when another same-identity row was created later or
+was updated after the selected assessment finished syncing. These database
+checks prevent deterministic stale retries; they do not replace durable
+serialization because a new row can still appear after a check and before the
+external write.
+
+## Funnel reporting taxonomy
+
+Use **Lead → Request → Confirmed → Show → Outcome → Improve** across website,
+CRM, and reporting language. “Request” means the visitor has taken a scheduling
+step or supplied a preferred time; it is not a confirmed appointment.
+“Confirmed” requires an active booked time recorded by the calendar or staff.
+This distinction must remain visible in dashboards and conversion-rate
+denominators.
 
 ## Workflow architecture
 
@@ -409,9 +453,9 @@ Track at minimum:
    the dedicated `Phynyx Website` private integration.~~ Completed and verified.
 4. ~~Store the private token and the three non-secret GHL IDs in the deployed
    site environment.~~ Completed; the token remains secret and server-side.
-5. ~~Add the Workflow 00 source/pause guard.~~ Completed and canary-tested. Wire
-   Investment Context Acknowledged separately if that signal should be
-   operationally reportable.
+5. ~~Add the Workflow 00 source/pause guard.~~ Completed and canary-tested.
+   Revalidate the website's Investment Context Acknowledged field token and
+   explicit-continue write before launch.
 6. Approve channel-specific consent copy and capture before enabling customer
    SMS/email.
 7. Define coverage timezone/hours, stage-aging thresholds, the Lost-reason
@@ -421,20 +465,89 @@ Track at minimum:
 9. ~~Add a temporary `test:automation` enrollment gate or use a restricted,
    published test clone so no production contact can enroll during validation.~~
    Completed; the temporary gate remains active pending production approval.
-10. Run at least 20 labeled test submissions covering new/existing contacts,
+10. Close the identity/concurrency gate: record the production location's
+    `Allow Duplicate Contact` setting and match priority; require duplicate
+    contacts to be disabled unless an explicitly reviewed equivalent policy is
+    proven; and verify the priority matches the website's normalized email and
+    phone identity rules. If contact upsert is used, set
+    `createNewIfDuplicateAllowed: false`, while recognizing that the published
+    API reference does not document that flag as an atomic concurrency
+    guarantee.
+11. Run at least 20 labeled test submissions covering new/existing contacts,
    qualified/nurture paths, duplicate retries, each owner, bookings, reschedules,
    cancellations, no-shows, Won, Lost, and opt-out behavior.
-11. Include paused repeat submissions, pre-existing non-Phynyx owners, duplicate
+12. Include paused repeat submissions, pre-existing non-Phynyx owners, duplicate
     open opportunities, native calendar email/invite behavior, and unknown
     consent states in the test set.
-12. Verify exactly one contact, one open opportunity, one owner, correct
+13. Add a concurrent canary that fires at least two same-identity submissions
+    with distinct submission IDs at the same time, and repeat it at least three
+    times. Retain non-PII timestamps, response IDs, CRM record IDs, and workflow
+    logs proving every run converged on exactly one contact and one open
+    website-sales opportunity, preserved owner/stage, recorded each submission
+    once, and sent no unintended message.
+14. Verify durable serialization covers the zero-result search-through-create
+    window for both contacts and opportunities, or attach evidence of an
+    equivalent HighLevel concurrency guarantee for this exact location and API
+    version. Sequential tests are not sufficient. HighLevel's documented
+    opportunity upsert does not expose a natural contact-plus-pipeline key, so
+    it cannot by itself establish this invariant.
+15. Verify exactly one contact, one open opportunity, one owner, correct
    attribution, correct calendar, and no unintended messages for every test.
-13. Verify external tracking does not enroll test leads in any legacy global
+16. Verify external tracking does not enroll test leads in any legacy global
     workflow.
-14. Publish in phases: intake/internal alerts, appointment lifecycle, SLA alerts,
+17. Publish in phases: intake/internal alerts, appointment lifecycle, SLA alerts,
    then permission-based customer follow-up.
-15. Review execution logs daily for the first week and weekly thereafter.
+18. Review execution logs daily for the first week and weekly thereafter.
 
 Initial controlled canary coverage is complete. The broader 20-case matrix in
-items 10–13, Andrew's real availability, and removal of the temporary
+items 11–16, the concurrent identity canary and serialization proof, Andrew's
+real availability, and removal of the temporary
 `test:automation` requirement remain production-launch gates.
+
+Published API references: HighLevel
+[contact upsert](https://marketplace.gohighlevel.com/docs/ghl/contacts/upsert-contact/)
+and opportunity
+[search](https://marketplace.gohighlevel.com/docs/ghl/opportunities/search-opportunity),
+[create](https://marketplace.gohighlevel.com/docs/ghl/opportunities/create-opportunity/),
+[update](https://marketplace.gohighlevel.com/docs/ghl/opportunities/update-opportunity/),
+and
+[upsert](https://marketplace.gohighlevel.com/docs/ghl/opportunities/upsert-opportunity/index.html).
+These references document available operations, but do not document an atomic
+natural-key guarantee for the full website identity and opportunity invariant.
+This gate does not alter the packaged D1 migration scope, which remains
+`0000` through `0003`; any later schema-backed serialization must be a separate,
+reviewed, forward-only change.
+
+## Release-gate summary
+
+The candidate remains blocked from Sites save/deploy or broader automation
+activation until all of the following have named owners and current evidence:
+
+- Workflow 00's temporary `test:automation` gate, paused/eligible/replay paths,
+  and the separate approval required before gate removal
+- preservation of valid existing owners and stages on repeat submissions
+- drafted, peer-reviewed, and tested workflows 01–08
+- the full booking lifecycle, including request versus confirmation,
+  reschedule, cancellation, no-show, showed, Won, and Lost
+- the labeled 20-case matrix and proof of no unintended messages
+- isolation from legacy workflows reachable through external tracking
+- Andrew's ambiguous availability and the approved timezone, coverage, notice,
+  booking-window, buffer, cap, round-robin, and meeting-location settings
+- production GoHighLevel field tokens, mappings, and integration permissions
+- the production `Allow Duplicate Contact` and match-priority configuration,
+  repeated simultaneous same-identity canaries, and durable serialization or an
+  equivalent verified HighLevel concurrency guarantee
+- approved consent evidence, suppression behavior, and A2P/carrier readiness
+  before marketing SMS or email
+- business-owner/counsel attestations for legal copy and claims
+- a named, tested support-inquiry notification owner and escalation path
+- a site-side failed-sync monitor plus a named CRM administrator and escalation
+  destination
+- a verified production D1 export/restore test, migration journal review,
+  explicit `0003` status, and restored-copy migration rehearsal
+- desktop and mobile browser QA on the exact release candidate
+
+The operational sequence, evidence requirements, explicit orchestrator STOP,
+and non-destructive rollback procedure are in `DEPLOYMENT_RUNBOOK.md`. Never edit
+a historical migration to resolve production drift; use a separately reviewed,
+forward-only migration.

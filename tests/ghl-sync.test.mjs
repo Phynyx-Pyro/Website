@@ -171,6 +171,45 @@ test('matching existing contacts are securely resolved before metadata sync', as
   assert.deepEqual(calls.map((call) => call.method), ['GET', 'GET'])
 })
 
+for (const [label, contact] of [
+  [
+    'email',
+    {
+      id: 'existing-contact',
+      email: 'different@example.test',
+      phone: '(312) 555-0100',
+    },
+  ],
+  [
+    'phone',
+    {
+      id: 'existing-contact',
+      email: 'qa@example.test',
+      phone: '(312) 555-0199',
+    },
+  ],
+]) {
+  test(`existing-contact ${label} mismatches fail closed`, async () => {
+    globalThis.fetch = async (url) => {
+      const path = new URL(url).pathname
+      if (path === '/contacts/search/duplicate') {
+        return Response.json({ contact: { id: 'existing-contact' } })
+      }
+      if (path === '/contacts/existing-contact') {
+        return Response.json({ contact })
+      }
+      throw new Error(`Unexpected request: ${url}`)
+    }
+
+    const { GhlIdentityConflictError, resolveGrowthAssessmentContact } =
+      await loadGhlModule()
+    await assert.rejects(
+      resolveGrowthAssessmentContact(assessmentInput()),
+      GhlIdentityConflictError,
+    )
+  })
+}
+
 test('CRM lookup errors omit submitted identity from logs and error messages', async () => {
   globalThis.fetch = async () => new Response('{}', { status: 500 })
   const { resolveGrowthAssessmentContact } = await loadGhlModule()
@@ -193,7 +232,14 @@ test('metadata sync creates one enriched opportunity and is retry-idempotent', a
     const call = recordCall(calls, url, init)
 
     if (call.method === 'GET' && call.path === '/contacts/new-contact') {
-      return Response.json({ contact: { id: 'new-contact', customFields: [] } })
+      return Response.json({
+        contact: {
+          id: 'new-contact',
+          email: 'qa@example.test',
+          phone: '+13125550100',
+          customFields: [],
+        },
+      })
     }
     if (call.method === 'GET' && call.path === '/contacts/new-contact/notes') {
       return Response.json({
@@ -279,6 +325,16 @@ test('metadata sync creates one enriched opportunity and is retry-idempotent', a
   )
   assert.equal(contactFields['contact.assessment_fit_result'], 'qualified')
   assert.equal(
+    contactFields['contact.investment_context_acknowledged'],
+    'No',
+  )
+  assert.equal(
+    valuesByFieldKey(contactUpdates[2].body.customFields)[
+      'contact.investment_context_acknowledged'
+    ],
+    'No',
+  )
+  assert.equal(
     contactFields['contact.website_first_landing_page'],
     input.attribution.landingPage,
   )
@@ -306,12 +362,17 @@ test('metadata sync creates one enriched opportunity and is retry-idempotent', a
     utmContent: input.attribution.utmContent,
     utmTerm: input.attribution.utmTerm,
     gclid: input.attribution.gclid,
+    dclid: input.attribution.dclid,
+    gbraid: input.attribution.gbraid,
+    wbraid: input.attribution.wbraid,
     fbclid: input.attribution.fbclid,
     msclkid: input.attribution.msclkid,
+    ttclid: input.attribution.ttclid,
+    twclid: input.attribution.twclid,
+    liFatId: input.attribution.liFatId,
   })
 
   for (const uncapturedKey of [
-    'contact.investment_context_acknowledged',
     'contact.email_marketing_consent',
     'contact.sms_marketing_consent',
     'contact.consent_captured_at_utc',
@@ -329,7 +390,10 @@ test('metadata sync creates one enriched opportunity and is retry-idempotent', a
   assert.equal(opportunityCreate.body.pipelineStageId, 'stage-test')
   assert.equal(opportunityCreate.body.contactId, 'new-contact')
   assert.equal(opportunityCreate.body.status, 'open')
-  assert.equal(opportunityCreate.body.name, 'QA Company — Growth Assessment')
+  assert.equal(
+    opportunityCreate.body.name,
+    'QA Company — Acquisition Diagnostic',
+  )
   assert.deepEqual(valuesByFieldKey(opportunityCreate.body.customFields), {
     'opportunity.website_submission_id_snapshot': input.submissionId,
     'opportunity.lead_intent': 'assessment',
@@ -344,7 +408,7 @@ test('metadata sync creates one enriched opportunity and is retry-idempotent', a
   assert.equal(firstOpportunitySearch.searchParams.get('pipelineId'), 'pipeline-test')
   assert.equal(firstOpportunitySearch.searchParams.get('contactId'), 'new-contact')
   assert.equal(firstOpportunitySearch.searchParams.get('status'), 'open')
-  assert.equal(firstOpportunitySearch.searchParams.get('limit'), '1')
+  assert.equal(firstOpportunitySearch.searchParams.get('limit'), '100')
 
   assert.equal(
     calls.filter(
@@ -437,6 +501,8 @@ test('existing contacts preserve first touch and update their open opportunity',
       return Response.json({
         contact: {
           id: 'existing-contact',
+          email: 'qa@example.test',
+          phone: '+13125550100',
           customFields: [
             { id: existingFirstLandingId, value: 'https://original.example/' },
             { id: existingReferrerId, value: 'https://referrer.example/' },
@@ -504,13 +570,20 @@ test('existing contacts preserve first touch and update their open opportunity',
   assert.equal(contactFields['contact.assessment_current_marketing'], '')
   assert.equal(contactFields['contact.assessment_budget_range'], '')
   assert.equal(contactFields['contact.assessment_fit_result'], 'nurture')
+  assert.equal(
+    contactFields['contact.investment_context_acknowledged'],
+    'No',
+  )
 
   const noteUpdate = calls.find(
     (call) =>
       call.method === 'PUT' &&
       call.path === '/contacts/existing-contact/notes/existing-note',
   )
-  assert.match(noteUpdate.body.body, /Investment context required before calendar/)
+  assert.match(
+    noteUpdate.body.body,
+    /Revenue or budget threshold needs context before calendar/,
+  )
 
   const opportunityUpdate = calls.find(
     (call) =>
@@ -569,7 +642,14 @@ test('a failed contact update does not start any later CRM mutation', async () =
   globalThis.fetch = async (url, init = {}) => {
     const call = recordCall(calls, url, init)
     if (call.method === 'GET' && call.path === '/contacts/new-contact') {
-      return Response.json({ contact: { id: 'new-contact', customFields: [] } })
+      return Response.json({
+        contact: {
+          id: 'new-contact',
+          email: 'qa@example.test',
+          phone: '+13125550100',
+          customFields: [],
+        },
+      })
     }
     if (call.method === 'GET' && call.path === '/contacts/new-contact/notes') {
       return Response.json({ notes: [] })
@@ -603,6 +683,46 @@ test('a failed contact update does not start any later CRM mutation', async () =
   )
 })
 
+test('duplicate open opportunities fail before any CRM mutation', async () => {
+  const calls = []
+  globalThis.fetch = async (url, init = {}) => {
+    const call = recordCall(calls, url, init)
+    if (call.method === 'GET' && call.path === '/contacts/new-contact') {
+      return Response.json({
+        contact: {
+          id: 'new-contact',
+          email: 'qa@example.test',
+          phone: '+13125550100',
+          customFields: [],
+        },
+      })
+    }
+    if (call.method === 'GET' && call.path === '/contacts/new-contact/notes') {
+      return Response.json({ notes: [] })
+    }
+    if (call.method === 'GET' && call.path === '/opportunities/search') {
+      return Response.json({
+        opportunities: [{ id: 'open-one' }, { id: 'open-two' }],
+      })
+    }
+    if (
+      call.method === 'GET' &&
+      call.path === '/locations/location-test/customFields'
+    ) {
+      return Response.json(customFieldDefinitions())
+    }
+    throw new Error(`Unexpected mutation: ${call.method} ${call.url}`)
+  }
+
+  const { syncGrowthAssessmentMetadata } = await loadGhlModule()
+  await assert.rejects(
+    syncGrowthAssessmentMetadata('new-contact', assessmentInput()),
+    /Multiple open website-sales opportunities require manual review/,
+  )
+
+  assert.equal(calls.every((call) => call.method === 'GET'), true)
+})
+
 test('contact 404 errors are identifiable without starting metadata writes', async () => {
   const calls = []
   globalThis.fetch = async (url, init = {}) => {
@@ -631,25 +751,81 @@ test('contact 404 errors are identifiable without starting metadata writes', asy
   )
 })
 
+test('a cached contact ID is revalidated before any metadata read or write', async () => {
+  const calls = []
+  globalThis.fetch = async (url, init = {}) => {
+    const call = recordCall(calls, url, init)
+    if (call.method === 'GET' && call.path === '/contacts/cached-contact') {
+      return Response.json({
+        contact: {
+          id: 'cached-contact',
+          email: 'someone-else@example.test',
+          phone: '+13125550100',
+        },
+      })
+    }
+    throw new Error(`Unexpected request: ${call.method} ${call.url}`)
+  }
+
+  const { GhlIdentityConflictError, syncGrowthAssessmentMetadata } =
+    await loadGhlModule()
+  await assert.rejects(
+    syncGrowthAssessmentMetadata('cached-contact', assessmentInput()),
+    GhlIdentityConflictError,
+  )
+  assert.deepEqual(
+    calls.map((call) => `${call.method} ${call.path}`),
+    ['GET /contacts/cached-contact'],
+  )
+})
+
 test('assessment notes include sanitized CTA and supported click attribution when present', async () => {
   const calls = []
   globalThis.fetch = async (url, init = {}) => {
-    const body = typeof init.body === 'string' ? JSON.parse(init.body) : undefined
-    calls.push({ url: String(url), method: init.method ?? 'GET', body })
-    if (String(url).endsWith('/tags')) return Response.json({ tags: [] })
-    if (String(url).endsWith('/notes') && !init.method) {
+    const call = recordCall(calls, url, init)
+    if (call.method === 'GET' && call.path === '/contacts/new-contact') {
+      return Response.json({
+        contact: {
+          id: 'new-contact',
+          email: 'qa@example.test',
+          phone: '+13125550100',
+          customFields: [],
+        },
+      })
+    }
+    if (call.method === 'GET' && call.path === '/contacts/new-contact/notes') {
       return Response.json({ notes: [] })
     }
-    if (String(url).endsWith('/notes') && init.method === 'POST') {
+    if (call.method === 'GET' && call.path === '/opportunities/search') {
+      return Response.json({ opportunities: [] })
+    }
+    if (
+      call.method === 'GET' &&
+      call.path === '/locations/location-test/customFields'
+    ) {
+      return Response.json(customFieldDefinitions())
+    }
+    if (call.method === 'POST' && call.path === '/contacts/new-contact/notes') {
       return Response.json({ note: { id: 'note-test' } })
     }
-    throw new Error(`Unexpected request: ${url}`)
+    if (call.method === 'POST' && call.path === '/opportunities/') {
+      return Response.json({ opportunity: { id: 'opportunity-test' } })
+    }
+    if (
+      (call.method === 'PUT' && call.path === '/contacts/new-contact') ||
+      (call.method === 'DELETE' && call.path === '/contacts/new-contact/tags') ||
+      (call.method === 'POST' && call.path === '/contacts/new-contact/tags')
+    ) {
+      return Response.json({})
+    }
+    throw new Error(`Unexpected request: ${call.method} ${url}`)
   }
 
   const input = assessmentInput()
   input.attribution = {
     ...input.attribution,
     entryPoint: 'home_services_final',
+    ctaOrigin: 'home_services_final',
     dclid: 'display-123\nInjected: no',
     gbraid: 'gbraid-123',
     wbraid: 'wbraid-123',
@@ -663,7 +839,8 @@ test('assessment notes include sanitized CTA and supported click attribution whe
   await syncNewGrowthAssessmentMetadata('new-contact', input)
 
   const noteCall = calls.find(
-    (call) => call.url.endsWith('/notes') && call.method === 'POST',
+    (call) =>
+      call.path === '/contacts/new-contact/notes' && call.method === 'POST',
   )
   assert.ok(noteCall)
   assert.match(noteCall.body.body, /Assessment CTA entry point: home_services_final/)
@@ -675,4 +852,125 @@ test('assessment notes include sanitized CTA and supported click attribution whe
   assert.match(noteCall.body.body, /X\/Twitter click ID: twitter-123/)
   assert.match(noteCall.body.body, /LinkedIn click ID: linkedin-123/)
   assert.equal(noteCall.body.body.includes('\nInjected:'), false)
+})
+
+test('booking handoff verification requires the contact current submission marker', async () => {
+  const calls = []
+  const input = assessmentInput()
+  globalThis.fetch = async (url, init = {}) => {
+    const call = recordCall(calls, url, init)
+    if (call.method === 'GET' && call.path === '/contacts/contact-test') {
+      return Response.json({
+        contact: {
+          id: 'contact-test',
+          email: input.email,
+          phone: input.phone,
+          customFields: [
+            {
+              id: FIELD_ID_BY_KEY.get('contact.website_submission_id'),
+              fieldValue: input.submissionId,
+            },
+          ],
+        },
+      })
+    }
+    if (
+      call.method === 'GET' &&
+      call.path === '/locations/location-test/customFields'
+    ) {
+      return Response.json(customFieldDefinitions())
+    }
+    throw new Error(`Unexpected request: ${call.method} ${call.url}`)
+  }
+
+  const { verifyGrowthAssessmentBookingHandoff } = await loadGhlModule()
+  const contact = await verifyGrowthAssessmentBookingHandoff(
+    'contact-test',
+    input,
+  )
+
+  assert.equal(contact.id, 'contact-test')
+  assert.equal(calls.every((call) => call.method === 'GET'), true)
+})
+
+test('investment acknowledgement uses the stable CRM field definition', async () => {
+  const calls = []
+  const submissionId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+  globalThis.fetch = async (url, init = {}) => {
+    const call = recordCall(calls, url, init)
+    if (
+      call.method === 'GET' &&
+      call.path === '/locations/location-test/customFields'
+    ) {
+      return Response.json(customFieldDefinitions())
+    }
+    if (call.method === 'GET' && call.path === '/contacts/contact-test') {
+      return Response.json({
+        contact: {
+          id: 'contact-test',
+          customFields: [
+            {
+              id: FIELD_ID_BY_KEY.get('contact.website_submission_id'),
+              fieldValue: submissionId,
+            },
+          ],
+        },
+      })
+    }
+    if (call.method === 'PUT' && call.path === '/contacts/contact-test') {
+      return Response.json({})
+    }
+    throw new Error(`Unexpected request: ${call.method} ${call.url}`)
+  }
+
+  const { setGrowthAssessmentInvestmentAcknowledged } = await loadGhlModule()
+  await setGrowthAssessmentInvestmentAcknowledged(
+    'contact-test',
+    submissionId,
+  )
+
+  const update = calls.find((call) => call.method === 'PUT')
+  assert.deepEqual(valuesByFieldKey(update.body.customFields), {
+    'contact.investment_context_acknowledged': 'Yes',
+  })
+})
+
+test('an older booking handoff cannot acknowledge a newer CRM submission', async () => {
+  const calls = []
+  globalThis.fetch = async (url, init = {}) => {
+    const call = recordCall(calls, url, init)
+    if (
+      call.method === 'GET' &&
+      call.path === '/locations/location-test/customFields'
+    ) {
+      return Response.json(customFieldDefinitions())
+    }
+    if (call.method === 'GET' && call.path === '/contacts/contact-test') {
+      return Response.json({
+        contact: {
+          id: 'contact-test',
+          customFields: [
+            {
+              id: FIELD_ID_BY_KEY.get('contact.website_submission_id'),
+              fieldValue: 'newer-submission-id',
+            },
+          ],
+        },
+      })
+    }
+    throw new Error(`Unexpected request: ${call.method} ${call.url}`)
+  }
+
+  const {
+    GhlStaleBookingHandoffError,
+    setGrowthAssessmentInvestmentAcknowledged,
+  } = await loadGhlModule()
+  await assert.rejects(
+    setGrowthAssessmentInvestmentAcknowledged(
+      'contact-test',
+      'older-submission-id',
+    ),
+    GhlStaleBookingHandoffError,
+  )
+  assert.equal(calls.every((call) => call.method === 'GET'), true)
 })

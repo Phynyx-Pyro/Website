@@ -13,6 +13,10 @@ The recovery preserves the complete multi-page brand experience, local imagery, 
 | **PYRO by PhynyxPro** | Revenue-operations technology division |
 | **Ember** | AI voice/chat employee under PYRO |
 
+The shared customer-journey vocabulary is **Lead → Request → Confirmed → Show →
+Outcome → Improve**. A submitted scheduling request is not reported as a
+confirmed appointment until the calendar or staff records a booked time.
+
 ## Stack
 
 - Vinext and Vite, targeting Cloudflare Workers through Sites
@@ -34,7 +38,10 @@ The recovery preserves the complete multi-page brand experience, local imagery, 
 - `/client-login`
 - `/privacy-policy`, `/terms`, and `/fulfillment`
 
-The two form endpoints are `/api/growth-assessment` and `/api/support`.
+The two public form endpoints are `/api/growth-assessment` and `/api/support`.
+The assessment is the structured sales-intake form; the support route records a
+general inquiry and does not by itself promise a support SLA or identify a
+notification recipient.
 
 ## Local development
 
@@ -68,9 +75,20 @@ The production build is emitted to `dist/` in the Sites-compatible Worker format
 - `GHL_LOCATION_ID`, `GHL_PIPELINE_ID`, and `GHL_PIPELINE_STAGE_ID` select the production sub-account and dedicated website-lead pipeline. `GHL_PRIVATE_INTEGRATION_TOKEN` is server-only and must never be committed or prefixed with `NEXT_PUBLIC_`.
 - The GoHighLevel private integration needs `contacts.readonly`, `contacts.write`, `locations/customFields.readonly`, `opportunities.readonly`, and `opportunities.write`. Keep the token limited to the Phynyx location and rotate it if it is ever exposed.
 
-Growth Assessments are saved to D1 and classified on the server. New and matching GoHighLevel contacts receive structured website fields, additive source/form/intent/automation/fit tags, an idempotent assessment note, and one open opportunity in the dedicated website-lead pipeline. A short-lived, single-use, HTTP-only cookie authorizes the calendar prefill handoff, and the booking URL itself contains no name, email, phone number, or CRM contact identifier.
+Growth Assessments are saved to D1 and classified on the server. New and matching GoHighLevel contacts receive structured website fields, additive source/form/intent/automation/fit tags, an idempotent assessment note, and a reused-or-created open opportunity in the dedicated website-lead pipeline. Retries are idempotent, while strict convergence under simultaneous distinct submissions remains a documented deployment gate because HighLevel does not publish a contact-plus-pipeline natural-key guarantee. A short-lived, single-use, HTTP-only cookie authorizes the calendar prefill handoff, and the booking URL itself contains no name, email, phone number, or CRM contact identifier.
 
 Public form routes enforce same-origin JSON requests, streamed body-size limits, D1-backed global/client/identity rate limits, honeypot fields, and replay-safe submission IDs. Site-wide response headers provide a Content Security Policy, HTTPS enforcement, frame protection, MIME sniffing protection, a restrictive referrer policy, and a limited browser permissions policy.
+
+Assessment attribution distinguishes the current conversion page from the
+write-once first landing page and original referrer. It also records a stable CTA
+origin, a non-PII website session ID, UTMs, and supported ad click IDs in the
+auditable snapshot. CTA placement identifiers use stable underscore-delimited
+tokens so reporting does not depend on visible copy.
+
+See `DEPLOYMENT_RUNBOOK.md` before preparing a release. Production D1 changes,
+Sites save/deploy actions, GoHighLevel workflow activation, marketing messaging,
+and removal of the temporary automation test gate all require the evidence and
+explicit approvals described there.
 
 ## Reference archive
 

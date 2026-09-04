@@ -147,7 +147,7 @@ export function CtaSection() {
               <button
                 type="submit"
                 disabled={submitting || !form.firstName.trim() || !form.email.trim() || !form.phone.trim()}
-                data-cta-placement="homepage-final-form"
+                data-cta-placement="homepage_final_form"
                 className="mt-6 flex w-full items-center justify-center gap-3 rounded-lg bg-phoenix px-5 py-4 text-[14px] font-semibold text-white transition-colors hover:bg-ember focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phoenix focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 lg:text-[15px]"
               >
                 {submitting ? 'Opening the fit check…' : 'Book My Patient Acquisition Diagnostic'}

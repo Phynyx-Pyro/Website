@@ -115,7 +115,7 @@ export function JourneySection() {
             <AssessmentCtaLink
               placement="homepage_journey"
               industry="chiropractic"
-              data-cta-placement="homepage-journey"
+              data-cta-placement="homepage_journey"
               className="group inline-flex shrink-0 items-center gap-3 rounded-lg bg-phoenix px-6 py-3.5 text-[14px] font-semibold text-white transition-colors hover:bg-ember focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phoenix focus-visible:ring-offset-2 focus-visible:ring-offset-ivory"
             >
               Book My Patient Acquisition Diagnostic

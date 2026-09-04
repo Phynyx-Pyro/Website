@@ -41,6 +41,12 @@ export function SiteHeader() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const pageIndustry = getIndustryForPath(pathname)
+  const isAssessmentPage = pathname.startsWith('/growth-assessment')
+  const healthcareAudience = pathname.startsWith(
+    '/industries/dental-medspa',
+  )
+    ? 'healthcare'
+    : undefined
   const usesPatientAcquisitionLanguage =
     isHealthcareAssessmentIndustry(pageIndustry) ||
     pathname.startsWith('/industries/dental-medspa')
@@ -149,17 +155,20 @@ export function SiteHeader() {
         </div>
 
         {/* Desktop CTA */}
-        <AssessmentCtaLink
-          placement="header_desktop"
-          industry={pageIndustry}
-          data-cta-placement="header-desktop"
-          className="group hidden items-center gap-2.5 whitespace-nowrap rounded-lg bg-phoenix px-4 py-3.5 text-[13px] font-semibold text-white shadow-[0_12px_28px_-12px_rgba(212,85,42,.95)] transition-colors hover:bg-ember focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phoenix focus-visible:ring-offset-2 focus-visible:ring-offset-ivory lg:flex xl:px-5 xl:text-[14px]"
-        >
-          {diagnosticLabel}
-          <svg className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </AssessmentCtaLink>
+        {!isAssessmentPage && (
+          <AssessmentCtaLink
+            placement="header_desktop"
+            industry={pageIndustry}
+            audience={healthcareAudience}
+            data-cta-placement="header_desktop"
+            className="group hidden items-center gap-2.5 whitespace-nowrap rounded-lg bg-phoenix px-4 py-3.5 text-[13px] font-semibold text-white shadow-[0_12px_28px_-12px_rgba(212,85,42,.95)] transition-colors hover:bg-ember focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phoenix focus-visible:ring-offset-2 focus-visible:ring-offset-ivory lg:flex xl:px-5 xl:text-[14px]"
+          >
+            {diagnosticLabel}
+            <svg className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </AssessmentCtaLink>
+        )}
 
         {/* Mobile menu button */}
         <button
@@ -204,12 +213,13 @@ export function SiteHeader() {
                 )}
               </div>
             ))}
-            <div className="pt-6">
+            {!isAssessmentPage && <div className="pt-6">
               <AssessmentCtaLink
                 placement="header_mobile"
                 industry={pageIndustry}
+                audience={healthcareAudience}
                 onClick={() => setMobileOpen(false)}
-                data-cta-placement="header-mobile"
+                data-cta-placement="header_mobile"
                 className="flex w-full items-center justify-center gap-2.5 rounded-lg bg-phoenix px-4 py-4 text-center text-[14px] font-semibold text-white shadow-[0_14px_30px_-14px_rgba(212,85,42,.95)]"
               >
                 {diagnosticLabel}
@@ -217,7 +227,7 @@ export function SiteHeader() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
               </AssessmentCtaLink>
-            </div>
+            </div>}
           </div>
         </div>
       )}

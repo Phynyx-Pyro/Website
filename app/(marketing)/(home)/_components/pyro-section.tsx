@@ -8,19 +8,19 @@ import { AnimatedSection } from '../../_components/animated-section'
 const qualificationBubbles = [
   { speaker: 'Ember', text: 'Are you looking to request a new-patient appointment?', isEmber: true },
   { speaker: 'Caller', text: 'Yes—mornings are usually best.', isEmber: false },
-  { speaker: 'Ember', text: 'I can help with that. Let me check the available options.', isEmber: true },
+  { speaker: 'Ember', text: 'I can capture that preference for the team. Is there a day that works best?', isEmber: true },
 ]
 
 const appointmentBubbles = [
   { speaker: 'Caller', text: 'Thursday morning works.', isEmber: false },
-  { speaker: 'Ember', text: 'You’re all set for Thursday at 9:30am.', isEmber: true },
+  { speaker: 'Ember', text: 'I’ve captured Thursday morning as your preference. The team can confirm the available time.', isEmber: true },
 ]
 
 const crmUpdates = [
   'Lead record created',
   'Campaign source retained',
-  'Appointment status updated',
-  'Confirmation workflow started',
+  'Request status updated',
+  'Staff confirmation handoff started',
   'Handoff owner assigned',
 ]
 
@@ -93,15 +93,18 @@ export function PyroSection() {
               PYRO runs the workflow. Ember handles the conversation.
             </h2>
             <p className="mt-5 max-w-[390px] text-[15.5px] leading-[1.65] text-white/70 lg:text-[16px]">
-              PYRO is the platform connecting response, qualification, booking,
-              reminders, and reporting. Ember is the AI receptionist inside PYRO,
-              with human handoff when your team should take over.
+              PYRO is the platform connecting response, qualification, appointment
+              requests, confirmations, reminders, and reporting. Ember is the AI
+              receptionist inside PYRO, with human handoff when your team should take over.
             </p>
           </AnimatedSection>
 
           <AnimatedSection delay={150} className="min-w-0">
             <figure className="flex min-w-0 flex-col">
-              <div className="relative order-2 lg:order-1">
+              <figcaption className="mb-4 border-l border-flame/45 pl-4 text-[11.5px] leading-[1.5] text-white/50">
+                Illustrative workflow — not a promise of availability or autonomous booking. Scripts, escalation rules, calendar logic, and confirmation behavior are configured for each business.
+              </figcaption>
+              <div className="relative">
               <PipelineAudioWave />
               <ol className="relative z-10 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-[1.2fr_1.03fr_1.03fr_.95fr_.9fr] lg:gap-0">
 
@@ -142,14 +145,14 @@ export function PyroSection() {
               </li>
 
               <li className="relative rounded-xl border border-white/10 bg-white/[.025] p-4 lg:rounded-none lg:border-y-0 lg:border-r-0 lg:border-l lg:border-l-white/10 lg:bg-transparent lg:px-3 lg:py-0">
-                <h3 className="text-center text-[12px] font-medium text-white/70">Appointment</h3>
+                <h3 className="text-center text-[12px] font-medium text-white/70">Appointment request</h3>
                 <div className="relative z-10 mt-7 space-y-3 lg:mt-8">
                   {appointmentBubbles.map((bubble) => (
                     <ConversationBubble key={bubble.text} {...bubble} />
                   ))}
                   <div className="flex items-center gap-2 rounded-lg bg-flame px-3 py-2.5 text-white shadow-[0_0_20px_rgba(255,107,53,.18)]">
                     <CheckCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                    <span className="text-[11px] font-bold">Appointment Confirmed</span>
+                    <span className="text-[11px] font-bold">Appointment Request Captured</span>
                   </div>
                 </div>
               </li>
@@ -184,9 +187,6 @@ export function PyroSection() {
               </li>
               </ol>
               </div>
-              <figcaption className="order-1 mb-4 border-l border-flame/45 pl-4 text-[11.5px] leading-[1.5] text-white/50 lg:order-2 lg:mb-0 lg:mt-4 lg:border-l-0 lg:pl-0 lg:text-center">
-                Illustrative workflow. Scripts, escalation rules, and calendar logic are configured for the practice.
-              </figcaption>
             </figure>
           </AnimatedSection>
         </div>

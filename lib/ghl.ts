@@ -70,12 +70,6 @@ type ContactResponse = {
   contact?: ContactSummary
 }
 
-type LegacyGrowthAssessmentAttribution = AssessmentAttribution & {
-  conversionPage?: string
-  ctaOrigin?: string
-  sessionId?: string
-}
-
 type NotesResponse = {
   notes?: Array<{ id?: string; body?: string }>
 }
@@ -104,6 +98,21 @@ type OpportunitiesResponse = {
   opportunities?: OpportunitySummary[]
 }
 
+function getSingleOpenOpportunity(
+  opportunities: OpportunitiesResponse | null,
+) {
+  const openOpportunities = (opportunities?.opportunities ?? []).filter(
+    (opportunity): opportunity is OpportunitySummary & { id: string } =>
+      Boolean(opportunity.id),
+  )
+  if (openOpportunities.length > 1) {
+    throw new Error(
+      'Multiple open website-sales opportunities require manual review.',
+    )
+  }
+  return openOpportunities[0]
+}
+
 class GhlRequestError extends Error {
   readonly operation: string
   readonly status: number
@@ -121,6 +130,13 @@ export class GhlIdentityConflictError extends Error {
   constructor() {
     super('The submitted contact details do not match the existing CRM contact.')
     this.name = 'GhlIdentityConflictError'
+  }
+}
+
+export class GhlStaleBookingHandoffError extends Error {
+  constructor() {
+    super('The booking handoff no longer matches the current CRM submission.')
+    this.name = 'GhlStaleBookingHandoffError'
   }
 }
 
@@ -189,6 +205,22 @@ function contactMatchesPhone(contact: ContactSummary, submittedPhone: string) {
   return Boolean(existingPhone && expectedPhone && existingPhone === expectedPhone)
 }
 
+function contactMatchesEmail(contact: ContactSummary, submittedEmail: string) {
+  const existingEmail = contact.email?.trim().toLowerCase() ?? ''
+  const expectedEmail = submittedEmail.trim().toLowerCase()
+  return Boolean(existingEmail && expectedEmail && existingEmail === expectedEmail)
+}
+
+function contactMatchesIdentity(
+  contact: ContactSummary,
+  input: Pick<GhlGrowthAssessment, 'email' | 'phone'>,
+) {
+  return (
+    contactMatchesEmail(contact, input.email) &&
+    contactMatchesPhone(contact, input.phone)
+  )
+}
+
 async function findDuplicateContact(locationId: string, email: string) {
   const query = new URLSearchParams({ locationId, email })
   const result = await ghlGet<ContactResponse>(
@@ -207,7 +239,7 @@ async function findDuplicateContact(locationId: string, email: string) {
 async function createOrMatchContact(input: GhlGrowthAssessment, locationId: string) {
   const existing = await findDuplicateContact(locationId, input.email)
   if (existing) {
-    if (!existing.id || !contactMatchesPhone(existing, input.phone)) {
+    if (!existing.id || !contactMatchesIdentity(existing, input)) {
       throw new GhlIdentityConflictError()
     }
     return { contactId: existing.id, isNew: false }
@@ -233,7 +265,7 @@ async function createOrMatchContact(input: GhlGrowthAssessment, locationId: stri
 
     const racedDuplicate = await findDuplicateContact(locationId, input.email)
     if (!racedDuplicate?.id) throw error
-    if (!contactMatchesPhone(racedDuplicate, input.phone)) {
+    if (!contactMatchesIdentity(racedDuplicate, input)) {
       throw new GhlIdentityConflictError()
     }
     return { contactId: racedDuplicate.id, isNew: false }
@@ -260,10 +292,10 @@ function presentAttributionWhenProvided(label: string, value: string) {
 
 function buildAssessmentNote(input: GhlGrowthAssessment) {
   const { fit } = input
-  const attribution = input.attribution as LegacyGrowthAssessmentAttribution
-  const effectiveConversionPage = attribution.conversionPage || attribution.landingPage
+  const attribution = input.attribution
+  const effectiveConversionPage = attribution.conversionPage
   const effectiveCtaOrigin = attribution.ctaOrigin || attribution.entryPoint || ''
-  const effectiveSessionId = attribution.sessionId || ''
+  const effectiveSessionId = attribution.sessionId
 
   return [
     `Submission ID: ${input.submissionId}`,
@@ -329,8 +361,8 @@ function readGhlSyncConfiguration() {
 }
 
 function buildAttributionSnapshot(input: GhlGrowthAssessment) {
-  const attribution = input.attribution as LegacyGrowthAssessmentAttribution
-  const conversionPage = attribution.conversionPage || attribution.landingPage
+  const attribution = input.attribution
+  const conversionPage = attribution.conversionPage
   const ctaOrigin = attribution.ctaOrigin || attribution.entryPoint || ''
   const sessionId = attribution.sessionId || ''
   return JSON.stringify({
@@ -349,8 +381,14 @@ function buildAttributionSnapshot(input: GhlGrowthAssessment) {
     utmContent: attribution.utmContent,
     utmTerm: attribution.utmTerm,
     gclid: attribution.gclid,
+    dclid: attribution.dclid,
+    gbraid: attribution.gbraid,
+    wbraid: attribution.wbraid,
     fbclid: attribution.fbclid,
     msclkid: attribution.msclkid,
+    ttclid: attribution.ttclid,
+    twclid: attribution.twclid,
+    liFatId: attribution.liFatId,
   })
 }
 
@@ -383,6 +421,20 @@ function contactHasCustomFieldValue(
       return isPresentCustomFieldValue(field.fieldValue ?? field.value)
     }),
   )
+}
+
+function contactCustomFieldStringValue(
+  contact: ContactSummary | undefined,
+  definitions: Map<string, string>,
+  fieldKey: string,
+) {
+  const fieldId = definitions.get(fieldKey)
+  if (!fieldId) return ''
+  const field = contact?.customFields?.find(
+    (candidate) => candidate.id === fieldId || candidate.key === fieldKey,
+  )
+  const value = field?.fieldValue ?? field?.value
+  return typeof value === 'string' ? value.trim() : ''
 }
 
 type FieldEntry = {
@@ -421,7 +473,7 @@ function buildContactCustomFields(
   contact: ContactSummary | undefined,
   definitions: Map<string, string>,
 ) {
-  const attribution = input.attribution as LegacyGrowthAssessmentAttribution
+  const attribution = input.attribution
   const fitResult = input.fit.path === 'calendar' ? 'qualified' : 'nurture'
   const firstLandingPage = contactHasCustomFieldValue(
     contact,
@@ -444,7 +496,7 @@ function buildContactCustomFields(
       fieldEntry(GHL_CONTACT_FIELD_KEYS.formVersion, WEBSITE_FORM_VERSION),
       fieldEntry(
         GHL_CONTACT_FIELD_KEYS.conversionPage,
-        attribution.conversionPage || attribution.landingPage,
+        attribution.conversionPage,
       ),
       fieldEntry(
         GHL_CONTACT_FIELD_KEYS.ctaOrigin,
@@ -462,6 +514,13 @@ function buildContactCustomFields(
       ),
       fieldEntry(GHL_CONTACT_FIELD_KEYS.budgetRange, input.monthlyBudget),
       fieldEntry(GHL_CONTACT_FIELD_KEYS.fitResult, fitResult),
+      // Acknowledgement belongs to this assessment attempt. Reset any value
+      // left by an older submission before the workflow enrollment signal is
+      // written; only the explicit continue action may change it to Yes.
+      fieldEntry(
+        GHL_CONTACT_FIELD_KEYS.investmentContextAcknowledged,
+        'No',
+      ),
       fieldEntryWhenPresent(
         GHL_CONTACT_FIELD_KEYS.firstLandingPage,
         firstLandingPage,
@@ -502,7 +561,7 @@ function buildOpportunityCustomFields(
 
 function buildOpportunityName(input: GhlGrowthAssessment) {
   const leadName = input.businessName || `${input.firstName} ${input.lastName}`.trim()
-  return `${leadName} — Growth Assessment`
+  return `${leadName} — Acquisition Diagnostic`
 }
 
 async function syncAssessmentNote(
@@ -518,7 +577,7 @@ async function syncAssessmentNote(
 
   if (!existing) {
     await ghlPost(`/contacts/${contactId}/notes`, {
-      title: 'Website Growth Assessment',
+      title: 'Website Acquisition Diagnostic',
       body,
       pinned: false,
     })
@@ -527,7 +586,7 @@ async function syncAssessmentNote(
 
   if (existing.id && existing.body !== body) {
     await ghlPut(`/contacts/${contactId}/notes/${encodeURIComponent(existing.id)}`, {
-      title: 'Website Growth Assessment',
+      title: 'Website Acquisition Diagnostic',
       body,
       pinned: false,
     })
@@ -541,9 +600,7 @@ async function syncAssessmentOpportunity(
   customFields: Array<{ id: string; fieldValue: string }>,
   configuration: ReturnType<typeof readGhlSyncConfiguration>,
 ) {
-  const existingOpportunity = opportunities?.opportunities?.find(
-    (opportunity) => opportunity.id,
-  )
+  const existingOpportunity = getSingleOpenOpportunity(opportunities)
   const commonFields = {
     pipelineId: configuration.pipelineId,
     name: buildOpportunityName(input),
@@ -574,6 +631,59 @@ export async function resolveGrowthAssessmentContact(input: GhlGrowthAssessment)
   return createOrMatchContact(input, locationId)
 }
 
+export async function verifyGrowthAssessmentContact(
+  contactId: string,
+  input: Pick<GhlGrowthAssessment, 'email' | 'phone'>,
+) {
+  const result = await ghlGet<ContactResponse>(
+    `/contacts/${encodeURIComponent(contactId)}`,
+  )
+  const contact = result?.contact
+  if (
+    !contact?.id ||
+    contact.id !== contactId ||
+    !contactMatchesIdentity(contact, input)
+  ) {
+    throw new GhlIdentityConflictError()
+  }
+  return contact
+}
+
+export async function verifyGrowthAssessmentBookingHandoff(
+  contactId: string,
+  input: Pick<GhlGrowthAssessment, 'submissionId' | 'email' | 'phone'>,
+) {
+  const locationId = env.GHL_LOCATION_ID?.trim()
+  if (!locationId) throw new Error('GoHighLevel location ID is unavailable.')
+
+  const customFieldsQuery = new URLSearchParams({ model: 'all' })
+  const [contactResult, customFieldsResult] = await Promise.all([
+    ghlGet<ContactResponse>(`/contacts/${encodeURIComponent(contactId)}`),
+    ghlGet<CustomFieldsResponse>(
+      `/locations/${encodeURIComponent(locationId)}/customFields?${customFieldsQuery.toString()}`,
+    ),
+  ])
+  const contact = contactResult?.contact
+  if (
+    !contact?.id ||
+    contact.id !== contactId ||
+    !contactMatchesIdentity(contact, input)
+  ) {
+    throw new GhlIdentityConflictError()
+  }
+
+  const definitions = customFieldDefinitionsByKey(customFieldsResult)
+  const currentSubmissionId = contactCustomFieldStringValue(
+    contact,
+    definitions,
+    GHL_CONTACT_FIELD_KEYS.submissionId,
+  )
+  if (currentSubmissionId !== input.submissionId) {
+    throw new GhlStaleBookingHandoffError()
+  }
+  return contact
+}
+
 export function isGhlContactNotFoundError(error: unknown, contactId: string) {
   return (
     error instanceof GhlRequestError &&
@@ -594,15 +704,13 @@ export async function syncGrowthAssessmentMetadata(
     contactId,
     status: 'open',
     order: 'added_asc',
-    limit: '1',
+    limit: '100',
   })
   const customFieldsQuery = new URLSearchParams({ model: 'all' })
 
   // Resolve the contact first so a stale persisted ID can be distinguished from
   // failures in the independent metadata lookups.
-  const contactResult = await ghlGet<ContactResponse>(
-    `/contacts/${encodedContactId}`,
-  )
+  const resolvedContact = await verifyGrowthAssessmentContact(contactId, input)
   const [notesResult, opportunitiesResult, customFieldsResult] =
     await Promise.all([
       ghlGet<NotesResponse>(`/contacts/${encodedContactId}/notes`),
@@ -614,10 +722,15 @@ export async function syncGrowthAssessmentMetadata(
       ),
     ])
 
+  // Duplicate open opportunities are an ownership/data-quality conflict. Fail
+  // before the first mutation so a human can resolve them without a partial
+  // website sync changing either record.
+  getSingleOpenOpportunity(opportunitiesResult)
+
   const definitions = customFieldDefinitionsByKey(customFieldsResult)
   const contactCustomFields = buildContactCustomFields(
     input,
-    contactResult?.contact,
+    resolvedContact,
     definitions,
   )
   const opportunityCustomFields = buildOpportunityCustomFields(
@@ -666,6 +779,42 @@ export async function syncGrowthAssessmentMetadata(
   await ghlPut(`/contacts/${encodedContactId}`, {
     customFields: enrollmentCustomFields,
   })
+}
+
+export async function setGrowthAssessmentInvestmentAcknowledged(
+  contactId: string,
+  submissionId: string,
+) {
+  const locationId = env.GHL_LOCATION_ID?.trim()
+  if (!locationId) throw new Error('GoHighLevel location ID is unavailable.')
+
+  const customFieldsQuery = new URLSearchParams({ model: 'all' })
+  const [customFieldsResult, contactResult] = await Promise.all([
+    ghlGet<CustomFieldsResponse>(
+      `/locations/${encodeURIComponent(locationId)}/customFields?${customFieldsQuery.toString()}`,
+    ),
+    ghlGet<ContactResponse>(`/contacts/${encodeURIComponent(contactId)}`),
+  ])
+  const definitions = customFieldDefinitionsByKey(customFieldsResult)
+  const currentSubmissionId = contactCustomFieldStringValue(
+    contactResult?.contact,
+    definitions,
+    GHL_CONTACT_FIELD_KEYS.submissionId,
+  )
+  if (currentSubmissionId !== submissionId) {
+    throw new GhlStaleBookingHandoffError()
+  }
+  const customFields = resolveCustomFieldUpdates(
+    [
+      fieldEntry(
+        GHL_CONTACT_FIELD_KEYS.investmentContextAcknowledged,
+        'Yes',
+      ),
+    ],
+    definitions,
+  )
+
+  await ghlPut(`/contacts/${encodeURIComponent(contactId)}`, { customFields })
 }
 
 export const syncNewGrowthAssessmentMetadata = syncGrowthAssessmentMetadata
