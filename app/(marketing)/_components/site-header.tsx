@@ -114,7 +114,7 @@ export function SiteHeader() {
 
         {/* Desktop CTA */}
         <Link
-          href="/growth-assessment"
+          href="/growth-assessment?cta=site-header-desktop"
           className="hidden lg:flex items-center gap-2.5 rounded-lg bg-phoenix px-5 py-3.5 text-[14px] font-semibold text-white shadow-[0_12px_28px_-12px_rgba(212,85,42,.95)] hover:bg-ember transition-colors group"
         >
           Book a Growth Assessment
@@ -165,7 +165,7 @@ export function SiteHeader() {
             ))}
             <div className="pt-6">
               <Link
-                href="/growth-assessment"
+                href="/growth-assessment?cta=site-header-mobile"
                 onClick={() => setMobileOpen(false)}
                 className="flex w-full items-center justify-center gap-2.5 rounded-lg bg-phoenix py-4 text-[15px] font-semibold text-white shadow-[0_14px_30px_-14px_rgba(212,85,42,.95)]"
               >

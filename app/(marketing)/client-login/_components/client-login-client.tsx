@@ -32,7 +32,7 @@ export function ClientLoginClient() {
           </div>
           <p className="mt-8 text-[14px] text-warm">
             Not a client yet?{' '}
-            <Link href="/growth-assessment" className="text-phoenix font-medium hover:underline">Book a Growth Assessment</Link>
+            <Link href="/growth-assessment?cta=client-login" className="text-phoenix font-medium hover:underline">Book a Growth Assessment</Link>
           </p>
           <p className="mt-3 text-[13px] text-warm">
             Need help?{' '}

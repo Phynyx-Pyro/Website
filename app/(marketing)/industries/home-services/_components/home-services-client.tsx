@@ -23,7 +23,7 @@ export function HomeServicesClient() {
               <p className="mt-6 max-w-[500px] text-[19px] leading-[1.65] text-warm">
                 Roofing, plumbing, HVAC — your business runs on booked jobs. The same system that converts patients for chiropractic practices converts customers for service businesses.
               </p>
-              <Link href="/growth-assessment" className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors">
+              <Link href="/growth-assessment?cta=home-services-hero" className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors">
                 Book a Growth Assessment <ArrowRight className="h-4 w-4" />
               </Link>
             </AnimatedSection>
@@ -71,9 +71,9 @@ export function HomeServicesClient() {
           <AnimatedSection>
             <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink">Ready to stop losing jobs to slow follow-up?</h2>
             <p className="mt-4 max-w-[500px] mx-auto text-[17px] leading-[1.65] text-warm">
-              A 15-minute growth assessment shows you where jobs are being lost and how the system fixes it.
+              A 30-minute growth assessment shows you where jobs are being lost and how the system fixes it.
             </p>
-            <Link href="/growth-assessment" className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors">
+            <Link href="/growth-assessment?cta=home-services-footer" className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors">
               Book a Growth Assessment <ArrowRight className="h-4 w-4" />
             </Link>
           </AnimatedSection>

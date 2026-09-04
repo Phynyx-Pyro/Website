@@ -34,7 +34,7 @@ const industries = [
     proof: 'Built for',
   },
   {
-    slug: '/growth-assessment',
+    slug: '/growth-assessment?cta=industries-other-card',
     title: 'Other Service Businesses',
     tagline: 'If your business runs on appointments, we should talk.',
     desc: 'The PhynyxPro Growth System works for any appointment-driven business. Tell us about yours.',
@@ -100,9 +100,9 @@ export function IndustriesHubClient() {
           <AnimatedSection>
             <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink">Not sure if PhynyxPro is right for your industry?</h2>
             <p className="mt-4 max-w-[500px] mx-auto text-[17px] leading-[1.65] text-warm">
-              If your business runs on booked appointments, we should talk. A growth assessment takes 15 minutes and costs nothing.
+              If your business runs on booked appointments, we should talk. A growth assessment takes 30 minutes and costs nothing.
             </p>
-            <Link href="/growth-assessment" className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors">
+            <Link href="/growth-assessment?cta=industries-footer" className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors">
               Book a Growth Assessment <ArrowRight className="h-4 w-4" />
             </Link>
           </AnimatedSection>

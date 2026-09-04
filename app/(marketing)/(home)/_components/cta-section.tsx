@@ -14,6 +14,7 @@ const ATTRIBUTION_QUERY_KEYS = [
   'utm_term',
   'gclid',
   'fbclid',
+  'msclkid',
 ] as const
 
 export function CtaSection() {
@@ -42,6 +43,7 @@ export function CtaSection() {
       const value = currentParams.get(key)
       if (value) attributionParams.set(key, value)
     }
+    attributionParams.set('cta', 'homepage-quick-form')
 
     const query = attributionParams.toString()
     router.push(query ? `/growth-assessment?${query}` : '/growth-assessment')
@@ -58,10 +60,10 @@ export function CtaSection() {
               Let&apos;s find out if PhynyxPro is the right growth partner.
             </h2>
             <p className="mt-4 lg:mt-6 max-w-[480px] text-[15.5px] lg:text-[17.5px] leading-[1.65] text-white/70">
-              A 15-minute qualified conversation — not a sales pitch. We&apos;ll review your marketing, lead flow, and operations, then tell you honestly whether we can help.
+              A 30-minute qualified conversation — not a sales pitch. We&apos;ll review your marketing, lead flow, and operations, then tell you honestly whether we can help.
             </p>
             <div className="mt-6 lg:mt-8 flex flex-wrap items-center gap-5 lg:gap-7 text-[12.5px] lg:text-[13.5px] text-white/70">
-              <span className="flex items-center gap-2 lg:gap-2.5"><Clock className="w-3.5 h-3.5 text-flame" /> 15 minutes</span>
+              <span className="flex items-center gap-2 lg:gap-2.5"><Clock className="w-3.5 h-3.5 text-flame" /> 30 minutes</span>
               <span className="flex items-center gap-2 lg:gap-2.5"><Lock className="w-3.5 h-3.5 text-flame" /> Confidential</span>
               <span className="hidden lg:flex items-center gap-2.5"><Ban className="w-3.5 h-3.5 text-flame" /> No pitch deck</span>
             </div>

@@ -9,6 +9,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { captureAssessmentAttribution } from '@/lib/assessment-attribution'
 
 export type AssessmentPrefill = {
   firstName: string
@@ -32,6 +33,10 @@ export function AssessmentPrefillProvider({ children }: { children: ReactNode })
     setPrefill(value)
   }, [])
   const clearPrefill = useCallback(() => setPrefill(null), [])
+
+  useEffect(() => {
+    captureAssessmentAttribution()
+  }, [])
 
   useEffect(() => {
     if (!prefill) return

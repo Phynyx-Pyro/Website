@@ -106,7 +106,7 @@ export function AboutClient() {
             <p className="mt-4 max-w-[500px] mx-auto text-[17px] leading-[1.65] text-warm">
               We\'re selective about who we work with — not because we\'re exclusive, but because the system works best for businesses that are ready for it.
             </p>
-            <Link href="/growth-assessment" className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors">
+            <Link href="/growth-assessment?cta=about-footer" className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors">
               Book a Growth Assessment <ArrowRight className="h-4 w-4" />
             </Link>
           </AnimatedSection>

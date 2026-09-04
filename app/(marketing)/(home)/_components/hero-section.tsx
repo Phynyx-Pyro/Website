@@ -60,7 +60,7 @@ export function HeroSection() {
             <AnimatedSection delay={300}>
               <div className="mt-9 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5">
                 <Link
-                  href="/growth-assessment"
+                  href="/growth-assessment?cta=homepage-hero"
                   className="group flex items-center gap-3 rounded-lg bg-ink px-7 py-4 text-[15px] font-semibold text-white lift-sm hover:bg-coal transition-colors"
                 >
                   Book a Growth Assessment

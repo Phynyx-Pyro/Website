@@ -33,7 +33,7 @@ export function ChiropracticClient() {
                 Andrew Higdon was — and remains — a practicing chiropractor. He built PhynyxPro after living the same frustration every practice owner knows: leads come in, then quietly slip through the cracks.
               </p>
               <div className="mt-8 flex flex-col sm:flex-row gap-4">
-                <Link href="/growth-assessment" className="inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors">
+                <Link href="/growth-assessment?cta=chiropractic-hero" className="inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors">
                   Book a Growth Assessment <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link href="/growth-system" className="inline-flex items-center gap-2 rounded-lg border border-ink/20 px-7 py-3.5 text-[15px] font-semibold text-ink hover:bg-ink hover:text-white transition-colors">
@@ -145,9 +145,9 @@ export function ChiropracticClient() {
               Ready to grow your practice?
             </h2>
             <p className="mt-4 max-w-[500px] mx-auto text-[17px] leading-[1.65] text-warm">
-              A 15-minute growth assessment shows you exactly where patients are being lost and how the system fixes it.
+              A 30-minute growth assessment shows you exactly where patients are being lost and how the system fixes it.
             </p>
-            <Link href="/growth-assessment" className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors">
+            <Link href="/growth-assessment?cta=chiropractic-footer" className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors">
               Book a Growth Assessment <ArrowRight className="h-4 w-4" />
             </Link>
           </AnimatedSection>

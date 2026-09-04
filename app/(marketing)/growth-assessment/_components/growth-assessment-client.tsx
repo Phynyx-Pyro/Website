@@ -230,7 +230,7 @@ export function GrowthAssessmentClient() {
               Let&apos;s find out if PhynyxPro is the <span className="text-phoenix">right growth partner.</span>
             </h1>
             <p className="mt-5 max-w-[560px] mx-auto text-[17px] leading-[1.65] text-warm">
-              A 15-minute qualified conversation — not a sales pitch. We&apos;ll review your current marketing, lead flow, and operations, then tell you honestly whether we can help.
+              A 30-minute qualified conversation — not a sales pitch. We&apos;ll review your current marketing, lead flow, and operations, then tell you honestly whether we can help.
             </p>
             <div className="mt-6 flex items-center justify-center gap-6 text-[13px] text-warm">
               <span className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-phoenix" /> Takes about 3 minutes</span>

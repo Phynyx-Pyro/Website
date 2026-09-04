@@ -23,7 +23,7 @@ export function DentalMedspaClient() {
               <p className="mt-6 max-w-[500px] text-[19px] leading-[1.65] text-warm">
                 High-value appointments, competitive markets, and patients who expect instant communication. PhynyxPro delivers all three with a system designed for healthcare practices.
               </p>
-              <Link href="/growth-assessment" className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors">
+              <Link href="/growth-assessment?cta=dental-medspa-hero" className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors">
                 Book a Growth Assessment <ArrowRight className="h-4 w-4" />
               </Link>
             </AnimatedSection>
@@ -73,7 +73,7 @@ export function DentalMedspaClient() {
             <p className="mt-4 max-w-[500px] mx-auto text-[17px] leading-[1.65] text-warm">
               A growth assessment shows you where patients are being lost and how the system brings them back.
             </p>
-            <Link href="/growth-assessment" className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors">
+            <Link href="/growth-assessment?cta=dental-medspa-footer" className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors">
               Book a Growth Assessment <ArrowRight className="h-4 w-4" />
             </Link>
           </AnimatedSection>
