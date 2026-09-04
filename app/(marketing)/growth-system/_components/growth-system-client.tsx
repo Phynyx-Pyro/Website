@@ -129,8 +129,8 @@ export function GrowthSystemClient() {
 
             <AnimatedSection className="lg:col-span-7 order-1 lg:order-2" delay={150}>
               <div className="relative rounded-xl overflow-hidden shadow-lift bg-ivory">
-                <div className="aspect-[16/10] relative">
-                  <Image src="/images/ember-human-headset.jpg" alt="Ember handling lead qualification and appointment booking" fill sizes="(min-width: 1024px) 58vw, 100vw" className="object-cover object-top" />
+                <div className="aspect-[16/10] relative flex items-end justify-center bg-gradient-to-br from-ivory to-linen">
+                  <Image src="/images/ember-human-transparent.png" alt="Ember handling lead qualification and appointment booking" width={500} height={500} className="h-full w-auto object-contain object-bottom" />
                 </div>
                 <div className="absolute bottom-4 right-4 w-[260px] rounded-xl bg-night/90 backdrop-blur-md p-4 shadow-xl">
                   <div className="flex items-center gap-2 mb-3">

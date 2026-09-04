@@ -25,6 +25,44 @@ const crmUpdates = [
   'Reminder: SMS + Email',
 ]
 
+const pipelineWaveHeights = Array.from({ length: 96 }, (_, index) => {
+  const mainBurst = Math.max(0, 1 - Math.abs(index - 24) / 15)
+  const stageEcho = Math.max(
+    0,
+    1 - Math.abs(index - 49) / 8,
+    1 - Math.abs(index - 68) / 8,
+    1 - Math.abs(index - 86) / 7,
+  )
+  const voiceTexture = 6 + ((index * 7) % 11)
+
+  return Math.round(
+    voiceTexture
+      + mainBurst * (30 + ((index * 11) % 28))
+      + stageEcho * (5 + ((index * 5) % 9)),
+  )
+})
+
+function PipelineAudioWave() {
+  return (
+    <div
+      className="pointer-events-none absolute left-[8%] right-[6%] top-[104px] z-0 hidden h-[82px] items-center justify-between lg:flex"
+      aria-hidden="true"
+    >
+      <div className="absolute left-[23%] top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full bg-flame/[.08] blur-xl" />
+      <div className="absolute left-[23%] top-1/2 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full border border-flame/20" />
+      <div className="absolute left-[23%] top-1/2 h-32 w-32 -translate-x-1/2 -translate-y-1/2 rounded-full border border-flame/10" />
+      <div className="absolute left-[23%] top-1/2 h-44 w-44 -translate-x-1/2 -translate-y-1/2 rounded-full border border-flame/[.06]" />
+      {pipelineWaveHeights.map((height, index) => (
+        <span
+          key={index}
+          className="pipeline-wave-bar relative z-10"
+          style={{ height: `${height}px`, animationDelay: `-${(index % 13) * 90}ms` }}
+        />
+      ))}
+    </div>
+  )
+}
+
 function ConversationBubble({
   speaker,
   text,
@@ -35,7 +73,7 @@ function ConversationBubble({
   isEmber: boolean
 }) {
   return (
-    <div className={`rounded-lg border border-white/10 px-3 py-2.5 ${isEmber ? 'bg-white/[.055]' : 'bg-white/[.10]'}`}>
+    <div className={`rounded-lg border border-white/10 px-3 py-2.5 ${isEmber ? 'bg-[#20201f]' : 'bg-[#30302f]'}`}>
       <p className={`text-[10px] font-bold ${isEmber ? 'text-flame' : 'text-white/55'}`}>{speaker}</p>
       <p className="mt-1 text-[11.5px] leading-[1.4] text-white/85">{text}</p>
     </div>
@@ -71,29 +109,23 @@ export function PyroSection() {
 
           <AnimatedSection delay={150} className="min-w-0">
             <div className="relative">
-              <span
-                className="pointer-events-none absolute left-[8%] right-[6%] top-[142px] hidden h-px bg-gradient-to-r from-flame/15 via-flame/80 to-flame/15 shadow-[0_0_14px_rgba(255,107,53,.6)] lg:block"
-                aria-hidden="true"
-              />
-              <ol className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-[1.2fr_1.03fr_1.03fr_.95fr_.9fr] lg:gap-0">
+              <PipelineAudioWave />
+              <ol className="relative z-10 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-[1.2fr_1.03fr_1.03fr_.95fr_.9fr] lg:gap-0">
 
               <li className="relative min-h-[310px] rounded-xl border border-white/10 bg-white/[.025] p-4 lg:min-h-[338px] lg:rounded-none lg:border-0 lg:bg-transparent lg:px-3 lg:py-0">
                 <h3 className="text-center text-[12px] font-medium text-white/70">Active Call</h3>
                 <div className="relative mt-3 min-h-[258px]">
-                  <div className="pointer-events-none absolute left-[74px] right-[-12px] top-[70px] z-0 h-[104px] overflow-visible" aria-hidden="true">
+                  <div className="pointer-events-none absolute left-[96px] right-[-12px] top-[70px] z-0 h-[104px] overflow-visible lg:hidden" aria-hidden="true">
                     <Waveform size="small" className="h-full w-full opacity-95" />
                   </div>
                   <div className="pointer-events-none absolute bottom-5 left-0 h-[210px] w-[158px] rounded-full bg-flame/[.12] blur-[38px]" aria-hidden="true" />
-                  <div
-                    className="absolute bottom-5 left-0 z-10 h-[222px] w-[164px] overflow-hidden"
-                    style={{ WebkitMaskImage: 'linear-gradient(to bottom, #000 84%, transparent 100%)', maskImage: 'linear-gradient(to bottom, #000 84%, transparent 100%)' }}
-                  >
+                  <div className="absolute bottom-5 left-0 z-10 h-[238px] w-[178px]">
                     <Image
-                      src="/images/ember-human-headset.jpg"
+                      src="/images/ember-human-transparent.png"
                       alt="Ember, the PYRO AI voice and chat receptionist"
                       fill
-                      sizes="(min-width: 1024px) 164px, 220px"
-                      className="object-cover object-top mix-blend-lighten"
+                      sizes="(min-width: 1024px) 178px, 220px"
+                      className="object-contain object-bottom"
                     />
                   </div>
                   <p className="absolute bottom-0 left-0 z-20 text-[11.5px] font-semibold text-white/80">
@@ -131,7 +163,7 @@ export function PyroSection() {
 
               <li className="relative rounded-xl border border-white/10 bg-white/[.025] p-4 lg:rounded-none lg:border-y-0 lg:border-r-0 lg:border-l lg:border-l-white/10 lg:bg-transparent lg:px-3 lg:py-0">
                 <h3 className="text-center text-[12px] font-medium text-white/70">CRM Update</h3>
-                <div className="relative z-10 mt-7 rounded-lg border border-white/10 bg-white/[.055] p-3 lg:mt-10">
+                <div className="relative z-10 mt-7 rounded-lg border border-white/10 bg-[#20201f] p-3 lg:mt-10">
                   <p className="text-[11px] font-bold text-white">CRM Update</p>
                   <div className="mt-3 space-y-2">
                     {crmUpdates.map((item) => (
