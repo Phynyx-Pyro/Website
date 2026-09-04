@@ -3,9 +3,9 @@
 import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { AnimatedSection } from '../../_components/animated-section'
+import { useAssessmentPrefill } from '../../_components/assessment-prefill-provider'
 import { Clock, Lock, Ban, ArrowRight } from 'lucide-react'
 
-const PREFILL_STORAGE_KEY = 'phynyx-growth-assessment-prefill'
 const ATTRIBUTION_QUERY_KEYS = [
   'utm_source',
   'utm_medium',
@@ -18,19 +18,23 @@ const ATTRIBUTION_QUERY_KEYS = [
 
 export function CtaSection() {
   const router = useRouter()
+  const { stagePrefill } = useAssessmentPrefill()
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '' })
   const [submitting, setSubmitting] = useState(false)
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (!form?.firstName?.trim() || !form?.email?.trim()) return
+    const submitted = new FormData(event.currentTarget)
+    const prefill = {
+      firstName: String(submitted.get('firstName') ?? ''),
+      lastName: String(submitted.get('lastName') ?? ''),
+      email: String(submitted.get('email') ?? ''),
+      phone: String(submitted.get('phone') ?? ''),
+    }
+    if (!prefill.firstName.trim() || !prefill.email.trim()) return
     setSubmitting(true)
 
-    try {
-      window.sessionStorage.setItem(PREFILL_STORAGE_KEY, JSON.stringify(form))
-    } catch {
-      // Continue without prefill if browser storage is unavailable.
-    }
+    stagePrefill(prefill)
 
     const currentParams = new URLSearchParams(window.location.search)
     const attributionParams = new URLSearchParams()
@@ -84,7 +88,12 @@ export function CtaSection() {
                       name="firstName"
                       placeholder="Andrew"
                       value={form?.firstName ?? ''}
-                      onChange={(e: any) => setForm({ ...(form ?? {}), firstName: e?.target?.value ?? '' })}
+                      onChange={(e: any) =>
+                        setForm((current) => ({
+                          ...current,
+                          firstName: e?.target?.value ?? '',
+                        }))
+                      }
                       className="mt-1.5 w-full rounded-lg border border-black/12 bg-ivory px-3.5 py-3 text-[14px] placeholder:text-warm/60 focus:outline-none focus:ring-2 focus:ring-phoenix/30"
                     />
                   </label>
@@ -95,7 +104,12 @@ export function CtaSection() {
                       name="lastName"
                       placeholder="Higdon"
                       value={form?.lastName ?? ''}
-                      onChange={(e: any) => setForm({ ...(form ?? {}), lastName: e?.target?.value ?? '' })}
+                      onChange={(e: any) =>
+                        setForm((current) => ({
+                          ...current,
+                          lastName: e?.target?.value ?? '',
+                        }))
+                      }
                       className="mt-1.5 w-full rounded-lg border border-black/12 bg-ivory px-3.5 py-3 text-[14px] placeholder:text-warm/60 focus:outline-none focus:ring-2 focus:ring-phoenix/30"
                     />
                   </label>
@@ -107,7 +121,12 @@ export function CtaSection() {
                     name="email"
                     placeholder="you@practice.com"
                     value={form?.email ?? ''}
-                    onChange={(e: any) => setForm({ ...(form ?? {}), email: e?.target?.value ?? '' })}
+                    onChange={(e: any) =>
+                      setForm((current) => ({
+                        ...current,
+                        email: e?.target?.value ?? '',
+                      }))
+                    }
                     className="mt-1.5 w-full rounded-lg border border-black/12 bg-ivory px-3.5 py-3 text-[14px] placeholder:text-warm/60 focus:outline-none focus:ring-2 focus:ring-phoenix/30"
                   />
                 </label>
@@ -118,7 +137,12 @@ export function CtaSection() {
                     name="phone"
                     placeholder="(555) 123-4567"
                     value={form?.phone ?? ''}
-                    onChange={(e: any) => setForm({ ...(form ?? {}), phone: e?.target?.value ?? '' })}
+                    onChange={(e: any) =>
+                      setForm((current) => ({
+                        ...current,
+                        phone: e?.target?.value ?? '',
+                      }))
+                    }
                     className="mt-1.5 w-full rounded-lg border border-black/12 bg-ivory px-3.5 py-3 text-[14px] placeholder:text-warm/60 focus:outline-none focus:ring-2 focus:ring-phoenix/30"
                   />
                 </label>

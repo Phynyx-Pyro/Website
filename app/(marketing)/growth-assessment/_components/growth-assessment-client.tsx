@@ -10,6 +10,7 @@ import {
   type BookingContact,
 } from '@/lib/ghl-booking'
 import { BookingCalendar } from './booking-calendar'
+import { useAssessmentPrefill } from '../../_components/assessment-prefill-provider'
 
 type FormData = {
   firstName: string
@@ -44,9 +45,8 @@ type AssessmentResult = {
   bookingContact: BookingContact
 }
 
-const PREFILL_STORAGE_KEY = 'phynyx-growth-assessment-prefill'
-
 export function GrowthAssessmentClient() {
+  const { prefill, clearPrefill } = useAssessmentPrefill()
   const [step, setStep] = useState(1)
   const [form, setForm] = useState<FormData>(initialForm)
   const [submitting, setSubmitting] = useState(false)
@@ -56,46 +56,24 @@ export function GrowthAssessmentClient() {
   const [website, setWebsite] = useState('')
   const [error, setError] = useState('')
   const submissionIdRef = useRef('')
+  const prefillAppliedRef = useRef(false)
   const resultHeadingRef = useRef<HTMLHeadingElement>(null)
   const resultPath = assessmentResult?.path ?? null
 
   useEffect(() => {
-    let parsed: Partial<FormData> | null = null
+    if (!prefill || prefillAppliedRef.current) return
+    prefillAppliedRef.current = true
 
-    try {
-      const stored = window.sessionStorage.getItem(PREFILL_STORAGE_KEY)
-      if (!stored) return
-
-      parsed = JSON.parse(stored) as Partial<FormData>
-      window.sessionStorage.removeItem(PREFILL_STORAGE_KEY)
-    } catch {
-      try {
-        window.sessionStorage.removeItem(PREFILL_STORAGE_KEY)
-      } catch {
-        // Browser storage is optional; the assessment still works without it.
-      }
-    }
-
-    if (!parsed) return
-
-    const prefill = parsed
-    const frame = window.requestAnimationFrame(() => {
-      setForm((current) => ({
-        ...current,
-        firstName: typeof prefill.firstName === 'string' ? prefill.firstName : '',
-        lastName: typeof prefill.lastName === 'string' ? prefill.lastName : '',
-        email: typeof prefill.email === 'string' ? prefill.email : '',
-        phone: typeof prefill.phone === 'string' ? prefill.phone : '',
-      }))
-      setStep(
-        typeof prefill.phone === 'string' && prefill.phone.trim().length > 0
-          ? 2
-          : 1,
-      )
-    })
-
-    return () => window.cancelAnimationFrame(frame)
-  }, [])
+    setForm((current) => ({
+      ...current,
+      firstName: prefill.firstName,
+      lastName: prefill.lastName,
+      email: prefill.email,
+      phone: prefill.phone,
+    }))
+    setStep(prefill.phone.trim().length > 0 ? 2 : 1)
+    clearPrefill()
+  }, [clearPrefill, prefill])
 
   useEffect(() => {
     if (!resultPath) return
