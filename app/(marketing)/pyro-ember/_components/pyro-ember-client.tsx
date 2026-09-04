@@ -60,14 +60,14 @@ export function PyroEmberClient() {
                 {/* Ember + name tag */}
                 <div className="relative flex justify-end">
                   <div className="relative w-[320px] sm:w-[380px]">
-                    <div className="relative aspect-square w-full drop-shadow-2xl">
+                    <div className="relative aspect-square w-full overflow-hidden rounded-[28px] border border-white/10 bg-black/40 shadow-2xl">
                       <Image
-                        src="/images/ember-headshot.png"
+                        src="/images/ember-human-headset.jpg"
                         alt="Ember, the PYRO AI voice and chat receptionist"
                         fill
                         priority
-                        className="object-contain object-bottom"
-                        style={{ objectFit: 'contain', objectPosition: 'bottom' }}
+                        sizes="(min-width: 640px) 380px, 320px"
+                        className="object-cover object-center"
                       />
                     </div>
                     {/* Name tag */}
@@ -155,7 +155,7 @@ export function PyroEmberClient() {
               <div className="rounded-2xl border border-white/10 bg-coal/60 p-8">
                 <div className="flex items-center gap-3 mb-6">
                   <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-phoenix/40">
-                    <Image src="/images/ember-avatar.png" alt="Ember" fill className="object-cover object-top" />
+                    <Image src="/images/ember-human-avatar.jpg" alt="Ember" fill sizes="40px" className="object-cover" />
                   </span>
                   <div>
                     <p className="text-[15px] font-semibold text-white leading-tight">Ember</p>

@@ -7,14 +7,11 @@ export function SiteFooter() {
       <div className="mx-auto grid max-w-[1320px] grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-8 px-6 lg:px-10 py-16">
         {/* Brand */}
         <div className="lg:col-span-4">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="relative h-9 w-9">
-              <Image src="/images/pyro-icon.png" alt="PhynyxPro" fill className="object-contain" style={{ objectFit: 'contain' }} />
-            </div>
-            <div className="relative h-7 w-[140px]">
+          <Link href="/" className="inline-block" aria-label="Phynyx Pro home">
+            <div className="relative h-[44px] w-[198px]">
               <Image
-                src="/images/phynyx-logo-white.png"
-                alt="PhynyxPro"
+                src="/images/phynyx-pro-logo-light.png"
+                alt="Phynyx Pro"
                 fill
                 className="object-contain object-left"
                 style={{ objectFit: 'contain', objectPosition: 'left' }}

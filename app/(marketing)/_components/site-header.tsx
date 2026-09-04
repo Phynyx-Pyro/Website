@@ -52,19 +52,17 @@ export function SiteHeader() {
     >
       <nav className="mx-auto flex h-[84px] max-w-[1320px] items-center justify-between px-6 lg:px-10">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2.5 shrink-0">
-          <div className="relative h-[26px] w-[132px] lg:h-[30px] lg:w-[150px]">
+        <Link href="/" className="shrink-0" aria-label="Phynyx Pro home">
+          <div className="relative h-[38px] w-[170px] lg:h-[42px] lg:w-[188px]">
             <Image
-              src="/images/phynyx-logo-black.png"
-              alt="PhynyxPro"
+              src="/images/phynyx-pro-logo-dark.png"
+              alt="Phynyx Pro"
               fill
               className="object-contain object-left"
               style={{ objectFit: 'contain', objectPosition: 'left' }}
               priority
             />
           </div>
-          <span className="h-5 w-px bg-ink/20" />
-          <span className="text-[11px] font-bold uppercase tracking-[.3em] text-warm">Pro</span>
         </Link>
 
         {/* Desktop nav */}
