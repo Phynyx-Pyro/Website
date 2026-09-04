@@ -1,8 +1,26 @@
 import { getDb } from '@/db'
 import { growthAssessments } from '@/db/schema'
-import { syncGrowthAssessmentToGhl } from '@/lib/ghl'
-import { assessGrowthFit } from '@/lib/growth-assessment'
-import { and, desc, eq, gte, inArray } from 'drizzle-orm'
+import { issueBookingSession } from '@/lib/booking-session'
+import {
+  GhlIdentityConflictError,
+  resolveGrowthAssessmentContact,
+  syncNewGrowthAssessmentMetadata,
+} from '@/lib/ghl'
+import { assessGrowthFit, type FitAssessment } from '@/lib/growth-assessment'
+import {
+  PublicFormError,
+  canonicalPayloadHashInput,
+  enforcePublicFormRateLimit,
+  hashText,
+  normalizePhone,
+  normalizeSubmissionId,
+  publicFormErrorResponse,
+  readBoundedJson,
+} from '@/lib/public-form-security'
+import { and, eq } from 'drizzle-orm'
+
+const MAX_REQUEST_BYTES = 24 * 1_024
+const PROCESSING_LEASE_MS = 2 * 60_000
 
 const MAX_LENGTHS = {
   firstName: 80,
@@ -20,6 +38,15 @@ const MAX_LENGTHS = {
   attributionValue: 500,
 } as const
 
+const ALLOWED_INDUSTRIES = new Set([
+  'chiropractic',
+  'dental',
+  'medspa',
+  'home-services',
+  'other-healthcare',
+  'other-service',
+])
+
 const ALLOWED_REVENUE = new Set([
   'under-250k',
   '250k-500k',
@@ -36,6 +63,15 @@ const ALLOWED_BUDGET = new Set([
   '10k-plus',
 ])
 
+const ALLOWED_CHALLENGES = new Set([
+  'not-enough-leads',
+  'leads-not-converting',
+  'no-show-rate',
+  'no-attribution',
+  'follow-up',
+  'scaling',
+])
+
 function clean(value: unknown, maxLength: number) {
   return typeof value === 'string' ? value.trim().slice(0, maxLength) : ''
 }
@@ -44,30 +80,69 @@ function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
 }
 
-function allowed(value: string, values: Set<string>) {
-  return values.has(value) ? value : ''
+function optionalAllowed(value: string, values: Set<string>, label: string) {
+  if (!value || values.has(value)) return value
+  throw new PublicFormError(400, 'INVALID_FIELD', `Please select a valid ${label}.`)
+}
+
+async function bookingReadyResponse(
+  request: Request,
+  submissionId: string,
+  fit: FitAssessment,
+) {
+  const bookingCookie = await issueBookingSession(submissionId, request.url)
+  return Response.json(
+    {
+      success: true,
+      crmSynced: true,
+      bookingReady: true,
+      fit: { path: fit.path },
+    },
+    {
+      headers: {
+        'Cache-Control': 'no-store',
+        'Set-Cookie': bookingCookie,
+      },
+    },
+  )
 }
 
 export async function POST(request: Request) {
   try {
-    const payload = (await request.json()) as Record<string, unknown>
+    const payload = await readBoundedJson(request, MAX_REQUEST_BYTES)
+
+    if (clean(payload.website, 200)) {
+      return Response.json(
+        { success: true, ignored: true },
+        { headers: { 'Cache-Control': 'no-store' } },
+      )
+    }
+
     const firstName = clean(payload.firstName, MAX_LENGTHS.firstName)
     const lastName = clean(payload.lastName, MAX_LENGTHS.lastName)
     const email = clean(payload.email, MAX_LENGTHS.email).toLowerCase()
-    const phone = clean(payload.phone, MAX_LENGTHS.phone)
+    const submittedPhone = clean(payload.phone, MAX_LENGTHS.phone)
+    const phone = normalizePhone(submittedPhone)
     const businessName = clean(payload.businessName, MAX_LENGTHS.businessName)
-    const industry = clean(payload.industry, MAX_LENGTHS.industry)
-    const annualRevenue = allowed(
+    const industry = optionalAllowed(
+      clean(payload.industry, MAX_LENGTHS.industry),
+      ALLOWED_INDUSTRIES,
+      'industry',
+    )
+    const annualRevenue = optionalAllowed(
       clean(payload.annualRevenue, MAX_LENGTHS.annualRevenue),
       ALLOWED_REVENUE,
+      'annual revenue range',
     )
-    const monthlyBudget = allowed(
+    const monthlyBudget = optionalAllowed(
       clean(payload.monthlyBudget, MAX_LENGTHS.monthlyBudget),
       ALLOWED_BUDGET,
+      'monthly budget range',
     )
-    const biggestChallenge = clean(
-      payload.biggestChallenge,
-      MAX_LENGTHS.biggestChallenge,
+    const biggestChallenge = optionalAllowed(
+      clean(payload.biggestChallenge, MAX_LENGTHS.biggestChallenge),
+      ALLOWED_CHALLENGES,
+      'business challenge',
     )
     const currentMarketing = clean(
       payload.currentMarketing,
@@ -89,74 +164,58 @@ export async function POST(request: Request) {
       fbclid: clean(rawAttribution.fbclid, MAX_LENGTHS.attributionValue),
     }
 
-    if (!firstName || !email) {
-      return Response.json(
-        { success: false, message: 'Name and email are required.' },
-        { status: 400 },
+    if (!firstName || !email || !submittedPhone || !businessName || !industry) {
+      throw new PublicFormError(
+        400,
+        'REQUIRED_FIELDS',
+        'Name, email, phone, business name, and industry are required.',
       )
     }
 
     if (!isValidEmail(email)) {
-      return Response.json(
-        { success: false, message: 'Please enter a valid email address.' },
-        { status: 400 },
+      throw new PublicFormError(
+        400,
+        'INVALID_EMAIL',
+        'Please enter a valid email address.',
       )
     }
 
-    const now = new Date()
-    const db = getDb()
-    const submissionType =
-      phone && businessName && industry ? 'full-assessment' : 'homepage-quick-form'
-    const fit = assessGrowthFit(annualRevenue, monthlyBudget)
-    const retryCutoff = new Date(now.getTime() - 24 * 60 * 60 * 1_000)
-    const [pendingSubmission] = await db
-      .select({ id: growthAssessments.id })
-      .from(growthAssessments)
-      .where(
-        and(
-          eq(growthAssessments.email, email),
-          inArray(growthAssessments.status, ['new', 'crm-sync-failed']),
-          gte(growthAssessments.createdAt, retryCutoff),
-        ),
+    if (!phone) {
+      throw new PublicFormError(
+        400,
+        'INVALID_PHONE',
+        'Please enter a valid phone number, including the area code.',
       )
-      .orderBy(desc(growthAssessments.createdAt))
-      .limit(1)
-    const id = pendingSubmission?.id ?? crypto.randomUUID()
+    }
 
-    const storedValues = {
+    const submissionId = normalizeSubmissionId(payload.submissionId)
+    await enforcePublicFormRateLimit({
+      request,
+      scope: 'growth-assessment',
+      identity: email,
+    })
+    const submissionType = 'full-assessment' as const
+    const fit = assessGrowthFit(annualRevenue, monthlyBudget)
+    const now = new Date()
+    const ghlInput = {
+      submissionId,
+      submittedAt: now.toISOString(),
+      submissionType,
       firstName,
       lastName,
       email,
       phone,
       businessName,
       industry,
-      annualRevenue: annualRevenue || null,
-      biggestChallenge: biggestChallenge || null,
-      currentMarketing: currentMarketing || null,
-      monthlyBudget: monthlyBudget || null,
-      submissionType,
-      status: 'crm-pending',
-      updatedAt: now,
-    } as const
-
-    if (pendingSubmission) {
-      await db
-        .update(growthAssessments)
-        .set(storedValues)
-        .where(eq(growthAssessments.id, id))
-    } else {
-      await db.insert(growthAssessments).values({
-        id,
-        ...storedValues,
-        createdAt: now,
-      })
+      annualRevenue,
+      biggestChallenge,
+      currentMarketing,
+      monthlyBudget,
+      attribution,
+      fit,
     }
-
-    try {
-      const ghl = await syncGrowthAssessmentToGhl({
-        submissionId: id,
-        submittedAt: now.toISOString(),
-        submissionType,
+    const payloadHash = await hashText(
+      canonicalPayloadHashInput([
         firstName,
         lastName,
         email,
@@ -168,47 +227,205 @@ export async function POST(request: Request) {
         currentMarketing,
         monthlyBudget,
         attribution,
-        fit,
+      ]),
+    )
+    const db = getDb()
+    const [inserted] = await db
+      .insert(growthAssessments)
+      .values({
+        id: submissionId,
+        firstName,
+        lastName,
+        email,
+        phone,
+        businessName,
+        industry,
+        annualRevenue: annualRevenue || null,
+        biggestChallenge: biggestChallenge || null,
+        currentMarketing: currentMarketing || null,
+        monthlyBudget: monthlyBudget || null,
+        submissionType,
+        payloadHash,
+        ghlContactId: null,
+        status: 'crm-pending',
+        createdAt: now,
+        updatedAt: now,
       })
+      .onConflictDoNothing()
+      .returning({ id: growthAssessments.id })
 
-      await db
-        .update(growthAssessments)
-        .set({ status: 'crm-synced', updatedAt: new Date() })
-        .where(eq(growthAssessments.id, id))
+    let resumeMetadataContactId = ''
+    if (!inserted) {
+      const [existing] = await db
+        .select()
+        .from(growthAssessments)
+        .where(eq(growthAssessments.id, submissionId))
+        .limit(1)
 
-      return Response.json({
-        success: true,
-        id,
-        crmSynced: true,
-        fit: { path: fit.path },
-        bookingContact: {
-          contactId: ghl.contactId,
-          firstName,
-          lastName,
-          email,
-          phone,
-        },
-      })
+      if (!existing || existing.payloadHash !== payloadHash) {
+        throw new PublicFormError(
+          409,
+          'SUBMISSION_CONFLICT',
+          'This submission changed while it was being processed. Please try again.',
+        )
+      }
+
+      if (existing.status === 'crm-synced' && existing.ghlContactId) {
+        return bookingReadyResponse(
+          request,
+          existing.id,
+          assessGrowthFit(existing.annualRevenue ?? '', existing.monthlyBudget ?? ''),
+        )
+      }
+
+      if (
+        ['crm-pending', 'crm-metadata-pending'].includes(existing.status) &&
+        now.getTime() - existing.updatedAt.getTime() < PROCESSING_LEASE_MS
+      ) {
+        throw new PublicFormError(
+          409,
+          'SUBMISSION_IN_PROGRESS',
+          'Your assessment is already being processed. Please wait a moment and try again.',
+        )
+      }
+
+      if (
+        existing.ghlContactId &&
+        ['crm-metadata-pending', 'crm-metadata-failed'].includes(existing.status)
+      ) {
+        resumeMetadataContactId = existing.ghlContactId
+        const [claimed] = await db
+          .update(growthAssessments)
+          .set({ status: 'crm-metadata-pending', updatedAt: now })
+          .where(
+            and(
+              eq(growthAssessments.id, submissionId),
+              eq(growthAssessments.status, existing.status),
+              eq(growthAssessments.updatedAt, existing.updatedAt),
+            ),
+          )
+          .returning({ id: growthAssessments.id })
+
+        if (!claimed) {
+          throw new PublicFormError(
+            409,
+            'SUBMISSION_IN_PROGRESS',
+            'Your assessment is already being processed. Please wait a moment and try again.',
+          )
+        }
+      } else {
+        const [claimed] = await db
+          .update(growthAssessments)
+          .set({ ghlContactId: null, status: 'crm-pending', updatedAt: now })
+          .where(
+            and(
+              eq(growthAssessments.id, submissionId),
+              eq(growthAssessments.status, existing.status),
+              eq(growthAssessments.updatedAt, existing.updatedAt),
+            ),
+          )
+          .returning({ id: growthAssessments.id })
+
+        if (!claimed) {
+          throw new PublicFormError(
+            409,
+            'SUBMISSION_IN_PROGRESS',
+            'Your assessment is already being processed. Please wait a moment and try again.',
+          )
+        }
+      }
+    }
+
+    let contactId = resumeMetadataContactId
+    let metadataPending = Boolean(resumeMetadataContactId)
+    try {
+      if (!contactId) {
+        const contact = await resolveGrowthAssessmentContact(ghlInput)
+        contactId = contact.contactId
+
+        if (!contact.isNew) {
+          await db
+            .update(growthAssessments)
+            .set({
+              ghlContactId: contactId,
+              status: 'crm-synced',
+              updatedAt: new Date(),
+            })
+            .where(eq(growthAssessments.id, submissionId))
+
+          return bookingReadyResponse(request, submissionId, fit)
+        }
+
+        metadataPending = true
+        await db
+          .update(growthAssessments)
+          .set({
+            ghlContactId: contactId,
+            status: 'crm-metadata-pending',
+            updatedAt: new Date(),
+          })
+          .where(eq(growthAssessments.id, submissionId))
+      }
+
+      await syncNewGrowthAssessmentMetadata(contactId, ghlInput)
     } catch (error) {
+      const identityConflict = error instanceof GhlIdentityConflictError
       await db
         .update(growthAssessments)
-        .set({ status: 'crm-sync-failed', updatedAt: new Date() })
-        .where(eq(growthAssessments.id, id))
+        .set({
+          ghlContactId: metadataPending && contactId ? contactId : null,
+          status: identityConflict
+            ? 'contact-verification-required'
+            : metadataPending
+              ? 'crm-metadata-failed'
+              : 'crm-sync-failed',
+          updatedAt: new Date(),
+        })
+        .where(eq(growthAssessments.id, submissionId))
+
+      if (identityConflict) {
+        return Response.json(
+          {
+            success: false,
+            code: 'CRM_HANDOFF_FAILED',
+            message:
+              'Your assessment was saved, but we could not finish the secure calendar handoff. Please contact support or try again later.',
+          },
+          { status: 502, headers: { 'Cache-Control': 'no-store' } },
+        )
+      }
+
       console.error('GoHighLevel growth assessment sync failed', error)
       return Response.json(
         {
           success: false,
+          code: 'CRM_HANDOFF_FAILED',
           message:
             'Your assessment was saved, but we could not finish the handoff. Please try again.',
         },
-        { status: 502 },
+        { status: 502, headers: { 'Cache-Control': 'no-store' } },
       )
     }
+
+    await db
+      .update(growthAssessments)
+      .set({
+        ghlContactId: contactId,
+        status: 'crm-synced',
+        updatedAt: new Date(),
+      })
+      .where(eq(growthAssessments.id, submissionId))
+
+    return bookingReadyResponse(request, submissionId, fit)
   } catch (error) {
+    if (error instanceof PublicFormError) return publicFormErrorResponse(error)
     console.error('Growth assessment submission failed', error)
     return Response.json(
-      { success: false, message: 'We could not save your assessment. Please try again.' },
-      { status: 500 },
+      {
+        success: false,
+        message: 'We could not save your assessment. Please try again.',
+      },
+      { status: 500, headers: { 'Cache-Control': 'no-store' } },
     )
   }
 }

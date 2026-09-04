@@ -10,6 +10,18 @@ export type AssessmentAttribution = {
   fbclid: string
 }
 
+export function minimizeAttributionUrl(value: string) {
+  if (!value) return ''
+
+  try {
+    const url = new URL(value)
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return ''
+    return `${url.origin}${url.pathname}`
+  } catch {
+    return ''
+  }
+}
+
 export function getAssessmentAttribution(): AssessmentAttribution {
   if (typeof window === 'undefined') {
     return {
@@ -28,8 +40,8 @@ export function getAssessmentAttribution(): AssessmentAttribution {
   const params = new URLSearchParams(window.location.search)
 
   return {
-    landingPage: window.location.href,
-    referrer: document.referrer,
+    landingPage: minimizeAttributionUrl(window.location.href),
+    referrer: minimizeAttributionUrl(document.referrer),
     utmSource: params.get('utm_source') ?? '',
     utmMedium: params.get('utm_medium') ?? '',
     utmCampaign: params.get('utm_campaign') ?? '',
@@ -39,4 +51,3 @@ export function getAssessmentAttribution(): AssessmentAttribution {
     fbclid: params.get('fbclid') ?? '',
   }
 }
-

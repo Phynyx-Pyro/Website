@@ -51,6 +51,8 @@ The local site runs at `http://localhost:3000`.
 ## Validation
 
 ```bash
+yarn test
+yarn lint
 yarn build
 yarn exec tsc --noEmit
 ```
@@ -60,11 +62,14 @@ The production build is emitted to `dist/` in the Sites-compatible Worker format
 ## Data and hosting
 
 - `.openai/hosting.json` declares the logical D1 binding as `DB`.
-- `db/schema.ts` defines growth assessments and support requests.
+- `db/schema.ts` defines growth assessments, support requests, short-lived booking handoffs, and public-form rate limits.
 - Generated D1 migrations live in `drizzle/` and are packaged with each Sites version.
 - `SITE_URL` optionally overrides the canonical metadata, sitemap, and robots origin. The source default is `https://phynyxpro.com`.
+- `GHL_LOCATION_ID` and the secret `GHL_PRIVATE_INTEGRATION_TOKEN` are production environment bindings. The token is server-only and must never be committed or prefixed with `NEXT_PUBLIC_`.
 
-The original Abacus notification-email hooks are intentionally not carried into this recovery. Submissions are saved durably in Sites; adding email or CRM delivery later should use the chosen production provider.
+Growth Assessments are saved to D1 and classified on the server. Net-new GoHighLevel contacts receive website-source tags and a structured assessment note; matching existing contacts are linked to the booking without changing their CRM fields, tags, or notes. A short-lived, single-use, HTTP-only cookie authorizes the calendar prefill handoff, and the booking URL itself contains no name, email, phone number, or CRM contact identifier.
+
+Public form routes enforce same-origin JSON requests, streamed body-size limits, D1-backed global/client/identity rate limits, honeypot fields, and replay-safe submission IDs. Site-wide response headers provide a Content Security Policy, HTTPS enforcement, frame protection, MIME sniffing protection, a restrictive referrer policy, and a limited browser permissions policy.
 
 ## Reference archive
 

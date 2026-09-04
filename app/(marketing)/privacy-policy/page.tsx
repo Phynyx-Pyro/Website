@@ -10,7 +10,7 @@ export default function PrivacyPolicyPage() {
     <main className="bg-ivory grain-subtle min-h-screen pt-32 pb-20 md:pt-40 md:pb-28">
       <div className="mx-auto max-w-[800px] px-6 lg:px-10">
         <h1 className="text-[36px] font-bold text-ink">Privacy Policy</h1>
-        <p className="mt-2 text-[14px] text-warm">Last updated: September 1, 2026</p>
+        <p className="mt-2 text-[14px] text-warm">Last updated: September 3, 2026</p>
 
         <div className="mt-10 space-y-8 text-[16px] leading-[1.7] text-ink/80">
           <section>
@@ -25,12 +25,12 @@ export default function PrivacyPolicyPage() {
 
           <section>
             <h2 className="text-[22px] font-semibold text-ink mb-3">Data Storage & Security</h2>
-            <p>Your information is stored securely using industry-standard encryption and access controls. We retain your data only as long as necessary to provide our services or as required by law.</p>
+            <p>Assessment and support submissions are processed through our website infrastructure and protected with access controls and encrypted network connections. We retain information only as long as reasonably necessary to provide our services, operate our business, or meet legal obligations.</p>
           </section>
 
           <section>
             <h2 className="text-[22px] font-semibold text-ink mb-3">Third-Party Services</h2>
-            <p>PhynyxPro uses third-party platforms for CRM, advertising, analytics, and communication. These services have their own privacy policies. We share only the information necessary to deliver our services.</p>
+            <p>PhynyxPro uses Cloudflare and OpenAI Sites for website infrastructure and GoHighLevel for customer relationship management, website attribution, and appointment booking. When you submit an assessment and continue to scheduling, the contact information you provided is securely passed to the GoHighLevel calendar so you do not need to enter it a second time. These providers process information under their own privacy terms. We share only the information needed for these functions.</p>
           </section>
 
           <section>

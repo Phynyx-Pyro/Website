@@ -53,7 +53,9 @@ export function GrowthAssessmentClient() {
   const [assessmentResult, setAssessmentResult] =
     useState<AssessmentResult | null>(null)
   const [investmentAccepted, setInvestmentAccepted] = useState(false)
+  const [website, setWebsite] = useState('')
   const [error, setError] = useState('')
+  const submissionIdRef = useRef('')
   const resultHeadingRef = useRef<HTMLHeadingElement>(null)
   const resultPath = assessmentResult?.path ?? null
 
@@ -85,7 +87,11 @@ export function GrowthAssessmentClient() {
         email: typeof prefill.email === 'string' ? prefill.email : '',
         phone: typeof prefill.phone === 'string' ? prefill.phone : '',
       }))
-      setStep(2)
+      setStep(
+        typeof prefill.phone === 'string' && prefill.phone.trim().length > 0
+          ? 2
+          : 1,
+      )
     })
 
     return () => window.cancelAnimationFrame(frame)
@@ -111,26 +117,53 @@ export function GrowthAssessmentClient() {
     setSubmitting(true)
     setError('')
     try {
+      if (!submissionIdRef.current) submissionIdRef.current = crypto.randomUUID()
       const res = await fetch('/api/growth-assessment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, attribution: getAssessmentAttribution() }),
+        body: JSON.stringify({
+          ...form,
+          website,
+          submissionId: submissionIdRef.current,
+          attribution: getAssessmentAttribution(),
+        }),
       })
       const result = (await res.json().catch(() => null)) as {
+        code?: string
         message?: string
+        bookingReady?: boolean
         fit?: { path?: FitPath }
-        bookingContact?: unknown
       } | null
-      if (!res.ok) throw new Error(result?.message ?? 'Submission failed')
+      if (!res.ok) {
+        if (result?.code === 'SUBMISSION_CONFLICT') {
+          submissionIdRef.current = ''
+        }
+        throw new Error(result?.message ?? 'Submission failed')
+      }
       if (result?.fit?.path !== 'calendar' && result?.fit?.path !== 'investment-context') {
         throw new Error('We could not determine the next step. Please try again.')
       }
-      if (!isBookingContact(result.bookingContact)) {
+      if (!result.bookingReady) {
+        throw new Error('We could not prepare the secure calendar handoff. Please try again.')
+      }
+
+      const bookingResponse = await fetch('/api/booking-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{}',
+      })
+      const bookingResult = (await bookingResponse.json().catch(() => null)) as {
+        message?: string
+        bookingContact?: unknown
+      } | null
+      const bookingContact = bookingResult?.bookingContact
+
+      if (!bookingResponse.ok || !isBookingContact(bookingContact)) {
         throw new Error('We could not connect your assessment to the calendar. Please try again.')
       }
       setAssessmentResult({
         path: result.fit.path,
-        bookingContact: result.bookingContact,
+        bookingContact,
       })
     } catch (e: any) {
       setError(e?.message ?? 'Something went wrong. Please try again.')
@@ -236,6 +269,18 @@ export function GrowthAssessmentClient() {
           onSubmit={handleSubmit}
           className="mx-auto max-w-[600px] px-6"
         >
+          <div className="absolute left-[-10000px] h-px w-px overflow-hidden" aria-hidden="true">
+            <label htmlFor="assessment-website">Website</label>
+            <input
+              id="assessment-website"
+              name="website"
+              type="text"
+              tabIndex={-1}
+              autoComplete="off"
+              value={website}
+              onChange={(event) => setWebsite(event.target.value)}
+            />
+          </div>
           <input type="hidden" name="firstName" value={form.firstName} />
           <input type="hidden" name="lastName" value={form.lastName} />
           <input type="hidden" name="email" value={form.email} />

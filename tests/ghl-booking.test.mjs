@@ -2,9 +2,11 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
   buildGhlBookingUrl,
+  buildGhlPrefillMessage,
   GHL_BOOKING_URL,
   isBookingContact,
 } from '../lib/ghl-booking.ts'
+import { minimizeAttributionUrl } from '../lib/assessment-attribution.ts'
 
 const contact = {
   contactId: 'contact_123',
@@ -14,27 +16,53 @@ const contact = {
   phone: '+1 (555) 123-4567',
 }
 
-test('buildGhlBookingUrl carries the exact CRM identity into the widget', () => {
-  const url = new URL(buildGhlBookingUrl(contact))
+test('buildGhlBookingUrl never places CRM identity in the URL', () => {
+  const url = new URL(buildGhlBookingUrl())
 
   assert.equal(`${url.origin}${url.pathname}`, GHL_BOOKING_URL)
-  assert.equal(url.searchParams.get('contact_id'), contact.contactId)
-  assert.equal(url.searchParams.get('first_name'), contact.firstName)
-  assert.equal(url.searchParams.get('last_name'), contact.lastName)
-  assert.equal(url.searchParams.get('email'), contact.email)
-  assert.equal(url.searchParams.get('phone'), contact.phone)
+  assert.equal(url.search, '')
 })
 
-test('buildGhlBookingUrl omits blank optional values', () => {
-  const url = new URL(
-    buildGhlBookingUrl({ ...contact, lastName: '', phone: '' }),
+test('buildGhlPrefillMessage uses the widget message channel for exact CRM identity', () => {
+  const message = buildGhlPrefillMessage(
+    contact,
+    'https://phynyxpro.example/growth-assessment',
+    'https://google.com/',
+    'calendar-frame',
   )
 
-  assert.equal(url.searchParams.has('last_name'), false)
-  assert.equal(url.searchParams.has('phone'), false)
+  assert.equal(message[0], 'query-params')
+  assert.deepEqual(message[1], {
+    contact_id: contact.contactId,
+    first_name: contact.firstName,
+    last_name: contact.lastName,
+    email: contact.email,
+    phone: contact.phone,
+  })
+  assert.equal(message[4], 'calendar-frame')
+})
+
+test('buildGhlPrefillMessage omits a blank optional last name', () => {
+  const message = buildGhlPrefillMessage(
+    { ...contact, lastName: '' },
+    'https://phynyxpro.example/growth-assessment',
+    '',
+    'calendar-frame',
+  )
+
+  assert.equal('last_name' in message[1], false)
 })
 
 test('isBookingContact rejects a response without a CRM contact ID', () => {
   assert.equal(isBookingContact(contact), true)
   assert.equal(isBookingContact({ ...contact, contactId: '' }), false)
+})
+
+test('minimizeAttributionUrl removes query strings, fragments, and unsafe schemes', () => {
+  assert.equal(
+    minimizeAttributionUrl('https://example.com/path?token=secret#details'),
+    'https://example.com/path',
+  )
+  assert.equal(minimizeAttributionUrl('javascript:alert(1)'), '')
+  assert.equal(minimizeAttributionUrl('not a URL'), '')
 })

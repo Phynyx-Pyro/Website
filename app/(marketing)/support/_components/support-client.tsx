@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import Link from 'next/link'
 import { AnimatedSection } from '../../_components/animated-section'
 import { CheckCircle2, AlertCircle, HelpCircle, Send } from 'lucide-react'
@@ -9,7 +9,9 @@ export function SupportClient() {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' })
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [website, setWebsite] = useState('')
   const [error, setError] = useState('')
+  const submissionIdRef = useRef('')
 
   const update = (field: string, value: string) => setForm((p) => ({ ...(p ?? {}), [field]: value }))
   const canSubmit = (form?.name?.trim?.()?.length ?? 0) > 0 && (form?.email?.trim?.()?.length ?? 0) > 0 && (form?.message?.trim?.()?.length ?? 0) > 0
@@ -18,15 +20,24 @@ export function SupportClient() {
     setSubmitting(true)
     setError('')
     try {
+      if (!submissionIdRef.current) submissionIdRef.current = crypto.randomUUID()
       const res = await fetch('/api/support', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          website,
+          submissionId: submissionIdRef.current,
+        }),
       })
       const result = (await res.json().catch(() => null)) as {
+        code?: string
         message?: string
       } | null
-      if (!res.ok) throw new Error(result?.message ?? 'Submission failed')
+      if (!res.ok) {
+        if (result?.code === 'SUBMISSION_CONFLICT') submissionIdRef.current = ''
+        throw new Error(result?.message ?? 'Submission failed')
+      }
       setSubmitted(true)
     } catch (e: any) {
       setError(e?.message ?? 'Something went wrong.')
@@ -69,6 +80,18 @@ export function SupportClient() {
 
         <AnimatedSection delay={100}>
           <div className="rounded-2xl bg-white p-8 shadow-xl">
+            <div className="absolute left-[-10000px] h-px w-px overflow-hidden" aria-hidden="true">
+              <label htmlFor="support-website">Website</label>
+              <input
+                id="support-website"
+                name="website"
+                type="text"
+                tabIndex={-1}
+                autoComplete="off"
+                value={website}
+                onChange={(event) => setWebsite(event.target.value)}
+              />
+            </div>
             <div className="space-y-4">
               <div>
                 <label className="block text-[13px] font-medium text-ink mb-1.5">Name *</label>

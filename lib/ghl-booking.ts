@@ -25,19 +25,31 @@ export function isBookingContact(value: unknown): value is BookingContact {
   )
 }
 
-export function buildGhlBookingUrl(contact: BookingContact) {
-  const url = new URL(GHL_BOOKING_URL)
-  const fields = [
-    ['contact_id', contact.contactId],
-    ['first_name', contact.firstName],
-    ['last_name', contact.lastName],
-    ['email', contact.email],
-    ['phone', contact.phone],
-  ] as const
+export function buildGhlBookingUrl() {
+  return GHL_BOOKING_URL
+}
 
-  for (const [key, value] of fields) {
-    if (value) url.searchParams.set(key, value)
+export function buildGhlPrefillMessage(
+  contact: BookingContact,
+  pageUrl: string,
+  referrer: string,
+  iframeId: string,
+) {
+  const params: Record<string, string> = {
+    contact_id: contact.contactId,
+    first_name: contact.firstName,
+    email: contact.email,
+    phone: contact.phone,
   }
 
-  return url.toString()
+  if (contact.lastName) params.last_name = contact.lastName
+
+  return [
+    'query-params',
+    params,
+    pageUrl,
+    referrer,
+    iframeId,
+    { consent: null, isConsentExpected: false },
+  ] as const
 }
