@@ -102,5 +102,6 @@ export function trackFunnelEvent<Name extends FunnelEventName>(
   if (!detail) return
 
   window.dispatchEvent(new CustomEvent(FUNNEL_EVENT_CHANNEL, { detail }))
+  window.dataLayer ??= []
   if (Array.isArray(window.dataLayer)) window.dataLayer.push(detail)
 }

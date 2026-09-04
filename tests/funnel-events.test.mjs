@@ -57,3 +57,46 @@ test('funnel event details reject invalid placement and path values', async () =
     null,
   )
 })
+
+test('tracking initializes the data layer queue and still dispatches the custom event', async () => {
+  const { FUNNEL_EVENT_CHANNEL, trackFunnelEvent } =
+    await loadFunnelEventsModule()
+  const originalWindow = globalThis.window
+  const originalCustomEvent = globalThis.CustomEvent
+  const dispatched = []
+
+  class TestCustomEvent {
+    constructor(type, init) {
+      this.type = type
+      this.detail = init.detail
+    }
+  }
+
+  try {
+    globalThis.CustomEvent = TestCustomEvent
+    globalThis.window = {
+      dispatchEvent(event) {
+        dispatched.push(event)
+        return true
+      },
+    }
+
+    trackFunnelEvent('diagnostic_cta_click', {
+      placement: 'growth_system_final',
+    })
+
+    assert.equal(dispatched.length, 1)
+    assert.equal(dispatched[0].type, FUNNEL_EVENT_CHANNEL)
+    assert.deepEqual(dispatched[0].detail, {
+      event: 'phynyx_diagnostic_cta_click',
+      placement: 'growth_system_final',
+    })
+    assert.deepEqual(globalThis.window.dataLayer, [dispatched[0].detail])
+    assert.strictEqual(globalThis.window.dataLayer[0], dispatched[0].detail)
+  } finally {
+    if (originalWindow === undefined) delete globalThis.window
+    else globalThis.window = originalWindow
+    if (originalCustomEvent === undefined) delete globalThis.CustomEvent
+    else globalThis.CustomEvent = originalCustomEvent
+  }
+})

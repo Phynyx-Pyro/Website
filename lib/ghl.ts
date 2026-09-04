@@ -70,6 +70,12 @@ type ContactResponse = {
   contact?: ContactSummary
 }
 
+type LegacyGrowthAssessmentAttribution = AssessmentAttribution & {
+  conversionPage?: string
+  ctaOrigin?: string
+  sessionId?: string
+}
+
 type NotesResponse = {
   notes?: Array<{ id?: string; body?: string }>
 }
@@ -234,18 +240,37 @@ async function createOrMatchContact(input: GhlGrowthAssessment, locationId: stri
   }
 }
 
+function sanitizeCrmNoteValue(value: string, maxLength = 2_000) {
+  if (typeof value !== 'string') return ''
+  return value
+    .replace(/[\u0000-\u001f\u007f]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, maxLength)
+}
+
 function present(label: string, value: string) {
-  return `${label}: ${value || 'Not provided'}`
+  return `${label}: ${sanitizeCrmNoteValue(value) || 'Not provided'}`
+}
+
+function presentAttributionWhenProvided(label: string, value: string) {
+  const sanitized = sanitizeCrmNoteValue(value, 500)
+  return sanitized ? [`${label}: ${sanitized}`] : []
 }
 
 function buildAssessmentNote(input: GhlGrowthAssessment) {
-  const { attribution, fit } = input
+  const { fit } = input
+  const attribution = input.attribution as LegacyGrowthAssessmentAttribution
+  const effectiveConversionPage = attribution.conversionPage || attribution.landingPage
+  const effectiveCtaOrigin = attribution.ctaOrigin || attribution.entryPoint || ''
+  const effectiveSessionId = attribution.sessionId || ''
+
   return [
     `Submission ID: ${input.submissionId}`,
     `Submitted: ${input.submittedAt}`,
     `Form: ${input.submissionType}`,
     '',
-    `Website assessment: ${fit.path === 'calendar' ? 'Good fit — show calendar immediately' : 'Investment context required before calendar'}`,
+    `Fit-check path: ${fit.path === 'calendar' ? 'Revenue and budget thresholds cleared — show calendar immediately' : 'Revenue or budget threshold needs context before calendar'}`,
     `Assessment basis: ${fit.summary}`,
     '',
     present('Business', input.businessName),
@@ -255,19 +280,37 @@ function buildAssessmentNote(input: GhlGrowthAssessment) {
     present('Biggest challenge', input.biggestChallenge),
     present('Current marketing', input.currentMarketing),
     '',
-    present('Submitting page', attribution.conversionPage),
-    present('First landing page', attribution.landingPage),
+    present('Submitting page', effectiveConversionPage),
+    present('First-touch landing page', attribution.landingPage),
     present('Original referrer', attribution.referrer),
-    present('CTA origin', attribution.ctaOrigin),
-    present('Website session ID', attribution.sessionId),
+    ...presentAttributionWhenProvided(
+      'Assessment CTA entry point',
+      effectiveCtaOrigin,
+    ),
+    present('Website session ID', effectiveSessionId),
     present('UTM source', attribution.utmSource),
     present('UTM medium', attribution.utmMedium),
     present('UTM campaign', attribution.utmCampaign),
     present('UTM content', attribution.utmContent),
     present('UTM term', attribution.utmTerm),
     present('Google click ID', attribution.gclid),
+    ...presentAttributionWhenProvided(
+      'Google Display click ID',
+      attribution.dclid,
+    ),
+    ...presentAttributionWhenProvided('Google GBRAID', attribution.gbraid),
+    ...presentAttributionWhenProvided('Google WBRAID', attribution.wbraid),
     present('Facebook click ID', attribution.fbclid),
-    present('Microsoft click ID', attribution.msclkid),
+    ...presentAttributionWhenProvided(
+      'Microsoft click ID',
+      attribution.msclkid,
+    ),
+    ...presentAttributionWhenProvided('TikTok click ID', attribution.ttclid),
+    ...presentAttributionWhenProvided('X/Twitter click ID', attribution.twclid),
+    ...presentAttributionWhenProvided(
+      'LinkedIn click ID',
+      attribution.liFatId,
+    ),
   ].join('\n')
 }
 
@@ -286,17 +329,20 @@ function readGhlSyncConfiguration() {
 }
 
 function buildAttributionSnapshot(input: GhlGrowthAssessment) {
-  const { attribution } = input
+  const attribution = input.attribution as LegacyGrowthAssessmentAttribution
+  const conversionPage = attribution.conversionPage || attribution.landingPage
+  const ctaOrigin = attribution.ctaOrigin || attribution.entryPoint || ''
+  const sessionId = attribution.sessionId || ''
   return JSON.stringify({
     source: 'phynyx-website',
     form: WEBSITE_FORM_NAME,
     formVersion: WEBSITE_FORM_VERSION,
     submittedAt: input.submittedAt,
-    conversionPage: attribution.conversionPage,
+    conversionPage,
     landingPage: attribution.landingPage,
     referrer: attribution.referrer,
-    ctaOrigin: attribution.ctaOrigin,
-    sessionId: attribution.sessionId,
+    ctaOrigin,
+    sessionId,
     utmSource: attribution.utmSource,
     utmMedium: attribution.utmMedium,
     utmCampaign: attribution.utmCampaign,
@@ -375,6 +421,7 @@ function buildContactCustomFields(
   contact: ContactSummary | undefined,
   definitions: Map<string, string>,
 ) {
+  const attribution = input.attribution as LegacyGrowthAssessmentAttribution
   const fitResult = input.fit.path === 'calendar' ? 'qualified' : 'nurture'
   const firstLandingPage = contactHasCustomFieldValue(
     contact,
@@ -397,9 +444,12 @@ function buildContactCustomFields(
       fieldEntry(GHL_CONTACT_FIELD_KEYS.formVersion, WEBSITE_FORM_VERSION),
       fieldEntry(
         GHL_CONTACT_FIELD_KEYS.conversionPage,
-        input.attribution.conversionPage,
+        attribution.conversionPage || attribution.landingPage,
       ),
-      fieldEntry(GHL_CONTACT_FIELD_KEYS.ctaOrigin, input.attribution.ctaOrigin),
+      fieldEntry(
+        GHL_CONTACT_FIELD_KEYS.ctaOrigin,
+        attribution.ctaOrigin || attribution.entryPoint || '',
+      ),
       fieldEntry(GHL_CONTACT_FIELD_KEYS.industry, input.industry),
       fieldEntry(GHL_CONTACT_FIELD_KEYS.revenueRange, input.annualRevenue),
       fieldEntry(

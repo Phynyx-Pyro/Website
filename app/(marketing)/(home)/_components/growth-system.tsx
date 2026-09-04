@@ -80,7 +80,7 @@ export function GrowthSystem() {
                 <span className="text-[13px] font-bold tracking-[.14em] text-flame">02</span>
                 <span className="text-[11px] font-bold uppercase tracking-[.16em] text-white/60">Convert</span>
               </div>
-              <h3 className="mt-3 text-[25px] font-bold leading-[1.02] tracking-[-.03em] lg:mt-4 lg:text-[30px]">Give every good inquiry a next step.</h3>
+              <h3 className="mt-3 text-[25px] font-bold leading-[1.02] tracking-[-.03em] lg:mt-4 lg:text-[30px]">Give qualified inquiries a defined next step.</h3>
               <p className="mt-3 text-[14.5px] leading-[1.6] text-white/70 lg:text-[15px]">
                 PYRO coordinates response, qualification, booking, confirmation,
                 reminders, and the handoff to your team.

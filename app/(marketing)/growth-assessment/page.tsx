@@ -2,9 +2,9 @@ import { Metadata } from 'next'
 import { GrowthAssessmentClient } from './_components/growth-assessment-client'
 
 export const metadata: Metadata = {
-  title: 'Book a Patient Acquisition Diagnostic',
+  title: 'Book an Acquisition Diagnostic',
   description:
-    'Start with a 3-minute fit check, then use a roughly 45-minute working diagnostic to review your patient-acquisition numbers and next steps.',
+    'Start with a 3-minute fit check, then use a working diagnostic to review your acquisition numbers, handoffs, and next steps.',
 }
 
 export default function GrowthAssessmentPage() {

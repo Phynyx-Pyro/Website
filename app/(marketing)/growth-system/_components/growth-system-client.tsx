@@ -70,7 +70,7 @@ export function GrowthSystemClient() {
             <AnimatedSection className="lg:col-span-7">
               <div className="relative rounded-xl overflow-hidden shadow-lift bg-linen">
                 <div className="aspect-[16/10] relative">
-                  <Image src="/images/ad-creative.jpg" alt="Illustrative patient-demand image" fill className="object-cover" />
+                  <Image src="/images/ad-creative.jpg" alt="Illustrative campaign creative" fill className="object-cover" />
                 </div>
                 <p className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-[10px] font-bold uppercase tracking-[.12em] text-warm shadow">Illustrative workflow</p>
                 <div className="absolute bottom-4 left-4 right-4 flex gap-3">
@@ -140,7 +140,7 @@ export function GrowthSystemClient() {
                     <p className="text-[12px] font-semibold text-phoenix">Ember AI · Example conversation</p>
                   </div>
                   <div className="space-y-2">
-                    <div className="rounded-lg bg-white/10 px-3 py-2 text-[12px] text-white/80">Hi! I&apos;d like to book a new patient exam.</div>
+                    <div className="rounded-lg bg-white/10 px-3 py-2 text-[12px] text-white/80">Hi! I&apos;d like to schedule an appointment.</div>
                     <div className="rounded-lg bg-phoenix/20 px-3 py-2 text-[12px] text-phoenix/90">I can help you find an available appointment. Would you prefer morning or afternoon?</div>
                   </div>
                 </div>
@@ -207,7 +207,7 @@ export function GrowthSystemClient() {
           <AnimatedSection delay={200}>
             <div className="mt-14 flex flex-col sm:flex-row items-center justify-center gap-4">
               <AssessmentCtaLink placement="growth_system_final" className="inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors">
-                Book My Patient Acquisition Diagnostic <ArrowRight className="h-4 w-4" />
+                Book My Acquisition Diagnostic <ArrowRight className="h-4 w-4" />
               </AssessmentCtaLink>
               <Link href="/results" className="inline-flex items-center gap-2 rounded-lg border border-ink/20 px-7 py-3.5 text-[15px] font-semibold text-ink hover:bg-ink hover:text-white transition-colors">
                 See How Measurement Works

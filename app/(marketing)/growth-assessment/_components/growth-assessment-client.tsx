@@ -12,6 +12,11 @@ import {
 } from '@/lib/ghl-booking'
 import { BookingCalendar } from './booking-calendar'
 import { useAssessmentPrefill } from '../../_components/assessment-prefill-provider'
+import {
+  isHealthcareAssessmentIndustry,
+  parseAssessmentIndustry,
+  type AssessmentIndustry,
+} from '@/lib/assessment-industry'
 
 type FormData = {
   firstName: string
@@ -46,6 +51,38 @@ type AssessmentResult = {
   bookingContact: BookingContact
 }
 
+function getJourneyCopy(industry: AssessmentIndustry | undefined) {
+  if (industry === 'chiropractic') {
+    return {
+      stages: 'lead, appointment request, confirmation, Day 1 show, and start of care',
+      metrics: 'spend, leads, appointment requests, shows, and starts',
+    }
+  }
+
+  if (industry === 'home-services') {
+    return {
+      stages: 'lead, response, estimate or booking request, scheduled visit, and completed job',
+      metrics: 'spend, leads, estimate or booking requests, scheduled visits, and completed jobs',
+    }
+  }
+
+  if (
+    industry === 'dental' ||
+    industry === 'medspa' ||
+    industry === 'other-healthcare'
+  ) {
+    return {
+      stages: 'lead, appointment request, confirmation, visit, and practice-recorded outcome',
+      metrics: 'spend, leads, appointment requests, visits, and recorded outcomes',
+    }
+  }
+
+  return {
+    stages: 'lead, response, appointment or estimate request, completion, and recorded outcome',
+    metrics: 'spend, leads, appointment or estimate requests, completed work, and recorded outcomes',
+  }
+}
+
 export function GrowthAssessmentClient() {
   const { prefill, clearPrefill } = useAssessmentPrefill()
   const [step, setStep] = useState(1)
@@ -64,6 +101,12 @@ export function GrowthAssessmentClient() {
   const qualificationTrackedRef = useRef(false)
   const resultHeadingRef = useRef<HTMLHeadingElement>(null)
   const resultPath = assessmentResult?.path ?? null
+  const selectedIndustry = parseAssessmentIndustry(form.industry)
+  const healthcareContext = isHealthcareAssessmentIndustry(selectedIndustry)
+  const diagnosticName = healthcareContext
+    ? 'Patient Acquisition Diagnostic'
+    : 'Acquisition Diagnostic'
+  const journeyCopy = getJourneyCopy(selectedIndustry)
 
   const markAssessmentStarted = useCallback(() => {
     if (assessmentStartedRef.current) return
@@ -81,12 +124,14 @@ export function GrowthAssessmentClient() {
 
   useEffect(() => {
     if (!prefill || prefillAppliedRef.current) return
-    prefillAppliedRef.current = true
-    markAssessmentStarted()
-    const nextStep = prefill.phone.trim().length > 0 ? 2 : 1
-    if (nextStep === 2) markStepComplete(1)
 
     const frame = window.requestAnimationFrame(() => {
+      if (prefillAppliedRef.current) return
+      prefillAppliedRef.current = true
+      markAssessmentStarted()
+      const nextStep = prefill.phone.trim().length > 0 ? 2 : 1
+      if (nextStep === 2) markStepComplete(1)
+
       setForm((current) => ({
         ...current,
         firstName: prefill.firstName,
@@ -103,12 +148,17 @@ export function GrowthAssessmentClient() {
 
   useEffect(() => {
     if (industryPrefillAppliedRef.current) return
-    industryPrefillAppliedRef.current = true
-    if (new URLSearchParams(window.location.search).get('industry') !== 'chiropractic') return
 
     const frame = window.requestAnimationFrame(() => {
+      if (industryPrefillAppliedRef.current) return
+      industryPrefillAppliedRef.current = true
+      const requestedIndustry = parseAssessmentIndustry(
+        new URLSearchParams(window.location.search).get('industry'),
+      )
+      if (!requestedIndustry) return
+
       setForm((current) => (
-        current.industry ? current : { ...current, industry: 'chiropractic' }
+        current.industry ? current : { ...current, industry: requestedIndustry }
       ))
     })
 
@@ -210,11 +260,11 @@ export function GrowthAssessmentClient() {
                 <CheckCircle2 className="h-16 w-16 text-phoenix mx-auto mb-6" />
                 <h1 ref={resultHeadingRef} tabIndex={-1} className="text-[clamp(32px,5vw,48px)] font-bold leading-tight text-ink outline-none">
                   {resultPath === 'calendar'
-                    ? 'Your practice looks ready for a working diagnostic.'
-                    : 'Let’s confirm the operating fit together.'}
+                    ? 'Your revenue and budget responses cleared the fit check.'
+                    : 'Let’s review the investment context together.'}
                 </h1>
                 <p className="mt-4 mx-auto max-w-[660px] text-[17px] leading-[1.65] text-warm">
-                  Thank you, {bookingContact.firstName || 'there'}. Choose a convenient time below for a roughly 45-minute working diagnostic. Bring last month&apos;s spend, leads, appointment requests, shows, and starts.
+                  Thank you, {bookingContact.firstName || 'there'}. Choose a convenient time below for the working diagnostic. Bring last month&apos;s {journeyCopy.metrics}.
                 </p>
                 <BookingCalendar contact={bookingContact} qualificationPath={resultPath} />
                 <Link href="/" className="mt-8 inline-flex items-center gap-2 text-[14px] font-semibold text-phoenix hover:underline">
@@ -225,21 +275,23 @@ export function GrowthAssessmentClient() {
               <div className="mx-auto max-w-[720px] rounded-2xl bg-white p-7 md:p-10 shadow-xl">
                 <Shield className="h-14 w-14 text-phoenix mx-auto mb-5" />
                 <h1 ref={resultHeadingRef} tabIndex={-1} className="text-[clamp(30px,5vw,42px)] font-bold leading-tight text-ink outline-none">
-                  Before you book, make sure the operating fit is realistic.
+                  Before you book, review the initial investment fit.
                 </h1>
                 <p className="mt-4 text-[16px] leading-[1.65] text-warm">
-                  The flagship PhynyxPro system is built for established practices with room for more new-patient evaluations and a plan to fund paid acquisition. Your answers suggest we should confirm at least one of those conditions before deciding whether to work together.
+                  The fit check compares the annual revenue and monthly marketing budget you entered with the initial thresholds. Your answers suggest one or both should be discussed before deciding whether to work together.
                 </p>
 
                 <div className="mt-7 grid gap-3 text-left sm:grid-cols-2">
                   {[
                     {
-                      label: 'Practice capacity',
-                      value: 'Openings for new-patient evaluations and a team ready to follow through.',
+                      label: 'Fit-check inputs',
+                      value: 'Annual revenue and planned monthly marketing budget.',
                     },
                     {
-                      label: 'Acquisition readiness',
-                      value: 'Prepared to fund paid acquisition and review the numbers from lead to start.',
+                      label: 'Working-diagnostic context',
+                      value: healthcareContext
+                        ? 'Lead flow, available records, appointment capacity, and team handoffs.'
+                        : 'Lead flow, available records, scheduling or service capacity, and team handoffs.',
                     },
                   ].map((item) => (
                     <div key={item.label} className="rounded-xl border border-ink/10 bg-ivory p-4">
@@ -250,7 +302,7 @@ export function GrowthAssessmentClient() {
                 </div>
 
                 <p className="mt-5 text-[14px] leading-[1.6] text-warm">
-                  This does not automatically rule you out. The working diagnostic is where we review the numbers, capacity, and next step. It is not a promise that the system is the right fit.
+                  This does not automatically rule you out. The working diagnostic is where we review the numbers, workflow context, capacity, and next step. It is not a promise that the system is the right fit.
                 </p>
 
                 <button
@@ -279,17 +331,17 @@ export function GrowthAssessmentClient() {
         <div className="mx-auto max-w-[800px] px-6 text-center">
           <AnimatedSection>
             <h1 className="text-[clamp(32px,5vw,56px)] font-bold leading-[1.05] tracking-tight text-ink">
-              Book your <span className="text-phoenix">Patient Acquisition Diagnostic.</span>
+              Book your <span className="text-phoenix">{diagnosticName}.</span>
             </h1>
             <p className="mt-5 max-w-[560px] mx-auto text-[17px] leading-[1.65] text-warm">
-              Start with a 3-minute fit check. Then choose a time for a roughly 45-minute working session focused on the gaps between lead, appointment request, confirmation, Day 1 show, and start of care.
+              Start with a 3-minute fit check, then choose a time for a working diagnostic focused on the gaps between {journeyCopy.stages}.
             </p>
             <div className="mt-6 flex items-center justify-center gap-6 text-[13px] text-warm">
               <span className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-phoenix" /> 3-minute fit check</span>
               <span className="flex items-center gap-1.5"><Shield className="h-4 w-4 text-phoenix" /> Fit-first process</span>
             </div>
             <p className="mt-4 mx-auto max-w-[620px] text-[13px] leading-[1.6] text-warm">
-              Bring last month&apos;s spend, leads, appointment requests, shows, and starts to the working session.
+              Bring last month&apos;s {journeyCopy.metrics} to the working session.
             </p>
           </AnimatedSection>
         </div>
@@ -329,7 +381,7 @@ export function GrowthAssessmentClient() {
           <div
             className="flex items-center gap-2 mb-8"
             role="progressbar"
-            aria-label="Patient Acquisition Diagnostic fit-check progress"
+            aria-label={`${diagnosticName} fit-check progress`}
             aria-valuemin={1}
             aria-valuemax={3}
             aria-valuenow={step}
@@ -391,7 +443,7 @@ export function GrowthAssessmentClient() {
                 <div className="space-y-4">
                   <div>
                     <label htmlFor="assessment-business-name" className="block text-[13px] font-medium text-ink mb-1.5">Business Name *</label>
-                    <input id="assessment-business-name" type="text" value={form?.businessName ?? ''} onChange={(e) => update('businessName', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink placeholder:text-warm/50 focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition" placeholder="Your Practice or Company" />
+                    <input id="assessment-business-name" type="text" value={form?.businessName ?? ''} onChange={(e) => update('businessName', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink placeholder:text-warm/50 focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition" placeholder="Your business" />
                   </div>
                   <div>
                     <label htmlFor="assessment-industry" className="block text-[13px] font-medium text-ink mb-1.5">Industry *</label>
@@ -490,7 +542,7 @@ export function GrowthAssessmentClient() {
                 </div>
 
                 <p className="mt-4 text-[12px] text-warm text-center">
-                  We&apos;ll use these details to evaluate fit, coordinate the diagnostic, and follow up about PhynyxPro.
+                  Revenue and budget determine the fit-check path. The remaining details help coordinate the diagnostic and follow-up.
                 </p>
               </div>
             </AnimatedSection>

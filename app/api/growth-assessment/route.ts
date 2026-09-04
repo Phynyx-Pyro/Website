@@ -7,12 +7,14 @@ import {
   syncNewGrowthAssessmentMetadata,
 } from '@/lib/ghl'
 import { assessGrowthFit, type FitAssessment } from '@/lib/growth-assessment'
+import {
+  buildGrowthAssessmentPayloadHashes,
+  growthAssessmentPayloadHashMatches,
+} from '@/lib/growth-assessment-idempotency'
 import { normalizeAssessmentEntryPoint } from '@/lib/assessment-attribution'
 import {
   PublicFormError,
-  canonicalPayloadHashInput,
   enforcePublicFormRateLimit,
-  hashText,
   normalizePhone,
   normalizeSubmissionId,
   publicFormErrorResponse,
@@ -223,8 +225,8 @@ export async function POST(request: Request) {
       attribution,
       fit,
     }
-    const payloadHash = await hashText(
-      canonicalPayloadHashInput([
+    const payloadHashes = await buildGrowthAssessmentPayloadHashes(
+      [
         firstName,
         lastName,
         email,
@@ -235,9 +237,10 @@ export async function POST(request: Request) {
         biggestChallenge,
         currentMarketing,
         monthlyBudget,
-        attribution,
-      ]),
+      ],
+      attribution,
     )
+    const payloadHash = payloadHashes.current
     const db = getDb()
     const [inserted] = await db
       .insert(growthAssessments)
@@ -274,7 +277,10 @@ export async function POST(request: Request) {
         .where(eq(growthAssessments.id, submissionId))
         .limit(1)
 
-      if (!existing || existing.payloadHash !== payloadHash) {
+      if (
+        !existing ||
+        !growthAssessmentPayloadHashMatches(existing.payloadHash, payloadHashes)
+      ) {
         throw new PublicFormError(
           409,
           'SUBMISSION_CONFLICT',
@@ -308,7 +314,14 @@ export async function POST(request: Request) {
         resumeMetadataContactId = existing.ghlContactId
         const [claimed] = await db
           .update(growthAssessments)
-          .set({ status: 'crm-metadata-pending', updatedAt: now })
+          .set({
+            status: 'crm-metadata-pending',
+            attributionJson: JSON.stringify(attribution),
+            entryPoint: attribution.entryPoint || null,
+            fitPath: fit.path,
+            payloadHash,
+            updatedAt: now,
+          })
           .where(
             and(
               eq(growthAssessments.id, submissionId),
@@ -328,7 +341,15 @@ export async function POST(request: Request) {
       } else {
         const [claimed] = await db
           .update(growthAssessments)
-          .set({ ghlContactId: null, status: 'crm-pending', updatedAt: now })
+          .set({
+            ghlContactId: null,
+            status: 'crm-pending',
+            attributionJson: JSON.stringify(attribution),
+            entryPoint: attribution.entryPoint || null,
+            fitPath: fit.path,
+            payloadHash,
+            updatedAt: now,
+          })
           .where(
             and(
               eq(growthAssessments.id, submissionId),

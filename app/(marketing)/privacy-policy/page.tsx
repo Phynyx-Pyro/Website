@@ -15,7 +15,7 @@ export default function PrivacyPolicyPage() {
         <div className="mt-10 space-y-8 text-[16px] leading-[1.7] text-ink/80">
           <section>
             <h2 className="text-[22px] font-semibold text-ink mb-3">Information We Collect</h2>
-            <p>When you submit a Patient Acquisition Diagnostic fit-check form, contact form, or otherwise interact with PhynyxPro, we may collect your name, email address, phone number, business name, industry, and other information you voluntarily provide.</p>
+            <p>When you submit an Acquisition Diagnostic fit-check form, contact form, or otherwise interact with PhynyxPro, we may collect your name, email address, phone number, business name, industry, and other information you voluntarily provide.</p>
           </section>
 
           <section>

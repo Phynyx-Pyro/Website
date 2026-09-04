@@ -109,7 +109,7 @@ export function JourneySection() {
         <AnimatedSection delay={220}>
           <div className="mt-11 flex flex-col items-start gap-4 border-t border-black/10 pt-7 sm:flex-row sm:items-center sm:justify-between">
             <p className="max-w-[570px] text-[13px] leading-[1.55] text-warm">
-              3-minute fit check → roughly 45-minute working session. Bring the numbers
+              3-minute fit check → working diagnostic. Bring the numbers
               from each stage and we&apos;ll map where the handoffs need attention.
             </p>
             <AssessmentCtaLink

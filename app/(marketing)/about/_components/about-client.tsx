@@ -7,8 +7,8 @@ import { AssessmentCtaLink } from '../../_components/assessment-cta-link'
 
 const values = [
   { icon: Eye, title: 'Transparency', desc: 'Connected reporting is designed to keep available spend, lead, appointment, and recorded-outcome data visible in one place.' },
-  { icon: Target, title: 'Outcomes Over Activity', desc: 'We connect campaign and response metrics to appointment status and practice-recorded outcomes when the source data is available.' },
-  { icon: Shield, title: 'Fit Before Scope', desc: 'The fit check looks for operational readiness, usable data, and an appointment-driven workflow before a working diagnostic.' },
+  { icon: Target, title: 'Outcomes Over Activity', desc: 'We connect campaign and response metrics to appointment status and business-recorded outcomes when the source data is available.' },
+  { icon: Shield, title: 'Fit Before Scope', desc: 'The fit check compares stated revenue and monthly marketing budget with initial thresholds. The working diagnostic reviews the wider operating context.' },
   { icon: Heart, title: 'Operator Perspective', desc: 'Andrew Higdon, DC, is a practicing chiropractor. That perspective keeps the work grounded in real handoffs and team capacity.' },
 ]
 
@@ -119,14 +119,14 @@ export function AboutClient() {
               Let&apos;s find out if we&apos;re the right fit.
             </h2>
             <p className="mt-4 max-w-[500px] mx-auto text-[17px] leading-[1.65] text-warm">
-              Start with a 3-minute fit check. If there may be a match, continue to a roughly 45-minute working diagnostic with last month&apos;s acquisition numbers.
+              Start with a 3-minute fit check. If there may be a match, continue to a working diagnostic with last month&apos;s acquisition numbers.
             </p>
             <AssessmentCtaLink
               placement="about_final"
               data-cta-placement="about-final"
               className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors"
             >
-              Book My Patient Acquisition Diagnostic <ArrowRight className="h-4 w-4" />
+              Book My Acquisition Diagnostic <ArrowRight className="h-4 w-4" />
             </AssessmentCtaLink>
           </AnimatedSection>
         </div>

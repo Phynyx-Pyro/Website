@@ -75,7 +75,7 @@ export function BookingCalendar({
           src={bookingUrl}
           allow="payment"
           referrerPolicy="no-referrer"
-          title="Book your PhynyxPro Patient Acquisition Diagnostic"
+          title="Book your PhynyxPro Acquisition Diagnostic"
           className="min-h-[780px] w-full"
           style={{ border: 'none', overflow: 'hidden' }}
           scrolling="no"

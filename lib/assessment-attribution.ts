@@ -1,3 +1,5 @@
+import type { AssessmentIndustry } from './assessment-industry'
+
 export type AssessmentAttribution = {
   landingPage: string
   referrer: string
@@ -21,7 +23,26 @@ export type AssessmentAttribution = {
 export const ASSESSMENT_ENTRY_POINT_QUERY_KEY = 'assessment_entry'
 export const ASSESSMENT_LANDING_PATH_QUERY_KEY = 'assessment_landing_path'
 export const ASSESSMENT_START_PATH = '/growth-assessment/start'
+export const ASSESSMENT_ATTRIBUTION_SESSION_STORAGE_KEY =
+  'phynyx_assessment_attribution:v1'
 const MAX_ATTRIBUTION_QUERY_VALUE_LENGTH = 500
+const MAX_ATTRIBUTION_LANDING_PATH_LENGTH = 2_048
+const CONTROL_CHARACTERS = /[\u0000-\u001f\u007f]/g
+const ASSESSMENT_INDUSTRY_VALUES = new Set<AssessmentIndustry>([
+  'chiropractic',
+  'dental',
+  'medspa',
+  'home-services',
+  'other-healthcare',
+  'other-service',
+])
+
+function normalizeAssessmentIndustry(value: unknown) {
+  return typeof value === 'string' &&
+    ASSESSMENT_INDUSTRY_VALUES.has(value as AssessmentIndustry)
+    ? (value as AssessmentIndustry)
+    : undefined
+}
 
 const ATTRIBUTION_QUERY_FIELDS = [
   ['utm_source', 'utmSource'],
@@ -46,6 +67,23 @@ export const ASSESSMENT_ATTRIBUTION_QUERY_KEYS = ATTRIBUTION_QUERY_FIELDS.map(
   ([queryKey]) => queryKey,
 )
 
+type AssessmentAttributionQueryKey =
+  (typeof ATTRIBUTION_QUERY_FIELDS)[number][0]
+
+export type AssessmentSessionAttribution = {
+  landingPath: string
+} & Partial<Record<AssessmentAttributionQueryKey, string>>
+
+type SessionStorageLike = Pick<Storage, 'getItem' | 'setItem'>
+
+function normalizeAttributionQueryValue(value: unknown) {
+  if (typeof value !== 'string') return ''
+  return value
+    .replace(CONTROL_CHARACTERS, '')
+    .trim()
+    .slice(0, MAX_ATTRIBUTION_QUERY_VALUE_LENGTH)
+}
+
 export function normalizeAssessmentEntryPoint(value: unknown) {
   if (typeof value !== 'string') return ''
   const normalized = value.trim().toLowerCase()
@@ -54,7 +92,10 @@ export function normalizeAssessmentEntryPoint(value: unknown) {
 
 export function normalizeAssessmentLandingPath(value: unknown) {
   if (typeof value !== 'string') return ''
-  const normalized = value.trim()
+  const normalized = value
+    .replace(CONTROL_CHARACTERS, '')
+    .trim()
+    .slice(0, MAX_ATTRIBUTION_LANDING_PATH_LENGTH)
   if (!normalized.startsWith('/') || normalized.startsWith('//')) return ''
 
   try {
@@ -64,6 +105,100 @@ export function normalizeAssessmentLandingPath(value: unknown) {
   } catch {
     return ''
   }
+}
+
+function getBrowserSessionStorage(): SessionStorageLike | null {
+  if (typeof window === 'undefined') return null
+
+  try {
+    return window.sessionStorage
+  } catch {
+    return null
+  }
+}
+
+function createSessionAttribution(
+  currentSearch: string | URLSearchParams,
+  landingPath: string,
+): AssessmentSessionAttribution {
+  const sourceParams =
+    typeof currentSearch === 'string'
+      ? new URLSearchParams(currentSearch)
+      : currentSearch
+  const attribution: AssessmentSessionAttribution = {
+    landingPath: normalizeAssessmentLandingPath(landingPath) || '/',
+  }
+
+  for (const queryKey of ASSESSMENT_ATTRIBUTION_QUERY_KEYS) {
+    const value = normalizeAttributionQueryValue(sourceParams.get(queryKey))
+    if (value) attribution[queryKey] = value
+  }
+
+  return attribution
+}
+
+function normalizeSessionAttribution(
+  value: unknown,
+): AssessmentSessionAttribution | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
+
+  const record = value as Record<string, unknown>
+  const landingPath = normalizeAssessmentLandingPath(record.landingPath)
+  if (!landingPath) return null
+
+  const attribution: AssessmentSessionAttribution = { landingPath }
+  for (const queryKey of ASSESSMENT_ATTRIBUTION_QUERY_KEYS) {
+    const fieldValue = normalizeAttributionQueryValue(record[queryKey])
+    if (fieldValue) attribution[queryKey] = fieldValue
+  }
+  return attribution
+}
+
+function parseSessionAttribution(value: string | null) {
+  if (!value) return null
+
+  try {
+    return normalizeSessionAttribution(JSON.parse(value) as unknown)
+  } catch {
+    return null
+  }
+}
+
+export function readAssessmentSessionAttribution(
+  storage: SessionStorageLike | null = getBrowserSessionStorage(),
+) {
+  if (!storage) return null
+
+  try {
+    return parseSessionAttribution(
+      storage.getItem(ASSESSMENT_ATTRIBUTION_SESSION_STORAGE_KEY),
+    )
+  } catch {
+    return null
+  }
+}
+
+export function captureAssessmentSessionAttribution(
+  currentSearch: string | URLSearchParams,
+  landingPath: string,
+  storage: SessionStorageLike | null = getBrowserSessionStorage(),
+) {
+  const storedAttribution = readAssessmentSessionAttribution(storage)
+  if (storedAttribution) return storedAttribution
+
+  const attribution = createSessionAttribution(currentSearch, landingPath)
+  if (!storage) return attribution
+
+  try {
+    storage.setItem(
+      ASSESSMENT_ATTRIBUTION_SESSION_STORAGE_KEY,
+      JSON.stringify(attribution),
+    )
+  } catch {
+    // Storage can be unavailable in private or locked-down browser contexts.
+  }
+
+  return attribution
 }
 
 export function minimizeAttributionUrl(value: string) {
@@ -108,7 +243,7 @@ export function getAssessmentAttribution(): AssessmentAttribution {
   const queryAttribution = Object.fromEntries(
     ATTRIBUTION_QUERY_FIELDS.map(([queryKey, field]) => [
       field,
-      params.get(queryKey) ?? '',
+      normalizeAttributionQueryValue(params.get(queryKey)),
     ]),
   ) as Pick<
     AssessmentAttribution,
@@ -131,18 +266,21 @@ export function buildAssessmentHref(
   currentSearch: string | URLSearchParams,
   entryPoint: string,
   landingPath = '/',
+  sessionAttribution?: AssessmentSessionAttribution | null,
 ) {
   const sourceParams =
     typeof currentSearch === 'string'
       ? new URLSearchParams(currentSearch)
       : currentSearch
   const assessmentParams = new URLSearchParams()
+  const normalizedSessionAttribution = normalizeSessionAttribution(
+    sessionAttribution,
+  )
 
   for (const queryKey of ASSESSMENT_ATTRIBUTION_QUERY_KEYS) {
-    const value = sourceParams
-      .get(queryKey)
-      ?.trim()
-      .slice(0, MAX_ATTRIBUTION_QUERY_VALUE_LENGTH)
+    const value = normalizedSessionAttribution
+      ? normalizedSessionAttribution[queryKey]
+      : normalizeAttributionQueryValue(sourceParams.get(queryKey))
     if (value) assessmentParams.set(queryKey, value)
   }
 
@@ -151,7 +289,9 @@ export function buildAssessmentHref(
     assessmentParams.set(ASSESSMENT_ENTRY_POINT_QUERY_KEY, normalizedEntryPoint)
   }
 
-  const normalizedLandingPath = normalizeAssessmentLandingPath(landingPath)
+  const normalizedLandingPath =
+    normalizedSessionAttribution?.landingPath ||
+    normalizeAssessmentLandingPath(landingPath)
   if (normalizedLandingPath) {
     assessmentParams.set(
       ASSESSMENT_LANDING_PATH_QUERY_KEY,
@@ -165,14 +305,15 @@ export function buildAssessmentHref(
 
 export function buildAssessmentStartHref(
   entryPoint: string,
-  industry?: string,
+  industry?: AssessmentIndustry,
 ) {
   const params = new URLSearchParams()
   const normalizedEntryPoint = normalizeAssessmentEntryPoint(entryPoint)
   if (normalizedEntryPoint) {
     params.set(ASSESSMENT_ENTRY_POINT_QUERY_KEY, normalizedEntryPoint)
   }
-  if (industry === 'chiropractic') params.set('industry', industry)
+  const normalizedIndustry = normalizeAssessmentIndustry(industry)
+  if (normalizedIndustry) params.set('industry', normalizedIndustry)
 
   const query = params.toString()
   return query ? `${ASSESSMENT_START_PATH}?${query}` : ASSESSMENT_START_PATH
@@ -204,9 +345,8 @@ export function buildAssessmentRedirectUrl(
     ),
     start.origin,
   )
-  if (start.searchParams.get('industry') === 'chiropractic') {
-    destination.searchParams.set('industry', 'chiropractic')
-  }
+  const industry = normalizeAssessmentIndustry(start.searchParams.get('industry'))
+  if (industry) destination.searchParams.set('industry', industry)
 
   return destination
 }

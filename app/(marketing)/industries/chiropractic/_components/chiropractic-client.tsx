@@ -146,7 +146,7 @@ export function ChiropracticClient() {
               Ready to grow your practice?
             </h2>
             <p className="mt-4 max-w-[500px] mx-auto text-[17px] leading-[1.65] text-warm">
-              Start with a 3-minute fit check. If your practice may be a fit, the next step is a roughly 45-minute working diagnostic to review last month&apos;s spend, leads, appointment requests, shows, and starts.
+              Start with a 3-minute fit check. If your practice may be a fit, the next step is a working diagnostic to review last month&apos;s spend, leads, appointment requests, shows, and starts.
             </p>
             <AssessmentCtaLink placement="chiropractic_final" industry="chiropractic" className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors">
               Book My Patient Acquisition Diagnostic <ArrowRight className="h-4 w-4" />

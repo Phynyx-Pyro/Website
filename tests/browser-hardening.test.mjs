@@ -32,3 +32,24 @@ test('assessment prefill is not persisted in browser storage', async () => {
 
   assert.equal(files.some((source) => /(?:local|session)Storage/.test(source)), false)
 })
+
+test('assessment prefill guards are set inside deferred callbacks', async () => {
+  const source = await readFile(
+    new URL(
+      '../app/(marketing)/growth-assessment/_components/growth-assessment-client.tsx',
+      import.meta.url,
+    ),
+    'utf8',
+  )
+
+  const contactFrame = source.indexOf('const frame = window.requestAnimationFrame(() => {')
+  const contactGuard = source.indexOf('prefillAppliedRef.current = true')
+  const industryFrame = source.indexOf(
+    'const frame = window.requestAnimationFrame(() => {',
+    contactFrame + 1,
+  )
+  const industryGuard = source.indexOf('industryPrefillAppliedRef.current = true')
+
+  assert.ok(contactFrame >= 0 && contactGuard > contactFrame)
+  assert.ok(industryFrame > contactFrame && industryGuard > industryFrame)
+})

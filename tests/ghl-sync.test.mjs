@@ -85,14 +85,21 @@ function assessmentInput() {
       referrer: 'https://google.example/search',
       ctaOrigin: 'homepage-hero',
       sessionId: '11111111-1111-4111-8111-111111111111',
+      entryPoint: '',
       utmSource: 'google',
       utmMedium: 'cpc',
       utmCampaign: 'growth-test',
       utmContent: 'assessment-ad',
       utmTerm: 'practice growth',
       gclid: 'google-click-id',
+      dclid: '',
+      gbraid: '',
+      wbraid: '',
       fbclid: '',
       msclkid: 'microsoft-click-id',
+      ttclid: '',
+      twclid: '',
+      liFatId: '',
     },
     fit: {
       path: 'calendar',
@@ -622,4 +629,50 @@ test('contact 404 errors are identifiable without starting metadata writes', asy
     calls.map((call) => `${call.method} ${call.path}`),
     ['GET /contacts/stale-contact'],
   )
+})
+
+test('assessment notes include sanitized CTA and supported click attribution when present', async () => {
+  const calls = []
+  globalThis.fetch = async (url, init = {}) => {
+    const body = typeof init.body === 'string' ? JSON.parse(init.body) : undefined
+    calls.push({ url: String(url), method: init.method ?? 'GET', body })
+    if (String(url).endsWith('/tags')) return Response.json({ tags: [] })
+    if (String(url).endsWith('/notes') && !init.method) {
+      return Response.json({ notes: [] })
+    }
+    if (String(url).endsWith('/notes') && init.method === 'POST') {
+      return Response.json({ note: { id: 'note-test' } })
+    }
+    throw new Error(`Unexpected request: ${url}`)
+  }
+
+  const input = assessmentInput()
+  input.attribution = {
+    ...input.attribution,
+    entryPoint: 'home_services_final',
+    dclid: 'display-123\nInjected: no',
+    gbraid: 'gbraid-123',
+    wbraid: 'wbraid-123',
+    msclkid: 'microsoft-123',
+    ttclid: 'tiktok-123',
+    twclid: 'twitter-123',
+    liFatId: 'linkedin-123',
+  }
+
+  const { syncNewGrowthAssessmentMetadata } = await loadGhlModule()
+  await syncNewGrowthAssessmentMetadata('new-contact', input)
+
+  const noteCall = calls.find(
+    (call) => call.url.endsWith('/notes') && call.method === 'POST',
+  )
+  assert.ok(noteCall)
+  assert.match(noteCall.body.body, /Assessment CTA entry point: home_services_final/)
+  assert.match(noteCall.body.body, /Google Display click ID: display-123 Injected: no/)
+  assert.match(noteCall.body.body, /Google GBRAID: gbraid-123/)
+  assert.match(noteCall.body.body, /Google WBRAID: wbraid-123/)
+  assert.match(noteCall.body.body, /Microsoft click ID: microsoft-123/)
+  assert.match(noteCall.body.body, /TikTok click ID: tiktok-123/)
+  assert.match(noteCall.body.body, /X\/Twitter click ID: twitter-123/)
+  assert.match(noteCall.body.body, /LinkedIn click ID: linkedin-123/)
+  assert.equal(noteCall.body.body.includes('\nInjected:'), false)
 })

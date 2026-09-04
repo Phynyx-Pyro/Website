@@ -20,7 +20,7 @@ const notYet = [
 const faqs = [
   {
     q: 'What happens after I click?',
-    a: 'You’ll complete a short fit check that takes about three minutes. If there appears to be a fit, you can choose a time for a roughly 45-minute working diagnostic. Bring last month’s spend, leads, appointment requests, shows, and starts.',
+    a: 'You’ll complete a short fit check that takes about three minutes. If there appears to be a fit, you can choose a time for a working diagnostic. Bring last month’s spend, leads, appointment requests, shows, and starts.',
   },
   {
     q: 'Is PhynyxPro just ad management?',
@@ -65,8 +65,9 @@ export function FitAndFaq() {
                 Built for established chiropractic practices.
               </h2>
               <p className="mt-4 max-w-[430px] text-[15.5px] leading-[1.6] text-warm lg:mt-5 lg:text-[17px]">
-                The diagnostic checks whether there is enough demand, capacity,
-                operating participation, and investment readiness to justify the work.
+                The fit check compares stated revenue and monthly marketing budget with
+                initial thresholds. The working diagnostic reviews demand, capacity,
+                operating participation, and the wider context.
               </p>
             </AnimatedSection>
 

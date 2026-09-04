@@ -10,7 +10,7 @@ const funnelSteps = [
   { label: 'Leads Generated', icon: Users, desc: 'People who express interest' },
   { label: 'Appointment Requests', icon: Calendar, desc: 'Inquiries that become bookings' },
   { label: 'Appointments Attended', icon: ShieldCheck, desc: 'People who actually show up' },
-  { label: 'New Patients / Customers', icon: TrendingUp, desc: 'Recorded care or service starts' },
+  { label: 'Recorded Customers / Outcomes', icon: TrendingUp, desc: 'Recorded care or service outcomes' },
   { label: 'Revenue Context', icon: BarChart3, desc: 'Recorded revenue associated with available source data' },
 ]
 
@@ -119,10 +119,10 @@ export function ResultsClient() {
           <AnimatedSection>
             <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink">Ready to map your current acquisition path?</h2>
             <p className="mt-4 max-w-[500px] mx-auto text-[17px] leading-[1.65] text-warm">
-              Start with a 3-minute fit check. If aligned, bring last month&apos;s spend, leads, appointment requests, shows, and starts to a roughly 45-minute working diagnostic.
+              Start with a 3-minute fit check. If aligned, bring last month&apos;s spend, leads, requests, completed appointments or jobs, and recorded outcomes to the working diagnostic.
             </p>
             <AssessmentCtaLink placement="results_final" className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors">
-              Book My Patient Acquisition Diagnostic <ArrowRight className="h-4 w-4" />
+              Book My Acquisition Diagnostic <ArrowRight className="h-4 w-4" />
             </AssessmentCtaLink>
           </AnimatedSection>
         </div>

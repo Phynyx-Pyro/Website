@@ -14,7 +14,7 @@ export function ClientLoginClient() {
           <Lock className="h-12 w-12 text-phoenix mx-auto mb-6" />
           <h1 className="text-[36px] font-bold text-ink">Client Login</h1>
           <p className="mt-4 text-[17px] leading-[1.65] text-warm">
-            Access your PYRO dashboard, CRM pipeline, reporting, and all growth system tools.
+            Access your PYRO dashboard, CRM pipeline, reporting, and available growth-system tools.
           </p>
           <div className="mt-10 rounded-2xl bg-white p-8 shadow-xl">
             <div className="flex items-center justify-center gap-2 mb-6">
@@ -33,7 +33,7 @@ export function ClientLoginClient() {
           </div>
           <p className="mt-8 text-[14px] text-warm">
             Not a client yet?{' '}
-            <AssessmentCtaLink placement="client_login_prospect" className="text-phoenix font-medium hover:underline">Book My Patient Acquisition Diagnostic</AssessmentCtaLink>
+            <AssessmentCtaLink placement="client_login_prospect" className="text-phoenix font-medium hover:underline">Book My Acquisition Diagnostic</AssessmentCtaLink>
           </p>
           <p className="mt-3 text-[13px] text-warm">
             Need help?{' '}

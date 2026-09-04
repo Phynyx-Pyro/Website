@@ -25,6 +25,7 @@ export function DentalMedspaClient() {
               </p>
               <AssessmentCtaLink
                 placement="dental_medspa_hero"
+                industry="dental"
                 data-cta-placement="dental-medspa-hero"
                 className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors"
               >
@@ -75,10 +76,11 @@ export function DentalMedspaClient() {
           <AnimatedSection>
             <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink">Ready to map the path to a booked appointment?</h2>
             <p className="mt-4 max-w-[500px] mx-auto text-[17px] leading-[1.65] text-warm">
-              Start with a 3-minute fit check. If there may be a match, continue to a roughly 45-minute working diagnostic using last month&apos;s acquisition numbers.
+              Start with a 3-minute fit check. If there may be a match, continue to a working diagnostic using last month&apos;s spend, leads, appointment requests, visits, and recorded outcomes.
             </p>
             <AssessmentCtaLink
               placement="dental_medspa_final"
+              industry="dental"
               data-cta-placement="dental-medspa-final"
               className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors"
             >

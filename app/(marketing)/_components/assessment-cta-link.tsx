@@ -1,19 +1,26 @@
 'use client'
 
 import Link from 'next/link'
-import { useSyncExternalStore, type ComponentProps } from 'react'
+import {
+  useEffect,
+  useSyncExternalStore,
+  type ComponentProps,
+} from 'react'
 import {
   buildAssessmentHref,
   buildAssessmentStartHref,
+  captureAssessmentSessionAttribution,
+  readAssessmentSessionAttribution,
 } from '@/lib/assessment-attribution'
+import type { AssessmentIndustry } from '@/lib/assessment-industry'
 import { trackFunnelEvent } from '@/lib/funnel-events'
 
 type AssessmentCtaLinkProps = Omit<ComponentProps<typeof Link>, 'href'> & {
   placement: string
-  industry?: 'chiropractic'
+  industry?: AssessmentIndustry
 }
 
-function addIndustry(href: string, industry?: 'chiropractic') {
+function addIndustry(href: string, industry?: AssessmentIndustry) {
   if (!industry) return href
   const [pathname, query = ''] = href.split('?')
   const params = new URLSearchParams(query)
@@ -43,9 +50,23 @@ export function AssessmentCtaLink({
     getServerLocationSnapshot,
   )
   const [landingPath = '/', currentSearch = ''] = locationSnapshot.split('\n')
+  const sessionAttribution = locationSnapshot
+    ? readAssessmentSessionAttribution()
+    : null
+
+  useEffect(() => {
+    if (!locationSnapshot) return
+    captureAssessmentSessionAttribution(currentSearch, landingPath)
+  }, [currentSearch, landingPath, locationSnapshot])
+
   const href = locationSnapshot
     ? addIndustry(
-        buildAssessmentHref(currentSearch, placement, landingPath),
+        buildAssessmentHref(
+          currentSearch,
+          placement,
+          landingPath,
+          sessionAttribution,
+        ),
         industry,
       )
     : buildAssessmentStartHref(placement, industry)

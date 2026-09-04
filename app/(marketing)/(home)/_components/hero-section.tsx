@@ -76,7 +76,7 @@ export function HeroSection() {
                 </Link>
               </div>
               <p className="mt-4 max-w-[590px] text-[12.5px] leading-[1.55] text-warm lg:text-[13px]">
-                3-minute fit check → roughly 45-minute working session. Bring last
+                3-minute fit check → working diagnostic. Bring last
                 month&apos;s spend, leads, appointment requests, shows, and starts.
               </p>
               <p className="mt-3 flex items-center gap-2 text-[12.5px] font-semibold text-ink/75">

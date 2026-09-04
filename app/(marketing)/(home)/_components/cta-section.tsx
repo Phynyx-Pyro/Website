@@ -5,7 +5,10 @@ import { useRouter } from 'next/navigation'
 import { AnimatedSection } from '../../_components/animated-section'
 import { useAssessmentPrefill } from '../../_components/assessment-prefill-provider'
 import { ArrowRight, CalendarClock, ClipboardList, Clock3 } from 'lucide-react'
-import { buildAssessmentHref } from '@/lib/assessment-attribution'
+import {
+  buildAssessmentHref,
+  captureAssessmentSessionAttribution,
+} from '@/lib/assessment-attribution'
 import { trackFunnelEvent } from '@/lib/funnel-events'
 
 export function CtaSection() {
@@ -29,10 +32,13 @@ export function CtaSection() {
     stagePrefill(prefill)
     trackFunnelEvent('diagnostic_cta_click', { placement: 'homepage_final_form' })
 
+    const currentSearch = window.location.search
+    const currentPath = window.location.pathname
     const assessmentHref = buildAssessmentHref(
-      window.location.search,
+      currentSearch,
       'homepage_final_form',
-      window.location.pathname,
+      currentPath,
+      captureAssessmentSessionAttribution(currentSearch, currentPath),
     )
     const nextUrl = new URL(assessmentHref, window.location.origin)
     nextUrl.searchParams.set('industry', 'chiropractic')
@@ -51,7 +57,7 @@ export function CtaSection() {
             </h2>
             <p className="mt-5 max-w-[540px] text-[15.5px] leading-[1.65] text-white/70 lg:mt-6 lg:text-[17.5px]">
               Start with a short fit check. If there is a potential match, choose a time
-              for a roughly 45-minute working diagnostic focused on the handoffs between
+              for a working diagnostic focused on the handoffs between
               paid lead and patient outcome.
             </p>
             <div className="mt-7 grid gap-4 text-[12.5px] text-white/70 sm:grid-cols-3 lg:mt-8 lg:text-[13px]">
@@ -61,7 +67,7 @@ export function CtaSection() {
               </span>
               <span className="flex items-start gap-2.5">
                 <CalendarClock className="mt-0.5 h-4 w-4 shrink-0 text-flame" aria-hidden="true" />
-                Roughly 45-minute working session
+                Working diagnostic
               </span>
               <span className="flex items-start gap-2.5">
                 <ClipboardList className="mt-0.5 h-4 w-4 shrink-0 text-flame" aria-hidden="true" />

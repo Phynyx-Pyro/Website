@@ -12,16 +12,16 @@ const features = [
   { icon: CalendarCheck, title: 'Automated Booking', desc: 'Connect approved calendars so Ember can offer available times, submit booking requests, and support confirmations.' },
   { icon: Database, title: 'Database Reactivation', desc: 'Run approved outreach to eligible existing contacts through personalized, automated workflows.' },
   { icon: BarChart3, title: 'CRM & Pipeline', desc: 'Track connected leads from first touch through recorded appointment outcomes in one working view.' },
-  { icon: Shield, title: 'Attribution Engine', desc: 'Connect available campaign, contact, and outcome data so the team can review where patients move or stall.' },
+  { icon: Shield, title: 'Attribution Engine', desc: 'Connect available campaign, contact, and outcome data so the team can review where inquiries move or stall.' },
 ]
 
 const chatDemo = [
-  { from: 'patient', text: 'Hi, I saw your ad for the new patient special. Do you have any openings this week?' },
+  { from: 'prospect', text: 'Hi, I saw your ad. Do you have any openings this week?' },
   { from: 'ember', text: 'Welcome! Yes, we have several openings. To help find the best time for you — are you looking for a morning or afternoon appointment?' },
-  { from: 'patient', text: 'Afternoon works better. Thursday or Friday if possible.' },
-  { from: 'ember', text: 'I have Thursday at 2:30 PM and Friday at 3:00 PM available. Which would you prefer?' },
-  { from: 'patient', text: 'Thursday at 2:30 please.' },
-  { from: 'ember', text: 'You\'re all set for Thursday at 2:30 PM. I\'ll send a confirmation text with all the details. Is there anything else I can help with?' },
+  { from: 'prospect', text: 'Afternoon works better. Thursday or Friday if possible.' },
+  { from: 'ember', text: 'I can submit a request for Thursday afternoon or Friday afternoon. Which would you prefer?' },
+  { from: 'prospect', text: 'Thursday afternoon, please.' },
+  { from: 'ember', text: 'I\'ve captured that request. The team can confirm the available time and next steps.' },
 ]
 
 export function PyroEmberClient() {
@@ -45,7 +45,7 @@ export function PyroEmberClient() {
               </div>
               <div className="mt-8 flex flex-col sm:flex-row gap-4">
                 <AssessmentCtaLink placement="pyro_hero" className="inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors">
-                  Book My Patient Acquisition Diagnostic <ArrowRight className="h-4 w-4" />
+                  Book My Acquisition Diagnostic <ArrowRight className="h-4 w-4" />
                 </AssessmentCtaLink>
               </div>
             </AnimatedSection>
@@ -113,7 +113,7 @@ export function PyroEmberClient() {
         <div className="mx-auto max-w-[1200px] px-6 lg:px-10">
           <AnimatedSection>
             <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink max-w-[600px]">
-              How PYRO supports the patient-acquisition workflow.
+              How PYRO supports the acquisition workflow.
             </h2>
             <p className="mt-4 max-w-[540px] text-[17px] leading-[1.65] text-warm">
               PYRO is the operating platform inside the PhynyxPro system. Ember is the AI receptionist inside PYRO.
@@ -147,7 +147,7 @@ export function PyroEmberClient() {
                 Ember can support configured inbound call flows, gather approved details, and route conversations to staff when human judgment is needed.
               </p>
               <p className="mt-4 text-[17px] leading-[1.65] text-white/70">
-                When enabled, call summaries and recorded outcomes can be written to connected systems. Recording and transcription depend on practice settings and applicable requirements.
+                When enabled, call summaries and recorded outcomes can be written to connected systems. Recording and transcription depend on business settings and applicable requirements.
               </p>
             </AnimatedSection>
 
@@ -213,10 +213,10 @@ export function PyroEmberClient() {
               Map PYRO and Ember into your current handoffs.
             </h2>
             <p className="mt-4 max-w-[500px] mx-auto text-[17px] leading-[1.65] text-warm">
-              Start with a 3-minute fit check. If the business may be a fit, the next step is a roughly 45-minute working diagnostic to review the current journey and next steps.
+              Start with a 3-minute fit check. If the business may be a fit, the next step is a working diagnostic to review the current journey and next steps.
             </p>
             <AssessmentCtaLink placement="pyro_final" className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors">
-              Book My Patient Acquisition Diagnostic <ArrowRight className="h-4 w-4" />
+              Book My Acquisition Diagnostic <ArrowRight className="h-4 w-4" />
             </AssessmentCtaLink>
           </AnimatedSection>
         </div>

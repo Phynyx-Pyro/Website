@@ -6,6 +6,10 @@ import Image from 'next/image'
 import { Menu, X, ChevronDown } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { AssessmentCtaLink } from './assessment-cta-link'
+import {
+  isHealthcareAssessmentIndustry,
+  type AssessmentIndustry,
+} from '@/lib/assessment-industry'
 
 const navLinks = [
   { label: 'Growth System', href: '/growth-system' },
@@ -23,11 +27,24 @@ const navLinks = [
   { label: 'About', href: '/about' },
 ]
 
+function getIndustryForPath(pathname: string): AssessmentIndustry | undefined {
+  if (pathname === '/' || pathname.startsWith('/industries/chiropractic')) {
+    return 'chiropractic'
+  }
+  if (pathname.startsWith('/industries/home-services')) return 'home-services'
+  if (pathname.startsWith('/industries/dental-medspa')) return 'dental'
+  return undefined
+}
+
 export function SiteHeader() {
   const pathname = usePathname()
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const pageIndustry = getIndustryForPath(pathname)
+  const diagnosticLabel = isHealthcareAssessmentIndustry(pageIndustry)
+    ? 'Book My Patient Acquisition Diagnostic'
+    : 'Book My Acquisition Diagnostic'
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window?.scrollY > 20)
@@ -89,8 +106,7 @@ export function SiteHeader() {
                   <button
                     type="button"
                     aria-expanded={dropdownOpen}
-                    aria-haspopup="menu"
-                    aria-controls="desktop-industries-menu"
+                    aria-controls="desktop-industries-disclosure"
                     onClick={() => setDropdownOpen((open) => !open)}
                     className="flex items-center gap-1.5 hover:text-phoenix transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phoenix focus-visible:ring-offset-4 focus-visible:ring-offset-ivory"
                   >
@@ -99,12 +115,11 @@ export function SiteHeader() {
                   </button>
                   {dropdownOpen && (
                     <div className="absolute top-full left-0 pt-2">
-                      <div id="desktop-industries-menu" role="menu" className="bg-white rounded-xl border border-black/10 py-2 px-1 min-w-[200px] lift-sm">
+                      <div id="desktop-industries-disclosure" className="bg-white rounded-xl border border-black/10 py-2 px-1 min-w-[200px] lift-sm">
                         {link?.children?.map((child: any) => (
                           <Link
                             key={child?.href}
                             href={child?.href}
-                            role="menuitem"
                             className="block px-4 py-2.5 rounded-lg text-[14px] hover:bg-ivory hover:text-phoenix transition-colors"
                           >
                             {child?.label}
@@ -113,7 +128,6 @@ export function SiteHeader() {
                         <div className="border-t border-black/5 mt-1 pt-1 mx-1">
                           <Link
                             href="/industries"
-                            role="menuitem"
                             className="block px-4 py-2.5 rounded-lg text-[13px] text-warm hover:bg-ivory hover:text-phoenix transition-colors"
                           >
                             View all industries →
@@ -135,11 +149,11 @@ export function SiteHeader() {
         {/* Desktop CTA */}
         <AssessmentCtaLink
           placement="header_desktop"
-          industry={pathname === '/' || pathname === '/industries/chiropractic' ? 'chiropractic' : undefined}
+          industry={pageIndustry}
           data-cta-placement="header-desktop"
           className="group hidden items-center gap-2.5 whitespace-nowrap rounded-lg bg-phoenix px-4 py-3.5 text-[13px] font-semibold text-white shadow-[0_12px_28px_-12px_rgba(212,85,42,.95)] transition-colors hover:bg-ember focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phoenix focus-visible:ring-offset-2 focus-visible:ring-offset-ivory lg:flex xl:px-5 xl:text-[14px]"
         >
-          Book My Patient Acquisition Diagnostic
+          {diagnosticLabel}
           <svg className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
           </svg>
@@ -191,12 +205,12 @@ export function SiteHeader() {
             <div className="pt-6">
               <AssessmentCtaLink
                 placement="header_mobile"
-                industry={pathname === '/' || pathname === '/industries/chiropractic' ? 'chiropractic' : undefined}
+                industry={pageIndustry}
                 onClick={() => setMobileOpen(false)}
                 data-cta-placement="header-mobile"
                 className="flex w-full items-center justify-center gap-2.5 rounded-lg bg-phoenix px-4 py-4 text-center text-[14px] font-semibold text-white shadow-[0_14px_30px_-14px_rgba(212,85,42,.95)]"
               >
-                Book My Patient Acquisition Diagnostic
+                {diagnosticLabel}
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
