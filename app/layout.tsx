@@ -1,22 +1,8 @@
-import { Space_Grotesk, Caveat } from 'next/font/google'
 import './globals.css'
 import { Toaster } from '@/components/ui/sonner'
 import { SITE_URL } from '@/lib/site'
 import type { Metadata } from 'next'
 import Script from 'next/script'
-
-const spaceGrotesk = Space_Grotesk({
-  subsets: ['latin'],
-  variable: '--font-sans',
-  display: 'swap',
-})
-
-const caveat = Caveat({
-  subsets: ['latin'],
-  variable: '--font-hand',
-  weight: ['500', '600', '700'],
-  display: 'swap',
-})
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -54,9 +40,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${spaceGrotesk.variable} ${caveat.variable} font-sans antialiased bg-ivory grain`}
-      >
+      <body className="font-sans antialiased bg-ivory grain">
         {children}
         <Toaster />
         <Script

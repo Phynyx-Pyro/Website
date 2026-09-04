@@ -12,6 +12,19 @@ test('page CSP trusts per-request nonces instead of arbitrary inline scripts', (
   assert.match(policy, /script-src-attr 'none'/)
 })
 
+test('page CSP keeps fonts self-hosted', async () => {
+  const policy = buildContentSecurityPolicy('0123456789abcdef0123456789abcdef')
+  const [layout, styles] = await Promise.all([
+    readFile(new URL('../app/layout.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('../app/globals.css', import.meta.url), 'utf8'),
+  ])
+
+  assert.doesNotMatch(policy, /fonts\.(?:googleapis|gstatic)\.com/)
+  assert.doesNotMatch(layout, /next\/font\/google/)
+  assert.match(styles, /\/fonts\/space-grotesk-latin\.woff2/)
+  assert.match(styles, /\/fonts\/caveat-latin\.woff2/)
+})
+
 test('assessment prefill is not persisted in browser storage', async () => {
   const files = await Promise.all([
     readFile(
