@@ -32,7 +32,6 @@ function getIndustryForPath(pathname: string): AssessmentIndustry | undefined {
     return 'chiropractic'
   }
   if (pathname.startsWith('/industries/home-services')) return 'home-services'
-  if (pathname.startsWith('/industries/dental-medspa')) return 'dental'
   return undefined
 }
 
@@ -42,7 +41,10 @@ export function SiteHeader() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const pageIndustry = getIndustryForPath(pathname)
-  const diagnosticLabel = isHealthcareAssessmentIndustry(pageIndustry)
+  const usesPatientAcquisitionLanguage =
+    isHealthcareAssessmentIndustry(pageIndustry) ||
+    pathname.startsWith('/industries/dental-medspa')
+  const diagnosticLabel = usesPatientAcquisitionLanguage
     ? 'Book My Patient Acquisition Diagnostic'
     : 'Book My Acquisition Diagnostic'
 

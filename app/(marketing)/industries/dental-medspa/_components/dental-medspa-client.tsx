@@ -25,7 +25,6 @@ export function DentalMedspaClient() {
               </p>
               <AssessmentCtaLink
                 placement="dental_medspa_hero"
-                industry="dental"
                 data-cta-placement="dental-medspa-hero"
                 className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors"
               >
@@ -80,7 +79,6 @@ export function DentalMedspaClient() {
             </p>
             <AssessmentCtaLink
               placement="dental_medspa_final"
-              industry="dental"
               data-cta-placement="dental-medspa-final"
               className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors"
             >
