@@ -24,15 +24,19 @@ workflows, tags, and fields.
 - The pipeline, its ten stages, all listed tags, both custom-field folders, and
   their fields have been created in the Phynyx location without changing legacy
   assets.
-- Workflow 00 has been saved as an unpublished draft. It cannot enroll contacts
-  or send notifications in its current state.
-- Before Workflow 00 is published, add an early exit for `automation:pause` and
-  require the website source marker so a manual field edit cannot create an
-  unintended enrollment.
-- The website-side contact, note, opportunity, and attribution sync is
-  implemented and validated with mocked/unit tests, but it is not
-  production-active until the private-integration scopes, deployed environment
-  values, and a live end-to-end test are completed.
+- The production website release is deployed with the dedicated location,
+  pipeline, stage, and server-only private-integration credentials. Required
+  private-integration scopes and a live website-to-GoHighLevel sync have been
+  verified.
+- Workflow 00 is published in restricted canary mode. Its first action requires
+  the website source, form, automation-version, and temporary `test:automation`
+  tags plus a nonempty Website Submission ID; `automation:pause` forces the
+  immediate stop branch. Untagged production leads cannot run the internal
+  actions until the temporary test requirement is removed.
+- The paused path, eligible internal-action path, and idempotent retry were
+  validated on September 4, 2026. The eligible run assigned Craig, created one
+  callback task, executed the Craig and Andrew in-app alerts, and sent no
+  customer-facing email or SMS.
 - Workflows 01–08 below are the reviewed build specification; they have not yet
   been created or published.
 
@@ -180,9 +184,18 @@ website intake fields.
 
 ### 00 — Website Intake & Routing
 
-Status: built as a draft.
+Status: published in restricted canary mode; not yet open to untagged production
+website leads.
 
 Trigger: Website Submission ID changes.
+
+First-action safety gate:
+
+- require all of `source:phynyx-website`, `form:growth-assessment`,
+  `automation:phynyx-web-v1`, and the temporary `test:automation` tag
+- require Website Submission ID to be nonempty
+- require `automation:pause` to be absent
+- end immediately when any requirement is not met
 
 Actions:
 
@@ -194,6 +207,9 @@ Actions:
 4. Send Craig a separate in-app visibility notification.
 5. Create a same-day callback task for the contact owner; the task description
    requires the first attempt within five minutes.
+
+There are no customer-facing email, SMS, voicemail, WhatsApp, or other outbound
+message actions in Workflow 00.
 
 HighLevel's task action accepts day-level offsets rather than a relative
 five-minute due time, so the current task is due at 5:00 PM the same day. The
@@ -207,6 +223,19 @@ alerts or callback tasks when a contact has unrelated opportunities elsewhere.
 The website integration creates or reuses the open opportunity before it marks
 the database submission complete. GoHighLevel's coupled owner setting keeps the
 contact and opportunity owner aligned.
+
+### Canary validation evidence
+
+- Synthetic contact: `E2E PhynyxTest` (`OjworJILwWTWER1nHh6c`)
+- Dedicated opportunity: `8nVYLJckzoQql0FRVoDX` in New Website Lead
+- Paused submission: `b7c51cd1-8b43-4c5e-bfc9-90b7e69582b4`; entered Workflow
+  00, took `Stop — not eligible`, finished, and stayed unassigned with no task
+- Eligible submission: `ed21eb0f-4ad1-40e6-87b8-f9944c40f3cf`; took `Process
+  website lead`, assigned Craig, executed all three internal-notification
+  actions, created exactly one callback task, and finished successfully
+- Exact replay of the eligible submission returned successfully without a new
+  workflow execution or second task
+- No appointment was booked and no customer-facing message was sent
 
 ### 01 — Speed-to-Lead SLA
 
@@ -380,16 +409,18 @@ Track at minimum:
    the dedicated `Phynyx Website` private integration.~~ Completed and verified.
 4. ~~Store the private token and the three non-secret GHL IDs in the deployed
    site environment.~~ Completed; the token remains secret and server-side.
-5. Add the Workflow 00 source/pause guard and wire Investment Context
-   Acknowledged if that signal should be operationally reportable.
+5. ~~Add the Workflow 00 source/pause guard.~~ Completed and canary-tested. Wire
+   Investment Context Acknowledged separately if that signal should be
+   operationally reportable.
 6. Approve channel-specific consent copy and capture before enabling customer
    SMS/email.
 7. Define coverage timezone/hours, stage-aging thresholds, the Lost-reason
    method, Won-onboarding destination, CRM administrator, and escalation
    recipients.
 8. Build workflows 01–08 as drafts and perform a peer review.
-9. Add a temporary `test:automation` enrollment gate or use a restricted,
-   published test clone so no production contact can enroll during validation.
+9. ~~Add a temporary `test:automation` enrollment gate or use a restricted,
+   published test clone so no production contact can enroll during validation.~~
+   Completed; the temporary gate remains active pending production approval.
 10. Run at least 20 labeled test submissions covering new/existing contacts,
    qualified/nurture paths, duplicate retries, each owner, bookings, reschedules,
    cancellations, no-shows, Won, Lost, and opt-out behavior.
@@ -403,3 +434,7 @@ Track at minimum:
 14. Publish in phases: intake/internal alerts, appointment lifecycle, SLA alerts,
    then permission-based customer follow-up.
 15. Review execution logs daily for the first week and weekly thereafter.
+
+Initial controlled canary coverage is complete. The broader 20-case matrix in
+items 10–13, Andrew's real availability, and removal of the temporary
+`test:automation` requirement remain production-launch gates.
