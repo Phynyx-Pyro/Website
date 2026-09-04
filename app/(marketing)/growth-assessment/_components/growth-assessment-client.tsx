@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import Link from 'next/link'
 import { AnimatedSection } from '../../_components/animated-section'
-import { ArrowRight, ArrowLeft, CheckCircle2, Clock, Shield, AlertCircle, DollarSign } from 'lucide-react'
+import { ArrowRight, ArrowLeft, CheckCircle2, Clock, Shield, AlertCircle } from 'lucide-react'
 import { getAssessmentAttribution } from '@/lib/assessment-attribution'
+import { trackFunnelEvent } from '@/lib/funnel-events'
 import {
   isBookingContact,
   type BookingContact,
@@ -57,23 +58,62 @@ export function GrowthAssessmentClient() {
   const [error, setError] = useState('')
   const submissionIdRef = useRef('')
   const prefillAppliedRef = useRef(false)
+  const industryPrefillAppliedRef = useRef(false)
+  const assessmentStartedRef = useRef(false)
+  const completedStepsRef = useRef(new Set<1 | 2 | 3>())
+  const qualificationTrackedRef = useRef(false)
   const resultHeadingRef = useRef<HTMLHeadingElement>(null)
   const resultPath = assessmentResult?.path ?? null
+
+  const markAssessmentStarted = useCallback(() => {
+    if (assessmentStartedRef.current) return
+    assessmentStartedRef.current = true
+    trackFunnelEvent('assessment_start', {
+      entryPoint: getAssessmentAttribution().entryPoint,
+    })
+  }, [])
+
+  const markStepComplete = useCallback((completedStep: 1 | 2 | 3) => {
+    if (completedStepsRef.current.has(completedStep)) return
+    completedStepsRef.current.add(completedStep)
+    trackFunnelEvent('assessment_step_complete', { step: completedStep })
+  }, [])
 
   useEffect(() => {
     if (!prefill || prefillAppliedRef.current) return
     prefillAppliedRef.current = true
+    markAssessmentStarted()
+    const nextStep = prefill.phone.trim().length > 0 ? 2 : 1
+    if (nextStep === 2) markStepComplete(1)
 
-    setForm((current) => ({
-      ...current,
-      firstName: prefill.firstName,
-      lastName: prefill.lastName,
-      email: prefill.email,
-      phone: prefill.phone,
-    }))
-    setStep(prefill.phone.trim().length > 0 ? 2 : 1)
-    clearPrefill()
-  }, [clearPrefill, prefill])
+    const frame = window.requestAnimationFrame(() => {
+      setForm((current) => ({
+        ...current,
+        firstName: prefill.firstName,
+        lastName: prefill.lastName,
+        email: prefill.email,
+        phone: prefill.phone,
+      }))
+      setStep(nextStep)
+      clearPrefill()
+    })
+
+    return () => window.cancelAnimationFrame(frame)
+  }, [clearPrefill, markAssessmentStarted, markStepComplete, prefill])
+
+  useEffect(() => {
+    if (industryPrefillAppliedRef.current) return
+    industryPrefillAppliedRef.current = true
+    if (new URLSearchParams(window.location.search).get('industry') !== 'chiropractic') return
+
+    const frame = window.requestAnimationFrame(() => {
+      setForm((current) => (
+        current.industry ? current : { ...current, industry: 'chiropractic' }
+      ))
+    })
+
+    return () => window.cancelAnimationFrame(frame)
+  }, [])
 
   useEffect(() => {
     if (!resultPath) return
@@ -92,6 +132,7 @@ export function GrowthAssessmentClient() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    markAssessmentStarted()
     setSubmitting(true)
     setError('')
     try {
@@ -125,6 +166,12 @@ export function GrowthAssessmentClient() {
         throw new Error('We could not prepare the secure calendar handoff. Please try again.')
       }
 
+      markStepComplete(3)
+      if (!qualificationTrackedRef.current) {
+        qualificationTrackedRef.current = true
+        trackFunnelEvent('qualification_result', { path: result.fit.path })
+      }
+
       const bookingResponse = await fetch('/api/booking-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -155,7 +202,7 @@ export function GrowthAssessmentClient() {
     const showCalendar = resultPath === 'calendar' || investmentAccepted
 
     return (
-      <main className="bg-ivory grain-subtle min-h-screen pt-32 pb-20">
+      <div className="bg-ivory grain-subtle min-h-screen pt-32 pb-20">
         <div className="mx-auto max-w-[920px] px-6 text-center" aria-live="polite">
           <AnimatedSection>
             {showCalendar ? (
@@ -163,42 +210,47 @@ export function GrowthAssessmentClient() {
                 <CheckCircle2 className="h-16 w-16 text-phoenix mx-auto mb-6" />
                 <h1 ref={resultHeadingRef} tabIndex={-1} className="text-[clamp(32px,5vw,48px)] font-bold leading-tight text-ink outline-none">
                   {resultPath === 'calendar'
-                    ? 'Your business looks ready for the next step.'
-                    : 'Let’s see if the numbers and the strategy make sense.'}
+                    ? 'Your practice looks ready for a working diagnostic.'
+                    : 'Let’s confirm the operating fit together.'}
                 </h1>
                 <p className="mt-4 mx-auto max-w-[660px] text-[17px] leading-[1.65] text-warm">
-                  Thank you, {bookingContact.firstName || 'there'}. Choose a convenient time below for a focused discovery call with PhynyxPro.
+                  Thank you, {bookingContact.firstName || 'there'}. Choose a convenient time below for a roughly 45-minute working diagnostic. Bring last month&apos;s spend, leads, appointment requests, shows, and starts.
                 </p>
-                <BookingCalendar contact={bookingContact} />
+                <BookingCalendar contact={bookingContact} qualificationPath={resultPath} />
                 <Link href="/" className="mt-8 inline-flex items-center gap-2 text-[14px] font-semibold text-phoenix hover:underline">
                   Back to Home <ArrowRight className="h-4 w-4" />
                 </Link>
               </>
             ) : (
               <div className="mx-auto max-w-[720px] rounded-2xl bg-white p-7 md:p-10 shadow-xl">
-                <DollarSign className="h-14 w-14 text-phoenix mx-auto mb-5" />
+                <Shield className="h-14 w-14 text-phoenix mx-auto mb-5" />
                 <h1 ref={resultHeadingRef} tabIndex={-1} className="text-[clamp(30px,5vw,42px)] font-bold leading-tight text-ink outline-none">
-                  Before we book, let&apos;s make sure the investment fits.
+                  Before you book, make sure the operating fit is realistic.
                 </h1>
                 <p className="mt-4 text-[16px] leading-[1.65] text-warm">
-                  Based on what you shared, your business may be early for the full PhynyxPro system. That does not automatically mean we cannot help—but we want the costs to be completely clear before you schedule.
+                  The flagship PhynyxPro system is built for established practices with room for more new-patient evaluations and a plan to fund paid acquisition. Your answers suggest we should confirm at least one of those conditions before deciding whether to work together.
                 </p>
 
-                <div className="mt-7 grid gap-3 text-left sm:grid-cols-3">
+                <div className="mt-7 grid gap-3 text-left sm:grid-cols-2">
                   {[
-                    { label: 'One-time buildout', value: '$1,000' },
-                    { label: 'Monthly retainer', value: '$1,500/mo' },
-                    { label: 'Lead generation', value: '$1,500–$2,500/mo' },
+                    {
+                      label: 'Practice capacity',
+                      value: 'Openings for new-patient evaluations and a team ready to follow through.',
+                    },
+                    {
+                      label: 'Acquisition readiness',
+                      value: 'Prepared to fund paid acquisition and review the numbers from lead to start.',
+                    },
                   ].map((item) => (
                     <div key={item.label} className="rounded-xl border border-ink/10 bg-ivory p-4">
                       <p className="text-[12px] font-semibold uppercase tracking-[.08em] text-warm">{item.label}</p>
-                      <p className="mt-1.5 text-[20px] font-bold text-ink">{item.value}</p>
+                      <p className="mt-2 text-[14px] leading-[1.55] font-medium text-ink">{item.value}</p>
                     </div>
                   ))}
                 </div>
 
                 <p className="mt-5 text-[14px] leading-[1.6] text-warm">
-                  Expected total: approximately <strong className="text-ink">$4,000–$5,000 in month one</strong>, then <strong className="text-ink">$3,000–$4,000 per month</strong>. The discovery call is still free and is simply to determine whether moving forward makes sense.
+                  This does not automatically rule you out. The working diagnostic is where we review the numbers, capacity, and next step. It is not a promise that the system is the right fit.
                 </p>
 
                 <button
@@ -206,7 +258,7 @@ export function GrowthAssessmentClient() {
                   onClick={() => setInvestmentAccepted(true)}
                   className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-phoenix px-7 py-4 text-[15px] font-semibold text-white shadow-lg transition-colors hover:bg-ember"
                 >
-                  I understand the investment — show me the calendar
+                  I understand — show diagnostic times
                   <ArrowRight className="h-4 w-4" />
                 </button>
                 <Link href="/" className="mt-5 inline-flex text-[13px] font-semibold text-warm hover:text-ink">
@@ -216,26 +268,29 @@ export function GrowthAssessmentClient() {
             )}
           </AnimatedSection>
         </div>
-      </main>
+      </div>
     )
   }
 
   return (
-    <main className="bg-ivory grain-subtle min-h-screen">
+    <div className="bg-ivory grain-subtle min-h-screen">
       {/* Hero */}
       <section className="pt-32 pb-12 md:pt-40 md:pb-16">
         <div className="mx-auto max-w-[800px] px-6 text-center">
           <AnimatedSection>
             <h1 className="text-[clamp(32px,5vw,56px)] font-bold leading-[1.05] tracking-tight text-ink">
-              Let&apos;s find out if PhynyxPro is the <span className="text-phoenix">right growth partner.</span>
+              Book your <span className="text-phoenix">Patient Acquisition Diagnostic.</span>
             </h1>
             <p className="mt-5 max-w-[560px] mx-auto text-[17px] leading-[1.65] text-warm">
-              A 30-minute qualified conversation — not a sales pitch. We&apos;ll review your current marketing, lead flow, and operations, then tell you honestly whether we can help.
+              Start with a short fit check. Then choose a time for a roughly 45-minute working session focused on the gaps between lead, appointment request, confirmation, Day 1 show, and start of care.
             </p>
             <div className="mt-6 flex items-center justify-center gap-6 text-[13px] text-warm">
-              <span className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-phoenix" /> Takes about 3 minutes</span>
-              <span className="flex items-center gap-1.5"><Shield className="h-4 w-4 text-phoenix" /> No obligation</span>
+              <span className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-phoenix" /> 3-minute fit check</span>
+              <span className="flex items-center gap-1.5"><Shield className="h-4 w-4 text-phoenix" /> Fit-first process</span>
             </div>
+            <p className="mt-4 mx-auto max-w-[620px] text-[13px] leading-[1.6] text-warm">
+              Bring last month&apos;s spend, leads, appointment requests, shows, and starts to the working session.
+            </p>
           </AnimatedSection>
         </div>
       </section>
@@ -245,6 +300,7 @@ export function GrowthAssessmentClient() {
         <form
           name="growth-assessment-full"
           onSubmit={handleSubmit}
+          onFocusCapture={markAssessmentStarted}
           className="mx-auto max-w-[600px] px-6"
         >
           <div className="absolute left-[-10000px] h-px w-px overflow-hidden" aria-hidden="true">
@@ -310,7 +366,17 @@ export function GrowthAssessmentClient() {
                     <input id="assessment-phone" type="tel" value={form?.phone ?? ''} onChange={(e) => update('phone', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink placeholder:text-warm/50 focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition" placeholder="(555) 123-4567" />
                   </div>
                 </div>
-                <button type="button" onClick={() => canProceed1 && setStep(2)} disabled={!canProceed1} className={`mt-8 w-full inline-flex items-center justify-center gap-2 rounded-lg px-7 py-3.5 text-[15px] font-semibold transition-colors ${canProceed1 ? 'bg-phoenix text-white hover:bg-ember' : 'bg-ink/10 text-ink/40 cursor-not-allowed'}`}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!canProceed1) return
+                    markAssessmentStarted()
+                    markStepComplete(1)
+                    setStep(2)
+                  }}
+                  disabled={!canProceed1}
+                  className={`mt-8 w-full inline-flex items-center justify-center gap-2 rounded-lg px-7 py-3.5 text-[15px] font-semibold transition-colors ${canProceed1 ? 'bg-phoenix text-white hover:bg-ember' : 'bg-ink/10 text-ink/40 cursor-not-allowed'}`}
+                >
                   Continue <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
@@ -355,7 +421,16 @@ export function GrowthAssessmentClient() {
                   <button type="button" onClick={() => setStep(1)} className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg border border-ink/20 px-7 py-3.5 text-[15px] font-semibold text-ink hover:bg-ink hover:text-white transition-colors">
                     <ArrowLeft className="h-4 w-4" /> Back
                   </button>
-                  <button type="button" onClick={() => canProceed2 && setStep(3)} disabled={!canProceed2} className={`flex-1 inline-flex items-center justify-center gap-2 rounded-lg px-7 py-3.5 text-[15px] font-semibold transition-colors ${canProceed2 ? 'bg-phoenix text-white hover:bg-ember' : 'bg-ink/10 text-ink/40 cursor-not-allowed'}`}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!canProceed2) return
+                      markStepComplete(2)
+                      setStep(3)
+                    }}
+                    disabled={!canProceed2}
+                    className={`flex-1 inline-flex items-center justify-center gap-2 rounded-lg px-7 py-3.5 text-[15px] font-semibold transition-colors ${canProceed2 ? 'bg-phoenix text-white hover:bg-ember' : 'bg-ink/10 text-ink/40 cursor-not-allowed'}`}
+                  >
                     Continue <ArrowRight className="h-4 w-4" />
                   </button>
                 </div>
@@ -410,18 +485,18 @@ export function GrowthAssessmentClient() {
                     <ArrowLeft className="h-4 w-4" /> Back
                   </button>
                   <button type="submit" disabled={submitting} className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white hover:bg-ember transition-colors disabled:opacity-50">
-                    {submitting ? 'Submitting...' : 'Submit Assessment'}
+                    {submitting ? 'Checking fit...' : 'Complete Fit Check'}
                   </button>
                 </div>
 
                 <p className="mt-4 text-[12px] text-warm text-center">
-                  Your information is kept private. We&apos;ll only use it to assess fit and reach out if we believe we can help.
+                  We&apos;ll use these details to evaluate fit, coordinate the diagnostic, and follow up about PhynyxPro.
                 </p>
               </div>
             </AnimatedSection>
           )}
         </form>
       </section>
-    </main>
+    </div>
   )
 }

@@ -1,53 +1,35 @@
 'use client'
 
 import Image from 'next/image'
-import { Counter } from '../../_components/counter'
+
+const trustPoints = [
+  ['Chiropractic-first', 'Built around the new-patient journey'],
+  ['Full-funnel view', 'From campaign source to start of care'],
+  ['Operator-led', 'A system shaped by practice reality'],
+  ['Human handoff', 'Your team steps in when it should'],
+]
 
 export function TrustStrip() {
   return (
-    <section className="slant-both relative z-20 mt-8 lg:mt-14 bg-ink text-white grain-dark">
-      <div className="mx-auto flex flex-col lg:flex-row max-w-[1320px] items-start lg:items-center justify-between px-5 lg:px-10 pb-10 pt-11 gap-6">
+    <section className="slant-both relative z-20 bg-ink text-white grain-dark">
+      <div className="mx-auto grid max-w-[1320px] gap-6 px-5 pb-11 pt-12 lg:grid-cols-[1.25fr_3fr] lg:items-center lg:px-10">
         <div className="flex items-center gap-3">
-          <div className="relative h-5 w-5">
-            <Image src="/images/pyro-icon.png" alt="" fill className="object-contain" style={{ objectFit: 'contain' }} />
+          <div className="relative h-6 w-6 shrink-0">
+            <Image src="/images/pyro-icon.png" alt="" fill className="object-contain" />
           </div>
-          <p className="text-[12px] font-bold uppercase tracking-[.18em] text-white/70">
-            Documented, not embellished
+          <p className="max-w-[250px] text-[12px] font-bold uppercase leading-[1.45] tracking-[.16em] text-white/75">
+            Designed around the handoffs that decide patient acquisition
           </p>
         </div>
-        <div className="grid grid-cols-2 lg:flex items-center gap-6 lg:gap-11">
-          <div>
-            <p className="text-[27px] lg:text-[30px] font-bold leading-none tracking-[-.03em]">
-              <Counter end={5} suffix="" className="" /><span className="text-phoenix">+</span>
-            </p>
-            <p className="mt-1 text-[10.5px] lg:text-[11.5px] uppercase tracking-[.1em] text-white/60">Years operating</p>
-          </div>
-          <div className="hidden lg:block h-9 w-px bg-white/15" />
-          <div>
-            <p className="text-[27px] lg:text-[30px] font-bold leading-none tracking-[-.03em]">
-              <Counter end={140} className="" /><span className="text-phoenix">+</span>
-            </p>
-            <p className="mt-1 text-[10.5px] lg:text-[11.5px] uppercase tracking-[.1em] text-white/60">Practices served</p>
-          </div>
-          <div className="hidden lg:block h-9 w-px bg-white/15" />
-          <div>
-            <p className="text-[27px] lg:text-[30px] font-bold leading-none tracking-[-.03em]">
-              &lt;1<span className="text-phoenix">min</span>
-            </p>
-            <p className="mt-1 text-[10.5px] lg:text-[11.5px] uppercase tracking-[.1em] text-white/60">Lead response time</p>
-          </div>
-          <div className="hidden lg:block h-9 w-px bg-white/15" />
-          <div>
-            <p className="text-[27px] lg:text-[30px] font-bold leading-none tracking-[-.03em]">
-              24<span className="text-phoenix">/7</span>
-            </p>
-            <p className="mt-1 text-[10.5px] lg:text-[11.5px] uppercase tracking-[.1em] text-white/60">Coverage with Ember</p>
-          </div>
-          <div className="hidden lg:block h-9 w-px bg-white/15" />
-          <div className="col-span-2 lg:col-span-1 max-w-[168px] border-t border-white/12 pt-5 lg:pt-0 lg:border-0">
-            <p className="text-[13.5px] font-semibold leading-tight">Built by a practicing chiropractor.</p>
-          </div>
-        </div>
+
+        <dl className="grid grid-cols-2 gap-x-5 gap-y-6 lg:grid-cols-4 lg:gap-0 lg:divide-x lg:divide-white/12">
+          {trustPoints.map(([term, description]) => (
+            <div key={term} className="lg:px-6 first:lg:pl-0 last:lg:pr-0">
+              <dt className="text-[14px] font-bold text-white lg:text-[15px]">{term}</dt>
+              <dd className="mt-1 text-[11.5px] leading-[1.45] text-white/55 lg:text-[12px]">{description}</dd>
+            </div>
+          ))}
+        </dl>
       </div>
     </section>
   )

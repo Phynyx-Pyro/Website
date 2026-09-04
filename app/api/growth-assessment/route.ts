@@ -3,15 +3,11 @@ import { growthAssessments } from '@/db/schema'
 import { issueBookingSession } from '@/lib/booking-session'
 import {
   GhlIdentityConflictError,
-  isGhlContactNotFoundError,
   resolveGrowthAssessmentContact,
-  syncGrowthAssessmentMetadata,
+  syncNewGrowthAssessmentMetadata,
 } from '@/lib/ghl'
 import { assessGrowthFit, type FitAssessment } from '@/lib/growth-assessment'
-import {
-  minimizeAttributionUrl,
-  normalizeAssessmentCtaOrigin,
-} from '@/lib/assessment-attribution'
+import { normalizeAssessmentEntryPoint } from '@/lib/assessment-attribution'
 import {
   PublicFormError,
   canonicalPayloadHashInput,
@@ -77,18 +73,8 @@ const ALLOWED_CHALLENGES = new Set([
   'scaling',
 ])
 
-const SESSION_ID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-
 function clean(value: unknown, maxLength: number) {
   return typeof value === 'string' ? value.trim().slice(0, maxLength) : ''
-}
-
-function cleanAttributionValue(value: unknown) {
-  return clean(value, MAX_LENGTHS.attributionValue).replace(
-    /[\u0000-\u001f\u007f]/g,
-    '',
-  )
 }
 
 function isValidEmail(value: string) {
@@ -167,28 +153,24 @@ export async function POST(request: Request) {
       typeof payload.attribution === 'object' && payload.attribution
         ? (payload.attribution as Record<string, unknown>)
         : {}
-    const rawCtaOrigin = cleanAttributionValue(rawAttribution.ctaOrigin)
-    const rawSessionId = cleanAttributionValue(rawAttribution.sessionId)
     const attribution = {
-      conversionPage: minimizeAttributionUrl(
-        clean(rawAttribution.conversionPage, MAX_LENGTHS.landingPage),
-      ),
-      landingPage: minimizeAttributionUrl(
-        clean(rawAttribution.landingPage, MAX_LENGTHS.landingPage),
-      ),
-      referrer: minimizeAttributionUrl(
-        clean(rawAttribution.referrer, MAX_LENGTHS.referrer),
-      ),
-      ctaOrigin: normalizeAssessmentCtaOrigin(rawCtaOrigin),
-      sessionId: SESSION_ID_PATTERN.test(rawSessionId) ? rawSessionId : '',
-      utmSource: cleanAttributionValue(rawAttribution.utmSource),
-      utmMedium: cleanAttributionValue(rawAttribution.utmMedium),
-      utmCampaign: cleanAttributionValue(rawAttribution.utmCampaign),
-      utmContent: cleanAttributionValue(rawAttribution.utmContent),
-      utmTerm: cleanAttributionValue(rawAttribution.utmTerm),
-      gclid: cleanAttributionValue(rawAttribution.gclid),
-      fbclid: cleanAttributionValue(rawAttribution.fbclid),
-      msclkid: cleanAttributionValue(rawAttribution.msclkid),
+      landingPage: clean(rawAttribution.landingPage, MAX_LENGTHS.landingPage),
+      referrer: clean(rawAttribution.referrer, MAX_LENGTHS.referrer),
+      entryPoint: normalizeAssessmentEntryPoint(rawAttribution.entryPoint),
+      utmSource: clean(rawAttribution.utmSource, MAX_LENGTHS.attributionValue),
+      utmMedium: clean(rawAttribution.utmMedium, MAX_LENGTHS.attributionValue),
+      utmCampaign: clean(rawAttribution.utmCampaign, MAX_LENGTHS.attributionValue),
+      utmContent: clean(rawAttribution.utmContent, MAX_LENGTHS.attributionValue),
+      utmTerm: clean(rawAttribution.utmTerm, MAX_LENGTHS.attributionValue),
+      gclid: clean(rawAttribution.gclid, MAX_LENGTHS.attributionValue),
+      dclid: clean(rawAttribution.dclid, MAX_LENGTHS.attributionValue),
+      gbraid: clean(rawAttribution.gbraid, MAX_LENGTHS.attributionValue),
+      wbraid: clean(rawAttribution.wbraid, MAX_LENGTHS.attributionValue),
+      fbclid: clean(rawAttribution.fbclid, MAX_LENGTHS.attributionValue),
+      msclkid: clean(rawAttribution.msclkid, MAX_LENGTHS.attributionValue),
+      ttclid: clean(rawAttribution.ttclid, MAX_LENGTHS.attributionValue),
+      twclid: clean(rawAttribution.twclid, MAX_LENGTHS.attributionValue),
+      liFatId: clean(rawAttribution.liFatId, MAX_LENGTHS.attributionValue),
     }
 
     if (!firstName || !email || !submittedPhone || !businessName || !industry) {
@@ -224,7 +206,23 @@ export async function POST(request: Request) {
     const submissionType = 'full-assessment' as const
     const fit = assessGrowthFit(annualRevenue, monthlyBudget)
     const now = new Date()
-    let submittedAt = now
+    const ghlInput = {
+      submissionId,
+      submittedAt: now.toISOString(),
+      submissionType,
+      firstName,
+      lastName,
+      email,
+      phone,
+      businessName,
+      industry,
+      annualRevenue,
+      biggestChallenge,
+      currentMarketing,
+      monthlyBudget,
+      attribution,
+      fit,
+    }
     const payloadHash = await hashText(
       canonicalPayloadHashInput([
         firstName,
@@ -256,6 +254,9 @@ export async function POST(request: Request) {
         currentMarketing: currentMarketing || null,
         monthlyBudget: monthlyBudget || null,
         submissionType,
+        attributionJson: JSON.stringify(attribution),
+        entryPoint: attribution.entryPoint || null,
+        fitPath: fit.path,
         payloadHash,
         ghlContactId: null,
         status: 'crm-pending',
@@ -280,8 +281,6 @@ export async function POST(request: Request) {
           'This submission changed while it was being processed. Please try again.',
         )
       }
-
-      submittedAt = existing.createdAt
 
       if (existing.status === 'crm-synced' && existing.ghlContactId) {
         return bookingReadyResponse(
@@ -349,30 +348,26 @@ export async function POST(request: Request) {
       }
     }
 
-    const ghlInput = {
-      submissionId,
-      submittedAt: submittedAt.toISOString(),
-      submissionType,
-      firstName,
-      lastName,
-      email,
-      phone,
-      businessName,
-      industry,
-      annualRevenue,
-      biggestChallenge,
-      currentMarketing,
-      monthlyBudget,
-      attribution,
-      fit,
-    }
-
     let contactId = resumeMetadataContactId
     let metadataPending = Boolean(resumeMetadataContactId)
     try {
       if (!contactId) {
         const contact = await resolveGrowthAssessmentContact(ghlInput)
         contactId = contact.contactId
+
+        if (!contact.isNew) {
+          await db
+            .update(growthAssessments)
+            .set({
+              ghlContactId: contactId,
+              status: 'crm-synced',
+              updatedAt: new Date(),
+            })
+            .where(eq(growthAssessments.id, submissionId))
+
+          return bookingReadyResponse(request, submissionId, fit)
+        }
+
         metadataPending = true
         await db
           .update(growthAssessments)
@@ -384,44 +379,7 @@ export async function POST(request: Request) {
           .where(eq(growthAssessments.id, submissionId))
       }
 
-      try {
-        await syncGrowthAssessmentMetadata(contactId, ghlInput)
-      } catch (error) {
-        const cachedContactWasRemoved =
-          Boolean(resumeMetadataContactId) &&
-          contactId === resumeMetadataContactId &&
-          isGhlContactNotFoundError(error, contactId)
-
-        if (!cachedContactWasRemoved) throw error
-
-        await db
-          .update(growthAssessments)
-          .set({
-            ghlContactId: null,
-            status: 'crm-pending',
-            updatedAt: new Date(),
-          })
-          .where(eq(growthAssessments.id, submissionId))
-
-        contactId = ''
-        metadataPending = false
-
-        const contact = await resolveGrowthAssessmentContact(ghlInput)
-        contactId = contact.contactId
-        metadataPending = true
-        await db
-          .update(growthAssessments)
-          .set({
-            ghlContactId: contactId,
-            status: 'crm-metadata-pending',
-            updatedAt: new Date(),
-          })
-          .where(eq(growthAssessments.id, submissionId))
-
-        // This is intentionally a single recovery attempt. A second failure is
-        // recorded normally instead of looping or creating more CRM work.
-        await syncGrowthAssessmentMetadata(contactId, ghlInput)
-      }
+      await syncNewGrowthAssessmentMetadata(contactId, ghlInput)
     } catch (error) {
       const identityConflict = error instanceof GhlIdentityConflictError
       await db

@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Menu, X, ChevronDown } from 'lucide-react'
+import { usePathname } from 'next/navigation'
+import { AssessmentCtaLink } from './assessment-cta-link'
 
 const navLinks = [
   { label: 'Growth System', href: '/growth-system' },
@@ -22,6 +24,7 @@ const navLinks = [
 ]
 
 export function SiteHeader() {
+  const pathname = usePathname()
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
@@ -66,7 +69,7 @@ export function SiteHeader() {
         </Link>
 
         {/* Desktop nav */}
-        <div className="hidden lg:flex items-center gap-8 text-[14.5px] font-medium text-ink/80">
+        <div className="hidden lg:flex items-center gap-6 xl:gap-8 text-[14px] xl:text-[14.5px] font-medium text-ink/80">
           {navLinks?.map((link: any) => (
             <div key={link?.href} className="relative">
               {link?.children ? (
@@ -74,18 +77,35 @@ export function SiteHeader() {
                   className="relative"
                   onMouseEnter={() => setDropdownOpen(true)}
                   onMouseLeave={() => setDropdownOpen(false)}
+                  onBlur={(event) => {
+                    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                      setDropdownOpen(false)
+                    }
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key !== 'Escape') return
+                    setDropdownOpen(false)
+                    event.currentTarget.querySelector('button')?.focus()
+                  }}
                 >
-                  <button className="flex items-center gap-1.5 hover:text-phoenix transition-colors">
+                  <button
+                    type="button"
+                    aria-expanded={dropdownOpen}
+                    aria-haspopup="menu"
+                    onClick={() => setDropdownOpen(true)}
+                    className="flex items-center gap-1.5 hover:text-phoenix transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phoenix focus-visible:ring-offset-4 focus-visible:ring-offset-ivory"
+                  >
                     {link?.label}
                     <ChevronDown className={`w-3.5 h-3.5 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
                   </button>
                   {dropdownOpen && (
                     <div className="absolute top-full left-0 pt-2">
-                      <div className="bg-white rounded-xl border border-black/10 py-2 px-1 min-w-[200px] lift-sm">
+                      <div role="menu" className="bg-white rounded-xl border border-black/10 py-2 px-1 min-w-[200px] lift-sm">
                         {link?.children?.map((child: any) => (
                           <Link
                             key={child?.href}
                             href={child?.href}
+                            role="menuitem"
                             className="block px-4 py-2.5 rounded-lg text-[14px] hover:bg-ivory hover:text-phoenix transition-colors"
                           >
                             {child?.label}
@@ -94,6 +114,7 @@ export function SiteHeader() {
                         <div className="border-t border-black/5 mt-1 pt-1 mx-1">
                           <Link
                             href="/industries"
+                            role="menuitem"
                             className="block px-4 py-2.5 rounded-lg text-[13px] text-warm hover:bg-ivory hover:text-phoenix transition-colors"
                           >
                             View all industries →
@@ -113,30 +134,35 @@ export function SiteHeader() {
         </div>
 
         {/* Desktop CTA */}
-        <Link
-          href="/growth-assessment?cta=site-header-desktop"
-          className="hidden lg:flex items-center gap-2.5 rounded-lg bg-phoenix px-5 py-3.5 text-[14px] font-semibold text-white shadow-[0_12px_28px_-12px_rgba(212,85,42,.95)] hover:bg-ember transition-colors group"
+        <AssessmentCtaLink
+          placement="header_desktop"
+          industry={pathname === '/' ? 'chiropractic' : undefined}
+          data-cta-placement="header-desktop"
+          className="group hidden items-center gap-2.5 whitespace-nowrap rounded-lg bg-phoenix px-4 py-3.5 text-[13px] font-semibold text-white shadow-[0_12px_28px_-12px_rgba(212,85,42,.95)] transition-colors hover:bg-ember focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phoenix focus-visible:ring-offset-2 focus-visible:ring-offset-ivory lg:flex xl:px-5 xl:text-[14px]"
         >
-          Book a Growth Assessment
+          Book My Patient Acquisition Diagnostic
           <svg className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
           </svg>
-        </Link>
+        </AssessmentCtaLink>
 
         {/* Mobile menu button */}
         <button
+          type="button"
           onClick={() => setMobileOpen(!mobileOpen)}
           className="lg:hidden flex h-10 w-10 items-center justify-center rounded-lg border border-black/10"
           aria-label="Toggle menu"
+          aria-expanded={mobileOpen}
+          aria-controls="mobile-site-menu"
         >
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
       </nav>
-    </header>
+      </header>
 
       {/* Mobile overlay */}
       {mobileOpen && (
-        <div className="fixed inset-0 top-[84px] z-40 bg-ivory overflow-y-auto lg:hidden">
+        <div id="mobile-site-menu" className="fixed inset-0 top-[84px] z-[45] bg-ivory overflow-y-auto lg:hidden">
           <div className="px-6 py-8 space-y-2">
             {navLinks?.map((link: any) => (
               <div key={link?.href}>
@@ -164,16 +190,18 @@ export function SiteHeader() {
               </div>
             ))}
             <div className="pt-6">
-              <Link
-                href="/growth-assessment?cta=site-header-mobile"
+              <AssessmentCtaLink
+                placement="header_mobile"
+                industry={pathname === '/' ? 'chiropractic' : undefined}
                 onClick={() => setMobileOpen(false)}
-                className="flex w-full items-center justify-center gap-2.5 rounded-lg bg-phoenix py-4 text-[15px] font-semibold text-white shadow-[0_14px_30px_-14px_rgba(212,85,42,.95)]"
+                data-cta-placement="header-mobile"
+                className="flex w-full items-center justify-center gap-2.5 rounded-lg bg-phoenix px-4 py-4 text-center text-[14px] font-semibold text-white shadow-[0_14px_30px_-14px_rgba(212,85,42,.95)]"
               >
-                Book a Growth Assessment
+                Book My Patient Acquisition Diagnostic
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
-              </Link>
+              </AssessmentCtaLink>
             </div>
           </div>
         </div>

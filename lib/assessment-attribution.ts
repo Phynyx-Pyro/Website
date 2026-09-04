@@ -1,47 +1,70 @@
 export type AssessmentAttribution = {
-  conversionPage: string
   landingPage: string
   referrer: string
-  ctaOrigin: string
-  sessionId: string
+  entryPoint: string
   utmSource: string
   utmMedium: string
   utmCampaign: string
   utmContent: string
   utmTerm: string
   gclid: string
+  dclid: string
+  gbraid: string
+  wbraid: string
   fbclid: string
   msclkid: string
+  ttclid: string
+  twclid: string
+  liFatId: string
 }
 
-type StoredAssessmentAttribution = Omit<AssessmentAttribution, 'conversionPage'>
+export const ASSESSMENT_ENTRY_POINT_QUERY_KEY = 'assessment_entry'
+export const ASSESSMENT_LANDING_PATH_QUERY_KEY = 'assessment_landing_path'
+export const ASSESSMENT_START_PATH = '/growth-assessment/start'
+const MAX_ATTRIBUTION_QUERY_VALUE_LENGTH = 500
 
-const ATTRIBUTION_STORAGE_KEY = 'phynyx:assessment-attribution:v1'
-const MAX_ATTRIBUTION_VALUE_LENGTH = 500
-const SESSION_ID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-const ASSESSMENT_CTA_ORIGINS = new Set([
-  'site-header-desktop',
-  'site-header-mobile',
-  'homepage-hero',
-  'homepage-quick-form',
-  'growth-system-footer',
-  'industries-other-card',
-  'industries-footer',
-  'chiropractic-hero',
-  'chiropractic-footer',
-  'home-services-hero',
-  'home-services-footer',
-  'dental-medspa-hero',
-  'dental-medspa-footer',
-  'results-footer',
-  'pyro-ember-hero',
-  'pyro-ember-footer',
-  'about-footer',
-  'client-login',
-])
+const ATTRIBUTION_QUERY_FIELDS = [
+  ['utm_source', 'utmSource'],
+  ['utm_medium', 'utmMedium'],
+  ['utm_campaign', 'utmCampaign'],
+  ['utm_content', 'utmContent'],
+  ['utm_term', 'utmTerm'],
+  ['gclid', 'gclid'],
+  ['dclid', 'dclid'],
+  ['gbraid', 'gbraid'],
+  ['wbraid', 'wbraid'],
+  ['fbclid', 'fbclid'],
+  ['msclkid', 'msclkid'],
+  ['ttclid', 'ttclid'],
+  ['twclid', 'twclid'],
+  ['li_fat_id', 'liFatId'],
+] as const satisfies ReadonlyArray<
+  readonly [string, Exclude<keyof AssessmentAttribution, 'landingPage' | 'referrer' | 'entryPoint'>]
+>
 
-let memoryAttribution: StoredAssessmentAttribution | null = null
+export const ASSESSMENT_ATTRIBUTION_QUERY_KEYS = ATTRIBUTION_QUERY_FIELDS.map(
+  ([queryKey]) => queryKey,
+)
+
+export function normalizeAssessmentEntryPoint(value: unknown) {
+  if (typeof value !== 'string') return ''
+  const normalized = value.trim().toLowerCase()
+  return /^[a-z0-9][a-z0-9_-]{0,63}$/.test(normalized) ? normalized : ''
+}
+
+export function normalizeAssessmentLandingPath(value: unknown) {
+  if (typeof value !== 'string') return ''
+  const normalized = value.trim()
+  if (!normalized.startsWith('/') || normalized.startsWith('//')) return ''
+
+  try {
+    const url = new URL(normalized, 'https://phynyxpro.invalid')
+    if (url.origin !== 'https://phynyxpro.invalid') return ''
+    return url.pathname
+  } catch {
+    return ''
+  }
+}
 
 export function minimizeAttributionUrl(value: string) {
   if (!value) return ''
@@ -55,144 +78,135 @@ export function minimizeAttributionUrl(value: string) {
   }
 }
 
-function cleanAttributionValue(value: unknown) {
-  return typeof value === 'string'
-    ? value
-        .replace(/[\u0000-\u001f\u007f]/g, '')
-        .trim()
-        .slice(0, MAX_ATTRIBUTION_VALUE_LENGTH)
-    : ''
-}
-
-export function normalizeAssessmentCtaOrigin(value: unknown) {
-  const origin = cleanAttributionValue(value)
-  return ASSESSMENT_CTA_ORIGINS.has(origin) ? origin : ''
-}
-
-function blankAttribution(): AssessmentAttribution {
-  return {
-    conversionPage: '',
-    landingPage: '',
-    referrer: '',
-    ctaOrigin: '',
-    sessionId: '',
-    utmSource: '',
-    utmMedium: '',
-    utmCampaign: '',
-    utmContent: '',
-    utmTerm: '',
-    gclid: '',
-    fbclid: '',
-    msclkid: '',
-  }
-}
-
-function createSessionId() {
-  try {
-    if (typeof window.crypto.randomUUID === 'function') {
-      return window.crypto.randomUUID()
+export function getAssessmentAttribution(): AssessmentAttribution {
+  if (typeof window === 'undefined') {
+    return {
+      landingPage: '',
+      referrer: '',
+      entryPoint: '',
+      utmSource: '',
+      utmMedium: '',
+      utmCampaign: '',
+      utmContent: '',
+      utmTerm: '',
+      gclid: '',
+      dclid: '',
+      gbraid: '',
+      wbraid: '',
+      fbclid: '',
+      msclkid: '',
+      ttclid: '',
+      twclid: '',
+      liFatId: '',
     }
-
-    const bytes = window.crypto.getRandomValues(new Uint8Array(16))
-    bytes[6] = (bytes[6] & 0x0f) | 0x40
-    bytes[8] = (bytes[8] & 0x3f) | 0x80
-    const hex = [...bytes].map((value) => value.toString(16).padStart(2, '0'))
-    return [
-      hex.slice(0, 4).join(''),
-      hex.slice(4, 6).join(''),
-      hex.slice(6, 8).join(''),
-      hex.slice(8, 10).join(''),
-      hex.slice(10).join(''),
-    ].join('-')
-  } catch {
-    return ''
   }
-}
-
-function sanitizeStoredAttribution(
-  value: unknown,
-): StoredAssessmentAttribution | null {
-  if (!value || typeof value !== 'object') return null
-  const stored = value as Partial<StoredAssessmentAttribution>
-  const sessionId = cleanAttributionValue(stored.sessionId)
-  if (!SESSION_ID_PATTERN.test(sessionId)) return null
-
-  return {
-    landingPage: minimizeAttributionUrl(
-      cleanAttributionValue(stored.landingPage),
-    ),
-    referrer: minimizeAttributionUrl(cleanAttributionValue(stored.referrer)),
-    ctaOrigin: normalizeAssessmentCtaOrigin(stored.ctaOrigin),
-    sessionId,
-    utmSource: cleanAttributionValue(stored.utmSource),
-    utmMedium: cleanAttributionValue(stored.utmMedium),
-    utmCampaign: cleanAttributionValue(stored.utmCampaign),
-    utmContent: cleanAttributionValue(stored.utmContent),
-    utmTerm: cleanAttributionValue(stored.utmTerm),
-    gclid: cleanAttributionValue(stored.gclid),
-    fbclid: cleanAttributionValue(stored.fbclid),
-    msclkid: cleanAttributionValue(stored.msclkid),
-  }
-}
-
-function readStoredAttribution() {
-  if (memoryAttribution) return memoryAttribution
-
-  try {
-    const raw = window.sessionStorage.getItem(ATTRIBUTION_STORAGE_KEY)
-    if (!raw) return null
-    memoryAttribution = sanitizeStoredAttribution(JSON.parse(raw))
-  } catch {
-    memoryAttribution = null
-  }
-
-  return memoryAttribution
-}
-
-function writeStoredAttribution(attribution: StoredAssessmentAttribution) {
-  memoryAttribution = attribution
-  try {
-    window.sessionStorage.setItem(
-      ATTRIBUTION_STORAGE_KEY,
-      JSON.stringify(attribution),
-    )
-  } catch {
-    // The in-memory copy keeps attribution available when storage is blocked.
-  }
-}
-
-export function captureAssessmentAttribution(): AssessmentAttribution {
-  if (typeof window === 'undefined') return blankAttribution()
 
   const params = new URLSearchParams(window.location.search)
-  const conversionPage = minimizeAttributionUrl(window.location.href)
-  const existing = readStoredAttribution()
-  const stored: StoredAssessmentAttribution = existing ?? {
-    landingPage: conversionPage,
-    referrer: minimizeAttributionUrl(document.referrer),
-    ctaOrigin: '',
-    sessionId: createSessionId(),
-    utmSource: cleanAttributionValue(params.get('utm_source')),
-    utmMedium: cleanAttributionValue(params.get('utm_medium')),
-    utmCampaign: cleanAttributionValue(params.get('utm_campaign')),
-    utmContent: cleanAttributionValue(params.get('utm_content')),
-    utmTerm: cleanAttributionValue(params.get('utm_term')),
-    gclid: cleanAttributionValue(params.get('gclid')),
-    fbclid: cleanAttributionValue(params.get('fbclid')),
-    msclkid: cleanAttributionValue(params.get('msclkid')),
-  }
-  const ctaOrigin =
-    normalizeAssessmentCtaOrigin(params.get('cta')) || stored.ctaOrigin
-  const updated = { ...stored, ctaOrigin }
-
-  writeStoredAttribution(updated)
+  const landingPath = normalizeAssessmentLandingPath(
+    params.get(ASSESSMENT_LANDING_PATH_QUERY_KEY),
+  )
+  const queryAttribution = Object.fromEntries(
+    ATTRIBUTION_QUERY_FIELDS.map(([queryKey, field]) => [
+      field,
+      params.get(queryKey) ?? '',
+    ]),
+  ) as Pick<
+    AssessmentAttribution,
+    Exclude<keyof AssessmentAttribution, 'landingPage' | 'referrer' | 'entryPoint'>
+  >
 
   return {
-    conversionPage,
-    ...updated,
+    landingPage: landingPath
+      ? `${window.location.origin}${landingPath}`
+      : minimizeAttributionUrl(window.location.href),
+    referrer: minimizeAttributionUrl(document.referrer),
+    entryPoint: normalizeAssessmentEntryPoint(
+      params.get(ASSESSMENT_ENTRY_POINT_QUERY_KEY),
+    ),
+    ...queryAttribution,
   }
 }
 
-export function getAssessmentAttribution(): AssessmentAttribution {
-  return captureAssessmentAttribution()
+export function buildAssessmentHref(
+  currentSearch: string | URLSearchParams,
+  entryPoint: string,
+  landingPath = '/',
+) {
+  const sourceParams =
+    typeof currentSearch === 'string'
+      ? new URLSearchParams(currentSearch)
+      : currentSearch
+  const assessmentParams = new URLSearchParams()
+
+  for (const queryKey of ASSESSMENT_ATTRIBUTION_QUERY_KEYS) {
+    const value = sourceParams
+      .get(queryKey)
+      ?.trim()
+      .slice(0, MAX_ATTRIBUTION_QUERY_VALUE_LENGTH)
+    if (value) assessmentParams.set(queryKey, value)
+  }
+
+  const normalizedEntryPoint = normalizeAssessmentEntryPoint(entryPoint)
+  if (normalizedEntryPoint) {
+    assessmentParams.set(ASSESSMENT_ENTRY_POINT_QUERY_KEY, normalizedEntryPoint)
+  }
+
+  const normalizedLandingPath = normalizeAssessmentLandingPath(landingPath)
+  if (normalizedLandingPath) {
+    assessmentParams.set(
+      ASSESSMENT_LANDING_PATH_QUERY_KEY,
+      normalizedLandingPath,
+    )
+  }
+
+  const query = assessmentParams.toString()
+  return query ? `/growth-assessment?${query}` : '/growth-assessment'
+}
+
+export function buildAssessmentStartHref(
+  entryPoint: string,
+  industry?: string,
+) {
+  const params = new URLSearchParams()
+  const normalizedEntryPoint = normalizeAssessmentEntryPoint(entryPoint)
+  if (normalizedEntryPoint) {
+    params.set(ASSESSMENT_ENTRY_POINT_QUERY_KEY, normalizedEntryPoint)
+  }
+  if (industry === 'chiropractic') params.set('industry', industry)
+
+  const query = params.toString()
+  return query ? `${ASSESSMENT_START_PATH}?${query}` : ASSESSMENT_START_PATH
+}
+
+export function buildAssessmentRedirectUrl(
+  startUrl: string,
+  referrer: string,
+) {
+  const start = new URL(startUrl)
+  let sourceSearch = ''
+  let landingPath = '/'
+
+  try {
+    const source = new URL(referrer)
+    if (source.origin === start.origin) {
+      sourceSearch = source.search
+      landingPath = source.pathname
+    }
+  } catch {
+    // A missing or invalid referrer falls back to a direct assessment visit.
+  }
+
+  const destination = new URL(
+    buildAssessmentHref(
+      sourceSearch,
+      start.searchParams.get(ASSESSMENT_ENTRY_POINT_QUERY_KEY) ?? '',
+      landingPath,
+    ),
+    start.origin,
+  )
+  if (start.searchParams.get('industry') === 'chiropractic') {
+    destination.searchParams.set('industry', 'chiropractic')
+  }
+
+  return destination
 }

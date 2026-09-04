@@ -21,28 +21,28 @@ const caveat = Caveat({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'PhynyxPro — More Appointments, Not Just More Leads',
+    default: 'PhynyxPro — Acquisition Operating System',
     template: '%s | PhynyxPro',
   },
   description:
-    'PhynyxPro builds the demand, the conversion infrastructure, and the revenue operations that turn interest into a full calendar — and proves what it produced.',
+    'PhynyxPro connects paid acquisition with response, qualification, booking, reminders, and verified outcome tracking.',
   icons: {
     icon: '/favicon.png',
     shortcut: '/favicon.png',
   },
   openGraph: {
-    title: 'PhynyxPro — More Appointments, Not Just More Leads',
+    title: 'PhynyxPro — Acquisition Operating System',
     description:
-      'A proof-led growth system for appointment-driven practices. Attract the right demand. Convert interest before it goes cold. Operate with evidence.',
+      'An acquisition operating system connecting paid demand to booking and verified outcomes.',
     images: [{ url: '/og-image.png', width: 1200, height: 630 }],
     type: 'website',
     siteName: 'PhynyxPro',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'PhynyxPro — More Appointments, Not Just More Leads',
+    title: 'PhynyxPro — Acquisition Operating System',
     description:
-      'A proof-led growth system for appointment-driven practices.',
+      'An acquisition operating system connecting paid demand to booking and verified outcomes.',
     images: ['/og-image.png'],
   },
 }

@@ -2,8 +2,9 @@ import { Metadata } from 'next'
 import { GrowthAssessmentClient } from './_components/growth-assessment-client'
 
 export const metadata: Metadata = {
-  title: 'Book a Growth Assessment — PhynyxPro',
-  description: 'A 30-minute qualified conversation — not a sales pitch. We review your current marketing, lead flow, and operations, then tell you honestly whether we can help.',
+  title: 'Book a Patient Acquisition Diagnostic',
+  description:
+    'Start with a 3-minute fit check, then use a roughly 45-minute working diagnostic to review your patient-acquisition numbers and next steps.',
 }
 
 export default function GrowthAssessmentPage() {

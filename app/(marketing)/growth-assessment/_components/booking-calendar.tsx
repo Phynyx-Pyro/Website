@@ -8,13 +8,21 @@ import {
   type BookingContact,
 } from '@/lib/ghl-booking'
 import { minimizeAttributionUrl } from '@/lib/assessment-attribution'
+import { trackFunnelEvent } from '@/lib/funnel-events'
 
 const GHL_BOOKING_ORIGIN = 'https://link.phynyxpro.com'
 const GHL_IFRAME_ID = 'NX2pJFAx51yOcaNIdNjL_1788462690940'
 
-export function BookingCalendar({ contact }: { contact: BookingContact }) {
+export function BookingCalendar({
+  contact,
+  qualificationPath,
+}: {
+  contact: BookingContact
+  qualificationPath: 'calendar' | 'investment-context'
+}) {
   const bookingUrl = buildGhlBookingUrl()
   const iframeRef = useRef<HTMLIFrameElement>(null)
+  const calendarViewTrackedRef = useRef(false)
 
   const sendSecurePrefill = useCallback(() => {
     const target = iframeRef.current?.contentWindow
@@ -30,6 +38,14 @@ export function BookingCalendar({ contact }: { contact: BookingContact }) {
       GHL_BOOKING_ORIGIN,
     )
   }, [contact])
+
+  const handleCalendarLoad = useCallback(() => {
+    sendSecurePrefill()
+    if (calendarViewTrackedRef.current) return
+
+    calendarViewTrackedRef.current = true
+    trackFunnelEvent('calendar_view', { path: qualificationPath })
+  }, [qualificationPath, sendSecurePrefill])
 
   useEffect(() => {
     const handleWidgetMessage = (event: MessageEvent) => {
@@ -59,11 +75,11 @@ export function BookingCalendar({ contact }: { contact: BookingContact }) {
           src={bookingUrl}
           allow="payment"
           referrerPolicy="no-referrer"
-          title="Book your PhynyxPro discovery call"
+          title="Book your PhynyxPro Patient Acquisition Diagnostic"
           className="min-h-[780px] w-full"
           style={{ border: 'none', overflow: 'hidden' }}
           scrolling="no"
-          onLoad={sendSecurePrefill}
+          onLoad={handleCalendarLoad}
         />
       </div>
       <Script

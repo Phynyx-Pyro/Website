@@ -1,15 +1,14 @@
 'use client'
 
 import Image from 'next/image'
-import Link from 'next/link'
 import { CheckCircle } from 'lucide-react'
 import { Waveform } from '../../_components/waveform'
 import { AnimatedSection } from '../../_components/animated-section'
 
 const qualificationBubbles = [
-  { speaker: 'Ember', text: 'What brings you in today?', isEmber: true },
-  { speaker: 'Caller', text: "I’ve been having shoulder pain for a few weeks.", isEmber: false },
-  { speaker: 'Ember', text: 'Got it. Is it on your left, right, or both sides?', isEmber: true },
+  { speaker: 'Ember', text: 'Are you looking to request a new-patient appointment?', isEmber: true },
+  { speaker: 'Caller', text: 'Yes—mornings are usually best.', isEmber: false },
+  { speaker: 'Ember', text: 'I can help with that. Let me check the available options.', isEmber: true },
 ]
 
 const appointmentBubbles = [
@@ -18,11 +17,11 @@ const appointmentBubbles = [
 ]
 
 const crmUpdates = [
-  'Contact created',
-  'Lead source: Website',
-  'Interest: New Patient',
-  'Appt: Thu 9:30am',
-  'Reminder: SMS + Email',
+  'Lead record created',
+  'Campaign source retained',
+  'Appointment status updated',
+  'Confirmation workflow started',
+  'Handoff owner assigned',
 ]
 
 const pipelineWaveHeights = Array.from({ length: 96 }, (_, index) => {
@@ -88,23 +87,20 @@ export function PyroSection() {
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-[minmax(245px,.82fr)_minmax(0,2.8fr)] lg:gap-8">
           <AnimatedSection className="lg:pr-2">
             <p className="mb-4 text-[11px] font-bold uppercase tracking-[.16em] text-flame">
-              PYRO — the revenue-operations engine
+              PYRO + Ember
             </p>
             <h2 className="max-w-[420px] text-[38px] font-bold leading-[.99] tracking-[-.04em] sm:text-[44px] lg:text-[46px]">
-              The response layer behind every good inquiry.
+              PYRO runs the workflow. Ember handles the conversation.
             </h2>
             <p className="mt-5 max-w-[390px] text-[15.5px] leading-[1.65] text-white/70 lg:text-[16px]">
-              Ember is the AI voice and chat receptionist that qualifies, books, and updates your systems. Then seamlessly hands off to your team.
+              PYRO is the platform connecting response, qualification, booking,
+              reminders, and reporting. Ember is the AI receptionist inside PYRO,
+              with human handoff when your team should take over.
             </p>
-            <Link
-              href="/pyro-ember"
-              className="group mt-7 inline-flex items-center gap-3 text-[15px] font-semibold text-flame lg:mt-8 lg:text-[16px]"
-            >
-              See Ember in Action
-              <svg className="h-4 w-4 transition-transform group-hover:translate-x-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </Link>
+            <p className="mt-6 max-w-[390px] border-l border-flame/45 pl-4 text-[12.5px] leading-[1.55] text-white/55">
+              Example workflow shown for explanation. Scripts, escalation rules, and
+              calendar logic are configured for the practice.
+            </p>
           </AnimatedSection>
 
           <AnimatedSection delay={150} className="min-w-0">
@@ -113,7 +109,7 @@ export function PyroSection() {
               <ol className="relative z-10 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-[1.2fr_1.03fr_1.03fr_.95fr_.9fr] lg:gap-0">
 
               <li className="relative min-h-[310px] rounded-xl border border-white/10 bg-white/[.025] p-4 lg:min-h-[338px] lg:rounded-none lg:border-0 lg:bg-transparent lg:px-3 lg:py-0">
-                <h3 className="text-center text-[12px] font-medium text-white/70">Active Call</h3>
+                <h3 className="text-center text-[12px] font-medium text-white/70">Active inquiry</h3>
                 <div className="relative mt-3 min-h-[258px]">
                   <div className="pointer-events-none absolute left-[96px] right-[-12px] top-[70px] z-0 h-[104px] overflow-visible lg:hidden" aria-hidden="true">
                     <Waveform size="small" className="h-full w-full opacity-95" />
@@ -122,14 +118,14 @@ export function PyroSection() {
                   <div className="absolute bottom-5 left-0 z-10 h-[238px] w-[178px]">
                     <Image
                       src="/images/ember-human-transparent.png"
-                      alt="Ember, the PYRO AI voice and chat receptionist"
+                      alt="Illustration of Ember, the AI receptionist inside PYRO"
                       fill
                       sizes="(min-width: 1024px) 178px, 220px"
                       className="object-contain object-bottom"
                     />
                   </div>
                   <p className="absolute bottom-0 left-0 z-20 text-[11.5px] font-semibold text-white/80">
-                    Ember · <span className="text-flame">Active call · 02:14</span>
+                    Ember · <span className="text-flame">AI receptionist</span>
                   </p>
                 </div>
               </li>
@@ -183,10 +179,10 @@ export function PyroSection() {
                   <div className="relative">
                     <span className="absolute -inset-2 rounded-full border border-flame/40" style={{ animation: 'ringpulse 3.4s cubic-bezier(.2,.6,.3,1) infinite' }} aria-hidden="true" />
                     <div className="relative h-[126px] w-[126px] overflow-hidden rounded-full border-2 border-flame shadow-[0_0_28px_rgba(255,107,53,.24)]">
-                      <Image src="/images/receptionist.jpg" alt="Live receptionist" fill sizes="126px" className="object-cover" />
+                      <Image src="/images/receptionist.jpg" alt="Front desk team member" fill sizes="126px" className="object-cover" />
                     </div>
                   </div>
-                  <p className="mt-5 max-w-[150px] text-[13px] font-medium leading-[1.45] text-white/80">Live receptionist takes over</p>
+                  <p className="mt-5 max-w-[165px] text-[13px] font-medium leading-[1.45] text-white/80">Your team takes over when human judgment is needed</p>
                 </div>
               </li>
               </ol>
