@@ -51,15 +51,15 @@ export function PyroEmberClient() {
             </AnimatedSection>
 
             <AnimatedSection delay={200}>
-              {/* Ember floating portrait (transparent) + conversation card, side by side */}
+              {/* Ember portrait grounded into the conversation card */}
               <div className="relative mx-auto max-w-[500px] lg:mr-0">
                 {/* Soft glow disc behind Ember */}
-                <div className="pointer-events-none absolute right-0 top-0 h-[360px] w-[360px] rounded-full bg-phoenix/[.14] blur-[80px]" />
-                <div className="pointer-events-none absolute right-4 top-4 h-[300px] w-[300px] rounded-full border border-white/[.06]" />
+                <div className="pointer-events-none absolute left-1/2 top-0 aspect-square w-full max-w-[360px] -translate-x-1/2 rounded-full bg-phoenix/[.14] blur-[80px]" />
+                <div className="pointer-events-none absolute left-1/2 top-4 aspect-square w-full max-w-[300px] -translate-x-1/2 rounded-full border border-white/[.06]" />
 
                 {/* Ember + name tag */}
-                <div className="relative flex justify-end">
-                  <div className="relative w-[320px] sm:w-[380px]">
+                <div className="relative flex justify-center">
+                  <div className="relative w-full max-w-[320px] sm:max-w-[380px]">
                     <div className="relative aspect-square w-full drop-shadow-[0_28px_44px_rgba(0,0,0,.42)]">
                       <Image
                         src="/images/ember-human-transparent.png"
@@ -68,6 +68,10 @@ export function PyroEmberClient() {
                         priority
                         sizes="(min-width: 640px) 380px, 320px"
                         className="object-contain object-bottom"
+                        style={{
+                          WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 78%, transparent 100%)',
+                          maskImage: 'linear-gradient(to bottom, black 0%, black 78%, transparent 100%)',
+                        }}
                       />
                     </div>
                     {/* Name tag */}
@@ -79,8 +83,8 @@ export function PyroEmberClient() {
                   </div>
                 </div>
 
-                {/* Conversation card — sits below Ember, not over her face */}
-                <div className="relative -mt-6 w-[300px] sm:w-[340px] rounded-2xl border border-white/12 bg-coal/90 backdrop-blur-md p-4 shadow-2xl">
+                {/* Conversation card — overlaps the portrait fade, not her face */}
+                <div className="relative z-10 mx-auto -mt-10 w-full max-w-[300px] sm:max-w-[340px] rounded-2xl border border-white/12 bg-coal/90 backdrop-blur-md p-4 shadow-2xl">
                   <div className="flex items-center gap-2.5 mb-3 pb-3 border-b border-white/10">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-phoenix/20">
                       <Bot className="h-4 w-4 text-phoenix" />

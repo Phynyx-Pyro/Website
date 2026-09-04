@@ -97,14 +97,11 @@ export function PyroSection() {
               reminders, and reporting. Ember is the AI receptionist inside PYRO,
               with human handoff when your team should take over.
             </p>
-            <p className="mt-6 max-w-[390px] border-l border-flame/45 pl-4 text-[12.5px] leading-[1.55] text-white/55">
-              Example workflow shown for explanation. Scripts, escalation rules, and
-              calendar logic are configured for the practice.
-            </p>
           </AnimatedSection>
 
           <AnimatedSection delay={150} className="min-w-0">
-            <div className="relative">
+            <figure className="flex min-w-0 flex-col">
+              <div className="relative order-2 lg:order-1">
               <PipelineAudioWave />
               <ol className="relative z-10 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-[1.2fr_1.03fr_1.03fr_.95fr_.9fr] lg:gap-0">
 
@@ -186,7 +183,11 @@ export function PyroSection() {
                 </div>
               </li>
               </ol>
-            </div>
+              </div>
+              <figcaption className="order-1 mb-4 border-l border-flame/45 pl-4 text-[11.5px] leading-[1.5] text-white/50 lg:order-2 lg:mb-0 lg:mt-4 lg:border-l-0 lg:pl-0 lg:text-center">
+                Illustrative workflow. Scripts, escalation rules, and calendar logic are configured for the practice.
+              </figcaption>
+            </figure>
           </AnimatedSection>
         </div>
       </div>
