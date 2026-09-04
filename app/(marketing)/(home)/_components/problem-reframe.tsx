@@ -1,80 +1,80 @@
 'use client'
 
 import { AnimatedSection } from '../../_components/animated-section'
-import { Clock } from 'lucide-react'
+import { ArrowRight, CalendarCheck, ClipboardCheck, MousePointerClick } from 'lucide-react'
+
+const handoffs = [
+  {
+    label: 'Lead captured',
+    title: 'The campaign did its job.',
+    description: 'Source and offer context enter the pipeline with the inquiry.',
+    icon: MousePointerClick,
+  },
+  {
+    label: 'Appointment request',
+    title: 'The handoff decides what happens next.',
+    description: 'Response, qualification, and booking remove avoidable friction.',
+    icon: CalendarCheck,
+  },
+  {
+    label: 'Verified outcome',
+    title: 'The practice closes the loop.',
+    description: 'Confirmed, Day 1 Show, and Start Care are recorded separately.',
+    icon: ClipboardCheck,
+  },
+]
 
 export function ProblemReframe() {
   return (
     <section className="relative overflow-hidden bg-linen py-14 lg:py-[92px]">
-      <p className="font-hand pointer-events-none absolute left-[46px] top-[64px] -rotate-[7deg] text-[26px] font-semibold text-phoenix/70 hidden lg:block">
-        this is where the money dies →
+      <p className="font-hand pointer-events-none absolute left-[46px] top-[64px] hidden -rotate-[7deg] text-[25px] font-semibold text-phoenix/70 lg:block">
+        this is where ad budget leaks →
       </p>
-      <p className="font-hand -rotate-[3deg] text-[21px] font-semibold text-phoenix px-5 lg:hidden mb-4">
-        this is where the money dies
+      <p className="font-hand mb-4 -rotate-[3deg] px-5 text-[20px] font-semibold text-phoenix lg:hidden">
+        this is where ad budget leaks
       </p>
-      <div className="mx-auto grid max-w-[1320px] grid-cols-1 lg:grid-cols-12 items-center gap-8 lg:gap-10 px-5 lg:px-10">
+
+      <div className="mx-auto grid max-w-[1320px] grid-cols-1 items-center gap-9 px-5 lg:grid-cols-12 lg:gap-10 lg:px-10">
         <div className="lg:col-span-5">
           <AnimatedSection>
-            <p className="mb-4 lg:mb-5 text-[11px] font-bold uppercase tracking-[.2em] text-phoenix">The reframe</p>
-            <h2 className="text-[38px] lg:text-[58px] font-bold leading-[.96] tracking-[-.04em]">
-              The problem<br />happens <span className="text-phoenix">after</span><br />the lead.
+            <p className="mb-4 text-[11px] font-bold uppercase tracking-[.2em] text-phoenix lg:mb-5">The reframe</p>
+            <h2 className="max-w-[520px] text-[38px] font-bold leading-[.96] tracking-[-.04em] lg:text-[58px]">
+              Buying more leads cannot fix what happens <span className="text-phoenix">after the click.</span>
             </h2>
-            <p className="mt-4 lg:mt-6 max-w-[400px] text-[15.5px] lg:text-[17.5px] leading-[1.6] text-warm">
-              Most practices don&apos;t have a lead problem. They have a response problem, a qualification problem, and a follow-up problem — and every one of them is invisible on a dashboard that only counts form fills.
-            </p>
-            <p className="mt-4 lg:mt-5 max-w-[400px] text-[15.5px] lg:text-[17.5px] leading-[1.6] text-warm">
-              Interest is easy to buy. Appointments are engineered.
+            <p className="mt-5 max-w-[470px] text-[15.5px] leading-[1.62] text-warm lg:mt-6 lg:text-[17px]">
+              A campaign can fill the inbox while slow response, unclear qualification,
+              scheduling friction, and inconsistent follow-up leave the calendar open.
+              Lead count alone cannot tell you where the patient journey broke.
             </p>
           </AnimatedSection>
         </div>
-        <div className="lg:col-span-7 relative">
-          <div className="flex flex-col lg:flex-row items-stretch gap-3 lg:gap-4">
-            <AnimatedSection className="flex-1">
-              <div className="rounded-xl border border-black/10 bg-white p-5 lg:p-6 lift-sm h-full">
-                <p className="text-[10px] lg:text-[11px] font-bold uppercase tracking-[.14em] text-warm">Leads generated</p>
-                <p className="mt-2 text-[40px] lg:text-[62px] font-bold leading-none tracking-[-.05em]">100</p>
-                <div className="mt-3 lg:mt-4 grid grid-cols-10 gap-1">
-                  {Array.from({ length: 10 }).map((_: unknown, i: number) => (
-                    <span key={i} className="h-2 rounded-sm bg-phoenix" />
-                  ))}
-                </div>
-                <p className="mt-3 lg:mt-4 text-[13px] leading-snug text-warm">Ad spend works. The inbox fills.</p>
-              </div>
-            </AnimatedSection>
 
-            <AnimatedSection delay={150} className="flex-1 ml-6 lg:ml-0">
-              <div className="rounded-xl border border-black/10 bg-white p-5 lg:p-6 lift-sm h-full">
-                <p className="text-[10px] lg:text-[11px] font-bold uppercase tracking-[.14em] text-warm">Reached in time</p>
-                <p className="mt-2 text-[40px] lg:text-[62px] font-bold leading-none tracking-[-.05em] text-warm/70">31</p>
-                <div className="mt-3 lg:mt-4 grid grid-cols-10 gap-1">
-                  {Array.from({ length: 10 }).map((_: unknown, i: number) => (
-                    <span key={i} className={`h-2 rounded-sm ${i < 3 ? 'bg-phoenix' : 'bg-black/10'}`} />
-                  ))}
-                </div>
-                <p className="mt-3 lg:mt-4 text-[13px] leading-snug text-warm">Manual follow-up, business hours only.</p>
-              </div>
-            </AnimatedSection>
-
-            <AnimatedSection delay={300} className="flex-1 ml-12 lg:ml-0">
-              <div className="rounded-xl border-2 border-dashed border-phoenix/40 bg-phoenix/[.06] p-5 lg:p-6 h-full">
-                <p className="text-[10px] lg:text-[11px] font-bold uppercase tracking-[.14em] text-phoenix">Actually booked</p>
-                <p className="mt-2 text-[40px] lg:text-[62px] font-bold leading-none tracking-[-.05em] text-phoenix">?</p>
-                <div className="mt-3 lg:mt-4 grid grid-cols-10 gap-1">
-                  {Array.from({ length: 10 }).map((_: unknown, i: number) => (
-                    <span key={i} className="h-2 rounded-sm" style={{ backgroundColor: `rgba(212, 85, 42, ${0.3 - i * 0.02})` }} />
-                  ))}
-                </div>
-                <p className="mt-3 lg:mt-4 text-[13px] leading-snug text-phoenix/80">Unmeasured. Unattributed. Unrepeatable.</p>
-              </div>
-            </AnimatedSection>
+        <div className="relative lg:col-span-7">
+          <div className="grid gap-3 md:grid-cols-3 lg:gap-4">
+            {handoffs.map((handoff, index) => {
+              const Icon = handoff.icon
+              return (
+                <AnimatedSection key={handoff.label} delay={index * 120} className={index === 1 ? 'md:mt-7' : index === 2 ? 'md:mt-14' : ''}>
+                  <article className={`h-full rounded-xl border bg-white p-5 lg:p-6 ${index === 2 ? 'border-phoenix/35 shadow-[0_14px_34px_-20px_rgba(212,85,42,.45)]' : 'border-black/10 lift-sm'}`}>
+                    <div className="flex items-center justify-between">
+                      <span className={`flex h-10 w-10 items-center justify-center rounded-full ${index === 2 ? 'bg-phoenix text-white' : 'bg-phoenix/[.08] text-phoenix'}`}>
+                        <Icon className="h-4 w-4" aria-hidden="true" />
+                      </span>
+                      {index < handoffs.length - 1 && <ArrowRight className="hidden h-4 w-4 text-phoenix/55 md:block" aria-hidden="true" />}
+                    </div>
+                    <p className="mt-5 text-[10px] font-bold uppercase tracking-[.14em] text-warm">{handoff.label}</p>
+                    <h3 className="mt-2 text-[18px] font-bold leading-[1.1] tracking-[-.02em]">{handoff.title}</h3>
+                    <p className="mt-3 text-[13px] leading-[1.5] text-warm">{handoff.description}</p>
+                  </article>
+                </AnimatedSection>
+              )
+            })}
           </div>
-          <AnimatedSection delay={450}>
-            <div className="mt-6 lg:absolute lg:-bottom-9 lg:left-1/2 lg:-translate-x-1/2 flex items-center gap-2.5 lg:gap-3 rounded-full border border-black/10 bg-white px-4 lg:px-5 py-2.5 lift-sm">
-              <Clock className="w-3 h-3 text-phoenix" />
-              <p className="text-[12px] lg:text-[13px] font-semibold">
-                Average first response: <span className="text-phoenix">4 hrs 12 min</span> — the window closes in 5.
-              </p>
-            </div>
+
+          <AnimatedSection delay={420}>
+            <p className="mx-auto mt-6 w-fit rounded-full border border-black/10 bg-white px-4 py-2.5 text-center text-[12px] font-semibold text-ink shadow-[0_8px_24px_-14px_rgba(20,19,18,.3)] lg:text-[13px]">
+              A lead is a starting event—not a patient outcome.
+            </p>
           </AnimatedSection>
         </div>
       </div>

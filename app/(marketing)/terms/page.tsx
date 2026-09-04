@@ -1,16 +1,17 @@
-import { Metadata } from 'next'
+import { buildPageMetadata } from '@/lib/page-metadata'
 
-export const metadata: Metadata = {
-  title: 'Terms of Service — PhynyxPro',
+export const metadata = buildPageMetadata({
+  title: 'Terms of Service',
   description: 'Terms and conditions for using PhynyxPro services and the PYRO platform.',
-}
+  path: '/terms',
+})
 
 export default function TermsPage() {
   return (
-    <main className="bg-ivory grain-subtle min-h-screen pt-32 pb-20 md:pt-40 md:pb-28">
+    <div className="bg-ivory grain-subtle min-h-screen pt-32 pb-20 md:pt-40 md:pb-28">
       <div className="mx-auto max-w-[800px] px-6 lg:px-10">
         <h1 className="text-[36px] font-bold text-ink">Terms of Service</h1>
-        <p className="mt-2 text-[14px] text-warm">Last updated: September 1, 2026</p>
+        <p className="mt-2 text-[14px] text-warm">Last updated: September 4, 2026</p>
 
         <div className="mt-10 space-y-8 text-[16px] leading-[1.7] text-ink/80">
           <section>
@@ -21,6 +22,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-[22px] font-semibold text-ink mb-3">Services</h2>
             <p>PhynyxPro provides growth marketing services, CRM and automation tools (through the PYRO platform), AI-powered communication (Ember), and related consulting and strategy services for appointment-driven businesses.</p>
+            <p className="mt-3">Unless otherwise stated in the client agreement, service descriptions on this website are illustrative, and the signed client agreement controls scope, deliverables, access, timing, and service levels.</p>
           </section>
 
           <section>
@@ -30,7 +32,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-[22px] font-semibold text-ink mb-3">Payment Terms</h2>
-            <p>Service fees are outlined in individual client agreements. PYRO platform access is billed monthly. Managed services are quoted and billed based on the scope of work agreed upon during onboarding.</p>
+            <p>Service fees are outlined in individual client agreements. Unless otherwise stated in the client agreement, billing intervals, payment timing, and managed-service fees follow the scope of work agreed upon during onboarding.</p>
           </section>
 
           <section>
@@ -49,6 +51,6 @@ export default function TermsPage() {
           </section>
         </div>
       </div>
-    </main>
+    </div>
   )
 }

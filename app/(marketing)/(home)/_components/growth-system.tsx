@@ -2,153 +2,164 @@
 
 import Image from 'next/image'
 import { AnimatedSection } from '../../_components/animated-section'
+import { ArrowRight, Check, CircleCheck, Users } from 'lucide-react'
+
+const phynyxOwns = [
+  'Campaign, offer, creative, and landing-page operation',
+  'PYRO pipeline, response, booking, and reminder workflows',
+  'Ember configuration with defined human-handoff rules',
+  'Source-to-stage reporting and an operating review cadence',
+]
+
+const practiceOwns = [
+  'Access, approvals, calendar rules, and new-patient capacity',
+  'Accurate services, FAQs, and escalation guidance',
+  'A person available when a conversation needs human judgment',
+  'Consistent Confirmed, Day 1 Show, and Start Care updates',
+]
 
 export function GrowthSystem() {
   return (
-    <section className="relative overflow-hidden bg-linen pb-14 lg:pb-[110px] pt-14 lg:pt-[92px]">
+    <section className="relative overflow-hidden bg-linen pb-14 pt-14 lg:pb-[104px] lg:pt-[92px]">
       <div className="mx-auto max-w-[1320px] px-5 lg:px-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 items-end gap-6 lg:gap-10">
+        <div className="grid grid-cols-1 items-end gap-6 lg:grid-cols-12 lg:gap-10">
           <div className="lg:col-span-7">
             <AnimatedSection>
-              <p className="mb-4 lg:mb-5 text-[11px] font-bold uppercase tracking-[.2em] text-phoenix">The growth system</p>
-              <h2 className="text-[38px] lg:text-[58px] font-bold leading-[.95] tracking-[-.042em]">
-                One connected system.<br />Three outcomes.
+              <p className="mb-4 text-[11px] font-bold uppercase tracking-[.2em] text-phoenix lg:mb-5">The PhynyxPro system</p>
+              <h2 className="text-[38px] font-bold leading-[.95] tracking-[-.042em] lg:text-[58px]">
+                One operating system. <span className="block">Three jobs.</span>
               </h2>
             </AnimatedSection>
           </div>
-          <div className="lg:col-span-5 pb-3">
+          <div className="pb-2 lg:col-span-5">
             <AnimatedSection delay={100}>
-              <p className="text-[15.5px] lg:text-[17px] leading-[1.6] text-warm">
-                Attract the right demand. Convert interest before it goes cold. Operate with the systems and evidence you need to scale.
+              <p className="text-[15.5px] leading-[1.6] text-warm lg:text-[17px]">
+                PhynyxPro is not just the ad account. It connects demand generation,
+                the workflow after the click, and the practice-verified outcomes used
+                to improve the system.
               </p>
             </AnimatedSection>
           </div>
         </div>
 
-        <div className="mt-8 lg:mt-14 grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-6">
-          {/* Attract */}
+        <div className="mt-9 grid grid-cols-1 gap-5 lg:mt-14 lg:grid-cols-3 lg:gap-6">
           <AnimatedSection>
-            <article className="relative rounded-2xl border border-black/10 bg-white p-6 lg:p-7 lift-sm h-full">
+            <article className="relative h-full rounded-2xl border border-black/10 bg-white p-6 lift-sm lg:p-7">
               <div className="flex items-baseline gap-3">
                 <span className="text-[13px] font-bold tracking-[.14em] text-phoenix">01</span>
                 <span className="text-[11px] font-bold uppercase tracking-[.16em] text-warm">Attract</span>
               </div>
-              <h3 className="mt-3 lg:mt-4 text-[25px] lg:text-[30px] font-bold leading-[1.02] tracking-[-.03em]">
-                Demand built for your market.
-              </h3>
-              <p className="mt-2.5 lg:mt-3.5 text-[14.5px] lg:text-[15px] leading-[1.6] text-warm">
-                Managed advertising, offer strategy, and creative that bring the right people in — not the cheapest clicks.
+              <h3 className="mt-3 text-[25px] font-bold leading-[1.02] tracking-[-.03em] lg:mt-4 lg:text-[30px]">Build demand for your market.</h3>
+              <p className="mt-3 text-[14.5px] leading-[1.6] text-warm lg:text-[15px]">
+                Managed paid acquisition, offer strategy, creative, and landing pages
+                designed for chiropractic new-patient demand.
               </p>
-              <div className="relative mt-5 lg:mt-7 h-[168px] lg:h-[236px]">
-                <div className="absolute left-0 top-0 w-[128px] lg:w-[152px] -rotate-[3deg] overflow-hidden rounded-lg border border-black/10 bg-ink lift-sm">
-                  <div className="relative h-[104px] lg:h-[124px]">
-                    <Image src="/images/ad-creative.jpg" alt="Ad creative preview" fill className="object-cover opacity-90" />
+              <div className="relative mt-6 h-[205px] lg:mt-7 lg:h-[244px]">
+                <div className="absolute left-0 top-0 w-[142px] -rotate-[3deg] overflow-hidden rounded-lg border border-black/10 bg-ink lift-sm lg:w-[162px]">
+                  <div className="relative h-[112px] lg:h-[130px]">
+                    <Image src="/images/ad-creative.jpg" alt="Example chiropractic campaign creative" fill className="object-cover opacity-90" />
                   </div>
-                  <p className="px-2 lg:px-2.5 py-1.5 lg:py-2 text-[9px] lg:text-[10px] font-semibold text-white">
-                    Back pain shouldn&apos;t run your life.
-                  </p>
+                  <p className="px-2.5 py-2 text-[10px] font-semibold leading-snug text-white">A clear offer for a local patient need.</p>
                 </div>
-                <div className="absolute right-0 top-6 lg:top-9 w-[152px] lg:w-[172px] rotate-[2deg] rounded-lg border border-black/10 bg-white p-3 lg:p-3.5 lift-sm">
-                  <p className="text-[9px] lg:text-[10px] font-bold uppercase tracking-[.12em] text-warm">Campaign performance</p>
-                  <p className="mt-1.5 lg:mt-2 text-[10.5px] lg:text-[11px] font-semibold text-[#1E7A42]">+31% qualified inquiries</p>
-                  <div className="mt-2.5 lg:mt-3 flex items-end gap-1.5">
-                    {[4,7,5,10,8,14].map((h: number, i: number) => (
-                      <span key={i} className="w-3 rounded-sm bg-phoenix" style={{ height: `${h}px`, opacity: 0.25 + i * 0.15 }} />
-                    ))}
-                  </div>
-                  <p className="mt-2 lg:mt-3 text-[9px] lg:text-[10px] text-warm">Cost / lead</p>
-                  <p className="text-[17px] lg:text-[19px] font-bold tracking-[-.03em]">$42.50</p>
+                <div className="absolute right-0 top-9 w-[165px] rotate-[2deg] rounded-lg border border-black/10 bg-white p-3.5 lift-sm lg:w-[182px]">
+                  <p className="text-[9.5px] font-bold uppercase tracking-[.12em] text-warm">Campaign path</p>
+                  {['Offer', 'Creative', 'Landing page'].map((item) => (
+                    <p key={item} className="mt-2.5 flex items-center gap-2 text-[11px] font-semibold">
+                      <CircleCheck className="h-3.5 w-3.5 text-phoenix" aria-hidden="true" />
+                      {item}
+                    </p>
+                  ))}
                 </div>
               </div>
             </article>
           </AnimatedSection>
 
-          {/* Convert */}
           <AnimatedSection delay={150}>
-            <article className="relative lg:-mt-8 rounded-2xl border border-black/10 bg-ink p-6 lg:p-7 text-white lift grain-dark h-full">
+            <article className="relative h-full rounded-2xl border border-black/10 bg-ink p-6 text-white lift grain-dark lg:-mt-8 lg:p-7">
               <div className="flex items-baseline gap-3">
                 <span className="text-[13px] font-bold tracking-[.14em] text-flame">02</span>
                 <span className="text-[11px] font-bold uppercase tracking-[.16em] text-white/60">Convert</span>
               </div>
-              <h3 className="mt-3 lg:mt-4 text-[25px] lg:text-[30px] font-bold leading-[1.02] tracking-[-.03em]">
-                Interest becomes a next step.
-              </h3>
-              <p className="mt-2.5 lg:mt-3.5 text-[14.5px] lg:text-[15px] leading-[1.6] text-white/70">
-                CRM, automated follow-up, and appointment workflows that respond before the moment passes.
+              <h3 className="mt-3 text-[25px] font-bold leading-[1.02] tracking-[-.03em] lg:mt-4 lg:text-[30px]">Give qualified inquiries a defined next step.</h3>
+              <p className="mt-3 text-[14.5px] leading-[1.6] text-white/70 lg:text-[15px]">
+                PYRO coordinates response, qualification, booking, confirmation,
+                reminders, and the handoff to your team.
               </p>
-              <div className="relative mt-5 lg:mt-7 h-[190px] lg:h-[268px]">
-                <div className="absolute left-0 top-0 w-[168px] lg:w-[196px] -rotate-[2deg] rounded-lg border border-white/12 bg-white/[.06] p-3 lg:p-3.5">
-                  <p className="text-[9px] lg:text-[10px] font-bold uppercase tracking-[.12em] text-white/50">Follow-up sequence</p>
-                  <div className="mt-2 lg:mt-2.5 space-y-1.5 lg:space-y-2 text-[10px] lg:text-[10.5px]">
-                    <p className="flex items-center gap-2">⚡ Instant SMS · 0 min</p>
-                    <p className="flex items-center gap-2">📞 Ember call · 2 min</p>
-                    <p className="flex items-center gap-2">✉️ Email recap · 10 min</p>
-                    <p className="flex items-center gap-2 text-white/50">⏰ Nudge · day 2</p>
-                  </div>
-                </div>
-                <div className="absolute right-0 top-[74px] lg:top-[104px] w-[156px] lg:w-[188px] rotate-[2deg] rounded-lg border border-white/12 bg-coal p-3 lg:p-3.5 lift-dark">
-                  <p className="text-[9px] lg:text-[10px] font-bold uppercase tracking-[.12em] text-white/50">Appointment</p>
-                  <div className="mt-2 lg:mt-2.5 grid grid-cols-4 gap-1 text-center text-[9.5px] lg:text-[10px]">
-                    <span className="rounded bg-white/[.06] py-1.5">9:00</span>
-                    <span className="rounded bg-white/[.06] py-1.5">9:20</span>
-                    <span className="rounded bg-flame py-1.5 font-bold text-white">2:30</span>
-                    <span className="rounded bg-white/[.06] py-1.5">3:10</span>
-                  </div>
-                </div>
-                <div className="absolute bottom-0 left-2 w-[150px] lg:w-[176px] -rotate-[1deg] rounded-lg border border-flame/45 bg-[#12341F] px-3.5 py-2.5 lg:py-3">
-                  <p className="text-[9px] lg:text-[10px] font-bold uppercase tracking-[.12em] text-white/60">Booked</p>
-                  <p className="mt-0.5 lg:mt-1 text-[14px] lg:text-[15px] font-bold">Thu · 2:30 PM</p>
-                </div>
-                <p className="font-hand absolute bottom-3 lg:bottom-[86px] right-1 lg:right-[6px] rotate-[5deg] text-[17px] lg:text-[19px] font-semibold leading-tight text-flame">
-                  no cold leads<br />left behind
-                </p>
-              </div>
+              <ol className="mt-6 space-y-2.5 lg:mt-7">
+                {['New lead enters PYRO', 'Ember begins the approved conversation', 'Appointment request reaches the calendar', 'Confirmation, reminders, and human handoff'].map((item, index) => (
+                  <li key={item} className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/[.045] px-3.5 py-3">
+                    <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[9px] font-bold ${index === 2 ? 'bg-flame text-white' : 'bg-white/[.08] text-white/60'}`}>{index + 1}</span>
+                    <span className="text-[11.5px] font-medium leading-[1.35] text-white/85">{item}</span>
+                  </li>
+                ))}
+              </ol>
+              <p className="font-hand mt-5 rotate-[-2deg] text-right text-[19px] font-semibold text-flame">one accountable handoff</p>
             </article>
           </AnimatedSection>
 
-          {/* Operate & Scale */}
           <AnimatedSection delay={300}>
-            <article className="relative lg:mt-4 rounded-2xl border border-black/10 bg-white p-6 lg:p-7 lift-sm h-full">
+            <article className="relative h-full rounded-2xl border border-black/10 bg-white p-6 lift-sm lg:mt-4 lg:p-7">
               <div className="flex items-baseline gap-3">
                 <span className="text-[13px] font-bold tracking-[.14em] text-phoenix">03</span>
-                <span className="text-[11px] font-bold uppercase tracking-[.16em] text-warm">Operate & Scale</span>
+                <span className="text-[11px] font-bold uppercase tracking-[.16em] text-warm">Operate &amp; improve</span>
               </div>
-              <h3 className="mt-3 lg:mt-4 text-[25px] lg:text-[30px] font-bold leading-[1.02] tracking-[-.03em]">
-                Know what drives revenue.
-              </h3>
-              <p className="mt-2.5 lg:mt-3.5 text-[14.5px] lg:text-[15px] leading-[1.6] text-warm">
-                AI employees, reactivation, coaching, and attribution that tie spend to attended appointments.
+              <h3 className="mt-3 text-[25px] font-bold leading-[1.02] tracking-[-.03em] lg:mt-4 lg:text-[30px]">Use the full journey to make decisions.</h3>
+              <p className="mt-3 text-[14.5px] leading-[1.6] text-warm lg:text-[15px]">
+                Review campaign activity alongside the appointment and patient stages
+                your practice records—without presenting ad-platform leads as outcomes.
               </p>
-              <div className="mt-5 lg:mt-7 rounded-lg border border-black/10 bg-ivory p-4">
-                <p className="text-[9px] lg:text-[10px] font-bold uppercase tracking-[.14em] text-warm">90-day outcomes</p>
-                <div className="mt-3 lg:mt-3.5 space-y-3 lg:space-y-3.5">
-                  {[
-                    { label: 'Contact rate', value: 94 },
-                    { label: 'Appointment show rate', value: 81 },
-                    { label: 'Lead response under 1 min', value: 99 },
-                  ].map((item: any) => (
-                    <div key={item?.label}>
-                      <div className="flex items-baseline justify-between">
-                        <span className="text-[12px] lg:text-[12.5px] font-medium">{item?.label}</span>
-                        <span className="text-[12px] lg:text-[12.5px] font-bold text-phoenix">{item?.value}%</span>
-                      </div>
-                      <div className="mt-1 lg:mt-1.5 h-1.5 rounded-full bg-black/[.07]">
-                        <div className="h-full rounded-full bg-phoenix" style={{ width: `${item?.value}%` }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <div className="mt-6 rounded-lg border border-black/10 bg-ivory p-4 lg:mt-7">
+                <p className="text-[9.5px] font-bold uppercase tracking-[.14em] text-warm">Decision record</p>
+                {[
+                  ['Campaign source', 'Captured'],
+                  ['Appointment status', 'Updated'],
+                  ['Show / start outcome', 'Practice verified'],
+                ].map(([label, status], index) => (
+                  <div key={label} className={`mt-3 flex items-center justify-between gap-3 ${index > 0 ? 'border-t border-black/[.07] pt-3' : ''}`}>
+                    <span className="text-[11.5px] font-semibold text-ink">{label}</span>
+                    <span className="text-right text-[10.5px] font-bold text-phoenix">{status}</span>
+                  </div>
+                ))}
               </div>
-              <div className="mt-3 lg:mt-4 flex items-center justify-between rounded-lg border border-black/10 bg-white px-4 py-3 lift-sm">
-                <div>
-                  <p className="text-[9px] lg:text-[10px] font-bold uppercase tracking-[.12em] text-warm">Attributed revenue</p>
-                  <p className="text-[20px] lg:text-[22px] font-bold tracking-[-.03em]">$418,200</p>
-                </div>
-                <span className="rounded-full bg-phoenix/10 px-2.5 py-1 text-[10.5px] lg:text-[11px] font-bold text-phoenix">+22% QoQ</span>
-              </div>
+              <p className="mt-4 flex items-start gap-2 text-[11.5px] leading-[1.45] text-warm">
+                <ArrowRight className="mt-0.5 h-3.5 w-3.5 shrink-0 text-phoenix" aria-hidden="true" />
+                The review starts with stage definitions everyone agrees on.
+              </p>
             </article>
           </AnimatedSection>
         </div>
+
+        <AnimatedSection delay={160}>
+          <div className="mt-10 overflow-hidden rounded-2xl border border-black/10 bg-white lift-sm lg:mt-14">
+            <div className="grid lg:grid-cols-2 lg:divide-x lg:divide-black/10">
+              <div className="p-6 lg:p-8">
+                <p className="text-[10.5px] font-bold uppercase tracking-[.16em] text-phoenix">PhynyxPro installs and operates</p>
+                <ul className="mt-4 space-y-3">
+                  {phynyxOwns.map((item) => (
+                    <li key={item} className="flex gap-3 text-[13.5px] leading-[1.5] text-ink/85 lg:text-[14px]">
+                      <Check className="mt-1 h-3.5 w-3.5 shrink-0 text-phoenix" aria-hidden="true" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="border-t border-black/10 bg-ivory/70 p-6 lg:border-t-0 lg:p-8">
+                <p className="flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-[.16em] text-warm">
+                  <Users className="h-4 w-4" aria-hidden="true" />
+                  Your practice provides
+                </p>
+                <ul className="mt-4 space-y-3">
+                  {practiceOwns.map((item) => (
+                    <li key={item} className="flex gap-3 text-[13.5px] leading-[1.5] text-ink/80 lg:text-[14px]">
+                      <Check className="mt-1 h-3.5 w-3.5 shrink-0 text-warm" aria-hidden="true" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </AnimatedSection>
       </div>
     </section>
   )

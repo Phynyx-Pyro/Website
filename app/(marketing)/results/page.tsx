@@ -1,10 +1,11 @@
-import { Metadata } from 'next'
+import { buildPageMetadata } from '@/lib/page-metadata'
 import { ResultsClient } from './_components/results-client'
 
-export const metadata: Metadata = {
-  title: 'Results — Documented Outcomes, Not Promises',
-  description: 'How PhynyxPro measures success: full-funnel attribution from advertising investment to revenue, with documented methodology.',
-}
+export const metadata = buildPageMetadata({
+  title: 'Measurement Framework',
+  description: 'See how PhynyxPro connects available campaign, response, appointment, and outcome data across the acquisition journey.',
+  path: '/results',
+})
 
 export default function ResultsPage() {
   return <ResultsClient />

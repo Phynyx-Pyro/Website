@@ -1,52 +1,62 @@
 'use client'
 
 import Image from 'next/image'
-import Link from 'next/link'
 import { AnimatedSection } from '../../_components/animated-section'
+import { ArrowDownRight } from 'lucide-react'
 
 export function FounderStory() {
   return (
-    <section className="relative overflow-hidden bg-linen py-14 lg:py-[96px]">
+    <section className="relative overflow-hidden py-14 lg:py-[96px]">
       <div className="mx-auto max-w-[1320px] px-5 lg:px-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 items-center gap-8 lg:gap-12">
-          {/* Portrait */}
-          <AnimatedSection className="lg:col-span-6 relative">
-            <div className="absolute -left-2 lg:-left-4 -top-2 lg:-top-4 h-full w-full rounded-2xl border-2 border-phoenix/35" />
-            <div className="relative h-[240px] lg:h-[440px] w-full rounded-2xl overflow-hidden lift">
-              <Image src="/images/founder.jpg" alt="Andrew Higdon, founder of PhynyxPro" fill className="object-cover" />
+        <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-12 lg:gap-12">
+          <AnimatedSection className="relative lg:col-span-6">
+            <div className="absolute -left-2 -top-2 h-full w-full rounded-2xl border-2 border-phoenix/35 lg:-left-4 lg:-top-4" />
+            <div className="relative flex min-h-[330px] w-full flex-col justify-between overflow-hidden rounded-2xl bg-ink p-7 text-white lift grain-dark lg:min-h-[440px] lg:p-10">
+              <div className="flex items-start justify-between">
+                <div className="relative h-12 w-12">
+                  <Image src="/images/pyro-icon.png" alt="" fill className="object-contain" />
+                </div>
+                <ArrowDownRight className="h-8 w-8 text-flame/70" aria-hidden="true" />
+              </div>
+              <div>
+                <p className="text-[10.5px] font-bold uppercase tracking-[.16em] text-flame">Operator perspective</p>
+                <p className="mt-4 max-w-[470px] text-[31px] font-bold leading-[1.02] tracking-[-.04em] sm:text-[38px] lg:text-[44px]">
+                  Measure the handoffs the practice can influence.
+                </p>
+                <div className="mt-7 flex flex-wrap gap-x-7 gap-y-2 border-t border-white/10 pt-5 text-[12px] font-medium text-white/55">
+                  <span>Campaign → response</span>
+                  <span>Request → show</span>
+                  <span>Show → start</span>
+                </div>
+              </div>
             </div>
-            <div className="relative -mt-8 ml-8 lg:absolute lg:-bottom-7 lg:right-7 w-[220px] lg:w-[262px] rounded-xl border border-black/10 bg-white px-4 lg:px-5 py-3.5 lg:py-4 lift">
-              <p className="text-[9.5px] lg:text-[10.5px] font-bold uppercase tracking-[.14em] text-warm">Founder</p>
-              <p className="mt-0.5 lg:mt-1 text-[17px] lg:text-[19px] font-bold tracking-[-.03em]">Andrew Higdon, DC</p>
-              <p className="mt-0.5 lg:mt-1 text-[11.5px] lg:text-[12.5px] text-warm">Practicing chiropractor · Operator</p>
+            <div className="relative -mt-7 ml-7 w-[250px] rounded-xl border border-black/10 bg-white px-4 py-3.5 lift lg:absolute lg:-bottom-7 lg:right-7 lg:ml-0 lg:w-[276px] lg:px-5 lg:py-4">
+              <p className="text-[9.5px] font-bold uppercase tracking-[.14em] text-warm lg:text-[10.5px]">Founder &amp; operator</p>
+              <p className="mt-1 text-[18px] font-bold tracking-[-.03em] lg:text-[20px]">Andrew Higdon, DC</p>
+              <p className="mt-1 text-[12px] text-warm">Practicing chiropractor</p>
             </div>
           </AnimatedSection>
 
-          {/* Copy */}
-          <div className="lg:col-span-6 relative lg:pl-4">
+          <div className="relative lg:col-span-6 lg:pl-4">
             <AnimatedSection>
-              <p className="mb-4 lg:mb-5 text-[11px] font-bold uppercase tracking-[.2em] text-phoenix">Why we exist</p>
-              <h2 className="text-[36px] lg:text-[50px] font-bold leading-[.98] tracking-[-.04em]">
-                Built by a chiropractor who lived the problems.
+              <p className="mb-4 text-[11px] font-bold uppercase tracking-[.2em] text-phoenix lg:mb-5">Why the model is different</p>
+              <h2 className="text-[36px] font-bold leading-[.98] tracking-[-.04em] lg:text-[50px]">
+                Built around the realities of a chiropractic front desk.
               </h2>
-              <p className="mt-4 lg:mt-6 text-[15.5px] lg:text-[17.5px] leading-[1.65] text-warm">
-                Andrew Higdon was — and remains — a practicing chiropractor. He built PhynyxPro after living the frustration every practice owner knows: leads come in, then quietly slip through the cracks.
+              <p className="mt-5 text-[15.5px] leading-[1.65] text-warm lg:mt-6 lg:text-[17px]">
+                Andrew Higdon, DC, is a practicing chiropractor and the founder of
+                PhynyxPro. That operator perspective shapes the system: campaign
+                reporting is only the beginning; response, appointment status, Day 1
+                attendance, and the practice-recorded start decision complete the view.
               </p>
-              <p className="mt-4 text-[15.5px] lg:text-[17.5px] leading-[1.65] text-warm">
-                Every part of this system was built to solve a problem he had first, in his own clinic, with his own money on the line.
+              <p className="mt-4 text-[15.5px] leading-[1.65] text-warm lg:text-[17px]">
+                PhynyxPro operates the acquisition infrastructure. Your team retains
+                clinical judgment, patient relationships, scheduling capacity, and the
+                responsibility to keep real outcomes current.
               </p>
-              <Link
-                href="/about"
-                className="group mt-6 lg:mt-8 inline-flex items-center gap-3 text-[15px] lg:text-[16px] font-semibold text-phoenix"
-              >
-                Read the full story
-                <svg className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </Link>
             </AnimatedSection>
-            <p className="font-hand mt-4 lg:absolute lg:-bottom-4 lg:right-6 rotate-[2deg] lg:rotate-[3deg] text-[20px] lg:text-[22px] font-semibold text-phoenix">
-              not from a marketing desk.
+            <p className="font-hand mt-5 rotate-[2deg] text-[20px] font-semibold text-phoenix lg:absolute lg:-bottom-7 lg:right-6 lg:mt-0 lg:rotate-[3deg] lg:text-[22px]">
+              practice reality over vanity metrics.
             </p>
           </div>
         </div>

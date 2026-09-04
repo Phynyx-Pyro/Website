@@ -1,10 +1,12 @@
-import { Metadata } from 'next'
+import { buildPageMetadata } from '@/lib/page-metadata'
 import { ChiropracticClient } from './_components/chiropractic-client'
 
-export const metadata: Metadata = {
-  title: 'Chiropractic Growth System — PhynyxPro',
-  description: 'Built by a chiropractor, proven in chiropractic. The PhynyxPro Growth System was designed for practice owners who want more booked appointments, not just more leads.',
-}
+export const metadata = buildPageMetadata({
+  title: 'Chiropractic Marketing & Lead Follow-Up',
+  description:
+    'PhynyxPro connects paid acquisition with response, qualification, booking, reminders, and outcome tracking for established chiropractic practices.',
+  path: '/industries/chiropractic',
+})
 
 export default function ChiropracticPage() {
   return <ChiropracticClient />

@@ -19,7 +19,7 @@ export function SiteFooter() {
             </div>
           </Link>
           <p className="mt-5 max-w-[300px] text-[14.5px] leading-[1.6] text-white/60">
-            More booked appointments. Fewer missed opportunities. A proof-led growth system for appointment-driven businesses.
+            The acquisition operating system connecting demand, response, booking, and verified outcomes.
           </p>
         </div>
 
@@ -28,7 +28,7 @@ export function SiteFooter() {
           <p className="text-[11px] font-bold uppercase tracking-[.16em] text-white/45">System</p>
           <div className="mt-4 space-y-2.5 text-[14.5px] text-white/75">
             <Link href="/growth-system" className="block hover:text-flame transition-colors">Growth System</Link>
-            <Link href="/results" className="block hover:text-flame transition-colors">Results</Link>
+            <Link href="/results" className="block hover:text-flame transition-colors">Measurement</Link>
             <Link href="/pyro-ember" className="block hover:text-flame transition-colors">PYRO & Ember</Link>
           </div>
         </div>
@@ -58,14 +58,14 @@ export function SiteFooter() {
           <p className="text-[11px] font-bold uppercase tracking-[.16em] text-white/45">Technology</p>
           <p className="mt-4 text-[16px] font-bold">PYRO <span className="font-normal text-white/60">by PhynyxPro</span></p>
           <p className="mt-2 text-[13.5px] leading-[1.55] text-white/60">
-            The revenue-operations engine. Ember is a PYRO AI Employee.
+            PYRO is the operating platform. Ember is the AI receptionist inside it.
           </p>
         </div>
       </div>
 
       <div className="border-t border-white/10">
         <div className="mx-auto flex flex-col sm:flex-row max-w-[1320px] items-center justify-between px-6 lg:px-10 py-6 text-[12.5px] text-white/50 gap-4">
-          <p>© 2026 PhynyxPro. PhynyxPro is the agency brand. PYRO by PhynyxPro powers your revenue operations.</p>
+          <p>© 2026 PhynyxPro. Acquisition systems for appointment-driven businesses.</p>
           <div className="flex gap-6">
             <Link href="/privacy-policy" className="hover:text-flame transition-colors">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-flame transition-colors">Terms</Link>

@@ -1,10 +1,11 @@
-import { Metadata } from 'next'
+import { buildPageMetadata } from '@/lib/page-metadata'
 import { GrowthSystemClient } from './_components/growth-system-client'
 
-export const metadata: Metadata = {
-  title: 'The PhynyxPro Growth System — Attract, Convert, Operate & Scale',
-  description: 'One connected system. Three outcomes. Managed advertising, automated follow-up, AI employees, and attribution that proves ROI.',
-}
+export const metadata = buildPageMetadata({
+  title: 'Growth System — Attract, Convert, Operate & Improve',
+  description: 'One connected system for managed advertising, follow-up, and campaign, response, booking, and recorded-outcome visibility.',
+  path: '/growth-system',
+})
 
 export default function GrowthSystemPage() {
   return <GrowthSystemClient />

@@ -59,7 +59,7 @@ export function BookingCalendar({ contact }: { contact: BookingContact }) {
           src={bookingUrl}
           allow="payment"
           referrerPolicy="no-referrer"
-          title="Book your PhynyxPro discovery call"
+          title="Book your PhynyxPro Acquisition Diagnostic"
           className="min-h-[780px] w-full"
           style={{ border: 'none', overflow: 'hidden' }}
           scrolling="no"

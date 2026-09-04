@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import Link from 'next/link'
 import { AnimatedSection } from '../../_components/animated-section'
-import { ArrowRight, ArrowLeft, CheckCircle2, Clock, Shield, AlertCircle, DollarSign } from 'lucide-react'
+import { ArrowRight, ArrowLeft, CheckCircle2, Clock, Shield, AlertCircle } from 'lucide-react'
 import { getAssessmentAttribution } from '@/lib/assessment-attribution'
 import {
   isBookingContact,
@@ -11,6 +11,11 @@ import {
 } from '@/lib/ghl-booking'
 import { BookingCalendar } from './booking-calendar'
 import { useAssessmentPrefill } from '../../_components/assessment-prefill-provider'
+import {
+  isHealthcareAssessmentIndustry,
+  parseAssessmentIndustry,
+  type AssessmentIndustry,
+} from '@/lib/assessment-industry'
 
 type FormData = {
   firstName: string
@@ -45,6 +50,42 @@ type AssessmentResult = {
   bookingContact: BookingContact
 }
 
+function getJourneyCopy(
+  industry: AssessmentIndustry | undefined,
+  healthcareAudience = false,
+) {
+  if (industry === 'chiropractic') {
+    return {
+      stages: 'lead, appointment request, confirmation, Day 1 show, and start of care',
+      metrics: 'spend, leads, appointment requests, shows, and starts',
+    }
+  }
+
+  if (industry === 'home-services') {
+    return {
+      stages: 'lead, response, estimate or booking request, scheduled visit, and completed job',
+      metrics: 'spend, leads, estimate or booking requests, scheduled visits, and completed jobs',
+    }
+  }
+
+  if (
+    industry === 'dental' ||
+    industry === 'medspa' ||
+    industry === 'other-healthcare' ||
+    healthcareAudience
+  ) {
+    return {
+      stages: 'lead, appointment request, confirmation, visit, and practice-recorded outcome',
+      metrics: 'spend, leads, appointment requests, visits, and recorded outcomes',
+    }
+  }
+
+  return {
+    stages: 'lead, response, appointment or estimate request, completion, and recorded outcome',
+    metrics: 'spend, leads, appointment or estimate requests, completed work, and recorded outcomes',
+  }
+}
+
 export function GrowthAssessmentClient() {
   const { prefill, clearPrefill } = useAssessmentPrefill()
   const [step, setStep] = useState(1)
@@ -53,27 +94,68 @@ export function GrowthAssessmentClient() {
   const [assessmentResult, setAssessmentResult] =
     useState<AssessmentResult | null>(null)
   const [investmentAccepted, setInvestmentAccepted] = useState(false)
+  const [healthcareAudience, setHealthcareAudience] = useState(false)
   const [website, setWebsite] = useState('')
   const [error, setError] = useState('')
   const submissionIdRef = useRef('')
   const prefillAppliedRef = useRef(false)
+  const industryPrefillAppliedRef = useRef(false)
   const resultHeadingRef = useRef<HTMLHeadingElement>(null)
   const resultPath = assessmentResult?.path ?? null
+  const selectedIndustry = parseAssessmentIndustry(form.industry)
+  const healthcareContext = selectedIndustry
+    ? isHealthcareAssessmentIndustry(selectedIndustry)
+    : healthcareAudience
+  const diagnosticName = healthcareContext
+    ? 'Patient Acquisition Diagnostic'
+    : 'Acquisition Diagnostic'
+  const journeyCopy = getJourneyCopy(
+    selectedIndustry,
+    !selectedIndustry && healthcareAudience,
+  )
 
   useEffect(() => {
     if (!prefill || prefillAppliedRef.current) return
-    prefillAppliedRef.current = true
 
-    setForm((current) => ({
-      ...current,
-      firstName: prefill.firstName,
-      lastName: prefill.lastName,
-      email: prefill.email,
-      phone: prefill.phone,
-    }))
-    setStep(prefill.phone.trim().length > 0 ? 2 : 1)
-    clearPrefill()
+    const frame = window.requestAnimationFrame(() => {
+      if (prefillAppliedRef.current) return
+      prefillAppliedRef.current = true
+      const nextStep = prefill.phone.trim().length > 0 ? 2 : 1
+
+      setForm((current) => ({
+        ...current,
+        firstName: prefill.firstName,
+        lastName: prefill.lastName,
+        email: prefill.email,
+        phone: prefill.phone,
+      }))
+      setStep(nextStep)
+      clearPrefill()
+    })
+
+    return () => window.cancelAnimationFrame(frame)
   }, [clearPrefill, prefill])
+
+  useEffect(() => {
+    if (industryPrefillAppliedRef.current) return
+
+    const frame = window.requestAnimationFrame(() => {
+      if (industryPrefillAppliedRef.current) return
+      industryPrefillAppliedRef.current = true
+      const searchParams = new URLSearchParams(window.location.search)
+      const requestedIndustry = parseAssessmentIndustry(
+        searchParams.get('industry'),
+      )
+      setHealthcareAudience(searchParams.get('audience') === 'healthcare')
+      if (!requestedIndustry) return
+
+      setForm((current) => (
+        current.industry ? current : { ...current, industry: requestedIndustry }
+      ))
+    })
+
+    return () => window.cancelAnimationFrame(frame)
+  }, [])
 
   useEffect(() => {
     if (!resultPath) return
@@ -88,7 +170,10 @@ export function GrowthAssessmentClient() {
   }
 
   const canProceed1 = (form?.firstName?.trim?.()?.length ?? 0) > 0 && (form?.email?.trim?.()?.length ?? 0) > 0 && (form?.phone?.trim?.()?.length ?? 0) > 0
-  const canProceed2 = (form?.businessName?.trim?.()?.length ?? 0) > 0 && (form?.industry?.trim?.()?.length ?? 0) > 0
+  const canProceed2 =
+    (form?.businessName?.trim?.()?.length ?? 0) > 0 &&
+    (form?.industry?.trim?.()?.length ?? 0) > 0 &&
+    (form?.annualRevenue?.trim?.()?.length ?? 0) > 0
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -155,7 +240,7 @@ export function GrowthAssessmentClient() {
     const showCalendar = resultPath === 'calendar' || investmentAccepted
 
     return (
-      <main className="bg-ivory grain-subtle min-h-screen pt-32 pb-20">
+      <div className="bg-ivory grain-subtle min-h-screen pt-32 pb-20">
         <div className="mx-auto max-w-[920px] px-6 text-center" aria-live="polite">
           <AnimatedSection>
             {showCalendar ? (
@@ -163,11 +248,11 @@ export function GrowthAssessmentClient() {
                 <CheckCircle2 className="h-16 w-16 text-phoenix mx-auto mb-6" />
                 <h1 ref={resultHeadingRef} tabIndex={-1} className="text-[clamp(32px,5vw,48px)] font-bold leading-tight text-ink outline-none">
                   {resultPath === 'calendar'
-                    ? 'Your business looks ready for the next step.'
-                    : 'Let’s see if the numbers and the strategy make sense.'}
+                    ? 'Your revenue and budget responses cleared the fit check.'
+                    : 'Let’s review the investment context together.'}
                 </h1>
                 <p className="mt-4 mx-auto max-w-[660px] text-[17px] leading-[1.65] text-warm">
-                  Thank you, {bookingContact.firstName || 'there'}. Choose a convenient time below for a focused discovery call with PhynyxPro.
+                  Thank you, {bookingContact.firstName || 'there'}. Choose a convenient time below for the working diagnostic. Bring last month&apos;s {journeyCopy.metrics}.
                 </p>
                 <BookingCalendar contact={bookingContact} />
                 <Link href="/" className="mt-8 inline-flex items-center gap-2 text-[14px] font-semibold text-phoenix hover:underline">
@@ -176,29 +261,36 @@ export function GrowthAssessmentClient() {
               </>
             ) : (
               <div className="mx-auto max-w-[720px] rounded-2xl bg-white p-7 md:p-10 shadow-xl">
-                <DollarSign className="h-14 w-14 text-phoenix mx-auto mb-5" />
+                <Shield className="h-14 w-14 text-phoenix mx-auto mb-5" />
                 <h1 ref={resultHeadingRef} tabIndex={-1} className="text-[clamp(30px,5vw,42px)] font-bold leading-tight text-ink outline-none">
-                  Before we book, let&apos;s make sure the investment fits.
+                  Before you book, review the initial investment fit.
                 </h1>
                 <p className="mt-4 text-[16px] leading-[1.65] text-warm">
-                  Based on what you shared, your business may be early for the full PhynyxPro system. That does not automatically mean we cannot help—but we want the costs to be completely clear before you schedule.
+                  The fit check compares the annual revenue and monthly marketing budget you entered with the initial thresholds. Your answers suggest one or both should be discussed before deciding whether to work together.
                 </p>
 
-                <div className="mt-7 grid gap-3 text-left sm:grid-cols-3">
+                <div className="mt-7 grid gap-3 text-left sm:grid-cols-2">
                   {[
-                    { label: 'One-time buildout', value: '$1,000' },
-                    { label: 'Monthly retainer', value: '$1,500/mo' },
-                    { label: 'Lead generation', value: '$1,500–$2,500/mo' },
+                    {
+                      label: 'Fit-check inputs',
+                      value: 'Annual revenue and planned monthly marketing budget.',
+                    },
+                    {
+                      label: 'Working-diagnostic context',
+                      value: healthcareContext
+                        ? 'Lead flow, available records, appointment capacity, and team handoffs.'
+                        : 'Lead flow, available records, scheduling or service capacity, and team handoffs.',
+                    },
                   ].map((item) => (
                     <div key={item.label} className="rounded-xl border border-ink/10 bg-ivory p-4">
                       <p className="text-[12px] font-semibold uppercase tracking-[.08em] text-warm">{item.label}</p>
-                      <p className="mt-1.5 text-[20px] font-bold text-ink">{item.value}</p>
+                      <p className="mt-2 text-[14px] leading-[1.55] font-medium text-ink">{item.value}</p>
                     </div>
                   ))}
                 </div>
 
                 <p className="mt-5 text-[14px] leading-[1.6] text-warm">
-                  Expected total: approximately <strong className="text-ink">$4,000–$5,000 in month one</strong>, then <strong className="text-ink">$3,000–$4,000 per month</strong>. The discovery call is still free and is simply to determine whether moving forward makes sense.
+                  This does not automatically rule you out. The working diagnostic is where we review the numbers, workflow context, capacity, and next step. It is not a promise that the system is the right fit.
                 </p>
 
                 <button
@@ -206,7 +298,7 @@ export function GrowthAssessmentClient() {
                   onClick={() => setInvestmentAccepted(true)}
                   className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-phoenix px-7 py-4 text-[15px] font-semibold text-white shadow-lg transition-colors hover:bg-ember"
                 >
-                  I understand the investment — show me the calendar
+                  Continue to diagnostic times
                   <ArrowRight className="h-4 w-4" />
                 </button>
                 <Link href="/" className="mt-5 inline-flex text-[13px] font-semibold text-warm hover:text-ink">
@@ -216,26 +308,29 @@ export function GrowthAssessmentClient() {
             )}
           </AnimatedSection>
         </div>
-      </main>
+      </div>
     )
   }
 
   return (
-    <main className="bg-ivory grain-subtle min-h-screen">
+    <div className="bg-ivory grain-subtle min-h-screen">
       {/* Hero */}
       <section className="pt-32 pb-12 md:pt-40 md:pb-16">
         <div className="mx-auto max-w-[800px] px-6 text-center">
           <AnimatedSection>
             <h1 className="text-[clamp(32px,5vw,56px)] font-bold leading-[1.05] tracking-tight text-ink">
-              Let&apos;s find out if PhynyxPro is the <span className="text-phoenix">right growth partner.</span>
+              Book your <span className="text-phoenix">{diagnosticName}.</span>
             </h1>
             <p className="mt-5 max-w-[560px] mx-auto text-[17px] leading-[1.65] text-warm">
-              A 30-minute qualified conversation — not a sales pitch. We&apos;ll review your current marketing, lead flow, and operations, then tell you honestly whether we can help.
+              Start with a 3-minute fit check, then choose a time for a working diagnostic focused on the gaps between {journeyCopy.stages}.
             </p>
             <div className="mt-6 flex items-center justify-center gap-6 text-[13px] text-warm">
-              <span className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-phoenix" /> Takes about 3 minutes</span>
-              <span className="flex items-center gap-1.5"><Shield className="h-4 w-4 text-phoenix" /> No obligation</span>
+              <span className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-phoenix" /> 3-minute fit check</span>
+              <span className="flex items-center gap-1.5"><Shield className="h-4 w-4 text-phoenix" /> Fit-first process</span>
             </div>
+            <p className="mt-4 mx-auto max-w-[620px] text-[13px] leading-[1.6] text-warm">
+              Bring last month&apos;s {journeyCopy.metrics} to the working session.
+            </p>
           </AnimatedSection>
         </div>
       </section>
@@ -273,10 +368,11 @@ export function GrowthAssessmentClient() {
           <div
             className="flex items-center gap-2 mb-8"
             role="progressbar"
-            aria-label="Growth assessment progress"
+            aria-label={`${diagnosticName} fit-check progress`}
             aria-valuemin={1}
             aria-valuemax={3}
             aria-valuenow={step}
+            aria-valuetext={`Step ${step} of 3`}
           >
             {[1, 2, 3].map((s) => (
               <div key={s} className={`h-1.5 flex-1 rounded-full transition-colors ${
@@ -294,23 +390,31 @@ export function GrowthAssessmentClient() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="assessment-first-name" className="block text-[13px] font-medium text-ink mb-1.5">First Name *</label>
-                      <input id="assessment-first-name" type="text" value={form?.firstName ?? ''} onChange={(e) => update('firstName', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink placeholder:text-warm/50 focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition" placeholder="Andrew" />
+                      <input id="assessment-first-name" required autoComplete="given-name" type="text" value={form?.firstName ?? ''} onChange={(e) => update('firstName', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink placeholder:text-warm/50 focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition" placeholder="Andrew" />
                     </div>
                     <div>
                       <label htmlFor="assessment-last-name" className="block text-[13px] font-medium text-ink mb-1.5">Last Name</label>
-                      <input id="assessment-last-name" type="text" value={form?.lastName ?? ''} onChange={(e) => update('lastName', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink placeholder:text-warm/50 focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition" placeholder="Higdon" />
+                      <input id="assessment-last-name" autoComplete="family-name" type="text" value={form?.lastName ?? ''} onChange={(e) => update('lastName', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink placeholder:text-warm/50 focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition" placeholder="Higdon" />
                     </div>
                   </div>
                   <div>
                     <label htmlFor="assessment-email" className="block text-[13px] font-medium text-ink mb-1.5">Email *</label>
-                    <input id="assessment-email" type="email" value={form?.email ?? ''} onChange={(e) => update('email', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink placeholder:text-warm/50 focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition" placeholder="andrew@example.com" />
+                    <input id="assessment-email" required autoComplete="email" type="email" value={form?.email ?? ''} onChange={(e) => update('email', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink placeholder:text-warm/50 focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition" placeholder="andrew@example.com" />
                   </div>
                   <div>
                     <label htmlFor="assessment-phone" className="block text-[13px] font-medium text-ink mb-1.5">Phone *</label>
-                    <input id="assessment-phone" type="tel" value={form?.phone ?? ''} onChange={(e) => update('phone', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink placeholder:text-warm/50 focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition" placeholder="(555) 123-4567" />
+                    <input id="assessment-phone" required autoComplete="tel" type="tel" value={form?.phone ?? ''} onChange={(e) => update('phone', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink placeholder:text-warm/50 focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition" placeholder="(555) 123-4567" />
                   </div>
                 </div>
-                <button type="button" onClick={() => canProceed1 && setStep(2)} disabled={!canProceed1} className={`mt-8 w-full inline-flex items-center justify-center gap-2 rounded-lg px-7 py-3.5 text-[15px] font-semibold transition-colors ${canProceed1 ? 'bg-phoenix text-white hover:bg-ember' : 'bg-ink/10 text-ink/40 cursor-not-allowed'}`}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!canProceed1) return
+                    setStep(2)
+                  }}
+                  disabled={!canProceed1}
+                  className={`mt-8 w-full inline-flex items-center justify-center gap-2 rounded-lg px-7 py-3.5 text-[15px] font-semibold transition-colors ${canProceed1 ? 'bg-phoenix text-white hover:bg-ember' : 'bg-ink/10 text-ink/40 cursor-not-allowed'}`}
+                >
                   Continue <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
@@ -325,11 +429,11 @@ export function GrowthAssessmentClient() {
                 <div className="space-y-4">
                   <div>
                     <label htmlFor="assessment-business-name" className="block text-[13px] font-medium text-ink mb-1.5">Business Name *</label>
-                    <input id="assessment-business-name" type="text" value={form?.businessName ?? ''} onChange={(e) => update('businessName', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink placeholder:text-warm/50 focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition" placeholder="Your Practice or Company" />
+                    <input id="assessment-business-name" required autoComplete="organization" type="text" value={form?.businessName ?? ''} onChange={(e) => update('businessName', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink placeholder:text-warm/50 focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition" placeholder="Your business" />
                   </div>
                   <div>
                     <label htmlFor="assessment-industry" className="block text-[13px] font-medium text-ink mb-1.5">Industry *</label>
-                    <select id="assessment-industry" value={form?.industry ?? ''} onChange={(e) => update('industry', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition">
+                    <select id="assessment-industry" required value={form?.industry ?? ''} onChange={(e) => update('industry', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition">
                       <option value="">Select your industry</option>
                       <option value="chiropractic">Chiropractic</option>
                       <option value="dental">Dental</option>
@@ -340,14 +444,14 @@ export function GrowthAssessmentClient() {
                     </select>
                   </div>
                   <div>
-                    <label htmlFor="assessment-annual-revenue" className="block text-[13px] font-medium text-ink mb-1.5">Annual Revenue</label>
-                    <select id="assessment-annual-revenue" value={form?.annualRevenue ?? ''} onChange={(e) => update('annualRevenue', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition">
+                    <label htmlFor="assessment-annual-revenue" className="block text-[13px] font-medium text-ink mb-1.5">Annual business revenue (last 12 months) *</label>
+                    <select id="assessment-annual-revenue" required value={form?.annualRevenue ?? ''} onChange={(e) => update('annualRevenue', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition">
                       <option value="">Select range</option>
                       <option value="under-250k">Under $250K</option>
-                      <option value="250k-500k">$250K – $500K</option>
-                      <option value="500k-1m">$500K – $1M</option>
-                      <option value="1m-5m">$1M – $5M</option>
-                      <option value="5m-plus">$5M+</option>
+                      <option value="250k-500k">$250K – $499,999</option>
+                      <option value="500k-1m">$500K – $999,999</option>
+                      <option value="1m-5m">$1M – $4,999,999</option>
+                      <option value="5m-plus">$5M or more</option>
                     </select>
                   </div>
                 </div>
@@ -355,7 +459,15 @@ export function GrowthAssessmentClient() {
                   <button type="button" onClick={() => setStep(1)} className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg border border-ink/20 px-7 py-3.5 text-[15px] font-semibold text-ink hover:bg-ink hover:text-white transition-colors">
                     <ArrowLeft className="h-4 w-4" /> Back
                   </button>
-                  <button type="button" onClick={() => canProceed2 && setStep(3)} disabled={!canProceed2} className={`flex-1 inline-flex items-center justify-center gap-2 rounded-lg px-7 py-3.5 text-[15px] font-semibold transition-colors ${canProceed2 ? 'bg-phoenix text-white hover:bg-ember' : 'bg-ink/10 text-ink/40 cursor-not-allowed'}`}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!canProceed2) return
+                      setStep(3)
+                    }}
+                    disabled={!canProceed2}
+                    className={`flex-1 inline-flex items-center justify-center gap-2 rounded-lg px-7 py-3.5 text-[15px] font-semibold transition-colors ${canProceed2 ? 'bg-phoenix text-white hover:bg-ember' : 'bg-ink/10 text-ink/40 cursor-not-allowed'}`}
+                  >
                     Continue <ArrowRight className="h-4 w-4" />
                   </button>
                 </div>
@@ -374,8 +486,8 @@ export function GrowthAssessmentClient() {
                     <select id="assessment-biggest-challenge" value={form?.biggestChallenge ?? ''} onChange={(e) => update('biggestChallenge', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition">
                       <option value="">Select one</option>
                       <option value="not-enough-leads">Not enough leads</option>
-                      <option value="leads-not-converting">Leads aren&apos;t converting to appointments</option>
-                      <option value="no-show-rate">High no-show rate</option>
+                      <option value="leads-not-converting">Leads aren&apos;t converting to appointment or estimate requests</option>
+                      <option value="no-show-rate">High no-show or cancellation rate</option>
                       <option value="no-attribution">Can&apos;t track what&apos;s working</option>
                       <option value="follow-up">Slow or inconsistent follow-up</option>
                       <option value="scaling">Ready to scale but systems aren&apos;t in place</option>
@@ -386,14 +498,14 @@ export function GrowthAssessmentClient() {
                     <textarea id="assessment-current-marketing" value={form?.currentMarketing ?? ''} onChange={(e) => update('currentMarketing', e?.target?.value ?? '')} rows={3} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink placeholder:text-warm/50 focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition resize-none" placeholder="What are you doing for marketing today? (Google Ads, social, referrals, etc.)" />
                   </div>
                   <div>
-                    <label htmlFor="assessment-monthly-budget" className="block text-[13px] font-medium text-ink mb-1.5">Monthly marketing budget</label>
-                    <select id="assessment-monthly-budget" value={form?.monthlyBudget ?? ''} onChange={(e) => update('monthlyBudget', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition">
+                    <label htmlFor="assessment-monthly-budget" className="block text-[13px] font-medium text-ink mb-1.5">Planned monthly marketing budget *</label>
+                    <select id="assessment-monthly-budget" required value={form?.monthlyBudget ?? ''} onChange={(e) => update('monthlyBudget', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition">
                       <option value="">Select range</option>
                       <option value="under-1k">Under $1,000/mo</option>
-                      <option value="1k-3k">$1,000 – $3,000/mo</option>
-                      <option value="3k-5k">$3,000 – $5,000/mo</option>
-                      <option value="5k-10k">$5,000 – $10,000/mo</option>
-                      <option value="10k-plus">$10,000+/mo</option>
+                      <option value="1k-3k">$1,000 – $2,999/mo</option>
+                      <option value="3k-5k">$3,000 – $4,999/mo</option>
+                      <option value="5k-10k">$5,000 – $9,999/mo</option>
+                      <option value="10k-plus">$10,000/mo or more</option>
                     </select>
                   </div>
                 </div>
@@ -409,19 +521,19 @@ export function GrowthAssessmentClient() {
                   <button type="button" onClick={() => setStep(2)} className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg border border-ink/20 px-7 py-3.5 text-[15px] font-semibold text-ink hover:bg-ink hover:text-white transition-colors">
                     <ArrowLeft className="h-4 w-4" /> Back
                   </button>
-                  <button type="submit" disabled={submitting} className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white hover:bg-ember transition-colors disabled:opacity-50">
-                    {submitting ? 'Submitting...' : 'Submit Assessment'}
+                  <button type="submit" disabled={submitting || !form.monthlyBudget} className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white hover:bg-ember transition-colors disabled:cursor-not-allowed disabled:opacity-50">
+                    {submitting ? 'Checking fit...' : 'Complete Fit Check'}
                   </button>
                 </div>
 
                 <p className="mt-4 text-[12px] text-warm text-center">
-                  Your information is kept private. We&apos;ll only use it to assess fit and reach out if we believe we can help.
+                  Revenue and budget determine the fit-check path. The remaining details help coordinate the diagnostic and follow-up.
                 </p>
               </div>
             </AnimatedSection>
           )}
         </form>
       </section>
-    </main>
+    </div>
   )
 }
