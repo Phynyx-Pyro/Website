@@ -24,7 +24,7 @@ const faqs = [
   },
   {
     q: 'Is PhynyxPro just ad management?',
-    a: 'No. Paid acquisition is one part of the system. PhynyxPro also coordinates the post-click workflow—response, qualification, booking, reminders, handoff, and stage reporting—through PYRO.',
+    a: 'No. Paid acquisition is one part of the system. PhynyxPro also coordinates the post-click workflow—response, qualification, appointment requests, confirmations, reminders, handoff, and stage reporting—through PYRO.',
   },
   {
     q: 'How does Ember work with our team?',

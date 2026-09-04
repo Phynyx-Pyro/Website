@@ -48,7 +48,7 @@ export function AboutClient() {
                 Andrew Higdon, DC, is a practicing chiropractor and the founder of PhynyxPro. His operator perspective shapes a system centered on what happens between first inquiry, appointment request, attendance, and the recorded outcome.
               </p>
               <p className="mt-4 text-[17px] leading-[1.65] text-warm">
-                PhynyxPro is designed to connect advertising, response, booking, reminders, and outcome reporting. PYRO coordinates the workflow, with Ember as the AI receptionist inside the platform.
+                PhynyxPro is designed to connect advertising, response, appointment requests, confirmations, reminders, and outcome reporting. PYRO coordinates the workflow, with Ember as the AI receptionist inside the platform.
               </p>
               <p className="mt-4 text-[17px] leading-[1.65] text-warm">
                 The operating principle is simple: make the workflow inspectable, distinguish recorded outcomes from assumptions, and improve the handoffs the business can control.
