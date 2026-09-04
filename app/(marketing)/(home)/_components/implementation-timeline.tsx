@@ -4,76 +4,77 @@ import { AnimatedSection } from '../../_components/animated-section'
 
 const stages = [
   {
-    period: 'Week 1',
-    title: 'Baseline and access',
+    period: 'Before day one',
+    title: 'Onboarding complete',
     description:
-      'We document your offer, available new-patient capacity, current funnel, and the account access needed to do the work.',
+      'We confirm the inputs, access, and approvals required to start the core build.',
     details: [
-      'Offer and capacity review',
-      'Current lead-to-visit baseline',
-      'Advertising, CRM, calendar, and reporting access',
+      'Confirm offer, capacity, locations, and handoff owners',
+      'Receive advertising, CRM, calendar, domain, and reporting access',
+      'Collect required brand assets, approvals, and business details',
     ],
   },
   {
-    period: 'Week 2',
-    title: 'Build and connect',
+    period: 'Days 1–3',
+    title: 'Campaign build',
     description:
-      'We assemble the campaign path and connect the systems that carry an inquiry from first response to a clean team handoff.',
+      'We build the campaign strategy, Meta lead flow, creative, and source tracking.',
     details: [
-      'Campaign and landing-page path',
+      'Campaign strategy and offer path',
+      'Meta lead ads, forms, copy, and creative setup',
+      'Tracking and source structure',
+    ],
+  },
+  {
+    period: 'Days 4–7',
+    title: 'System configuration',
+    description:
+      'We connect the pipeline, calendar, automations, and included handoff rules.',
+    details: [
       'PYRO pipeline and calendar connection',
-      'Ember and team handoff rules',
+      'Follow-up, reminders, and status automation',
+      'Ember and staff handoff rules where included',
     ],
   },
   {
-    period: 'Week 3',
-    title: 'Test and train',
+    period: 'Days 8–10',
+    title: 'QA and launch-ready',
     description:
-      'We test the patient journey before rollout and train your team on ownership, statuses, and escalation points.',
+      'We test the end-to-end journey, confirm ownership, and prepare for a controlled launch.',
     details: [
-      'Response and booking QA',
-      'Reminder and escalation QA',
-      'Team status and handoff training',
-    ],
-  },
-  {
-    period: 'Week 4',
-    title: 'Launch and review',
-    description:
-      'We begin with a controlled rollout, verify attribution, and review early handoffs for gaps before activity expands.',
-    details: [
-      'Controlled campaign rollout',
-      'Campaign-to-calendar attribution check',
-      'Early handoff review',
+      'End-to-end lead and booking tests',
+      'Team ownership and escalation review',
+      'Final approvals and controlled launch preparation',
     ],
   },
 ] as const
 
-export function FirstThirtyDays() {
+export function ImplementationTimeline() {
   return (
     <section
-      id="first-30-days"
+      id="implementation-timeline"
       className="relative overflow-hidden bg-linen py-14 lg:py-[92px]"
-      aria-labelledby="first-30-days-heading"
+      aria-labelledby="implementation-timeline-heading"
     >
       <div className="mx-auto max-w-[1320px] px-5 lg:px-10">
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-12 lg:items-end lg:gap-10">
           <AnimatedSection className="lg:col-span-7">
             <p className="mb-4 text-[11px] font-bold uppercase tracking-[.2em] text-phoenix">
-              The first 30 days
+              THE FIRST 7–10 DAYS
             </p>
             <h2
-              id="first-30-days-heading"
+              id="implementation-timeline-heading"
               className="max-w-[720px] text-[36px] font-bold leading-[.98] tracking-[-.04em] lg:text-[52px]"
             >
-              A clear build sequence before the system scales.
+              Your core acquisition system, built in 7–10 days.
             </h2>
           </AnimatedSection>
 
           <AnimatedSection delay={100} className="lg:col-span-5 lg:pb-1">
             <p className="max-w-[520px] text-[15.5px] leading-[1.65] text-warm lg:text-[17px]">
-              The first month moves from baseline to controlled rollout. Each stage has concrete
-              deliverables your practice can inspect before the next one begins.
+              The build window begins once onboarding inputs, account access, and required approvals
+              are complete. From there, we build the campaign, Meta lead flow, pipeline, follow-up,
+              and handoff process.
             </p>
           </AnimatedSection>
         </div>
@@ -123,8 +124,9 @@ export function FirstThirtyDays() {
 
         <AnimatedSection delay={220}>
           <p className="mt-5 max-w-[900px] border-l-2 border-phoenix/50 pl-4 text-[12.5px] leading-[1.6] text-warm lg:mt-6 lg:text-[13.5px]">
-            Timing depends on timely account access, approvals, and practice participation. This is
-            an implementation sequence, not a promise of patient volume or a guaranteed launch date.
+            7–10 days is the standard core-build window after complete onboarding. Missing access,
+            delayed approvals or client inputs, carrier/A2P registration, and other third-party
+            dependencies can move the live-launch date.
           </p>
         </AnimatedSection>
       </div>

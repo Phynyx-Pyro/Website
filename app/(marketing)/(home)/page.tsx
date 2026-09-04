@@ -5,7 +5,7 @@ import { TrustStrip } from './_components/trust-strip'
 import { ProblemReframe } from './_components/problem-reframe'
 import { JourneySection } from './_components/journey-section'
 import { GrowthSystem } from './_components/growth-system'
-import { FirstThirtyDays } from './_components/first-30-days'
+import { ImplementationTimeline } from './_components/implementation-timeline'
 import { PyroSection } from './_components/pyro-section'
 import { FounderStory } from './_components/founder-story'
 import { FitAndFaq } from './_components/fit-and-faq'
@@ -41,7 +41,7 @@ export default function HomePage() {
       <ProblemReframe />
       <JourneySection />
       <GrowthSystem />
-      <FirstThirtyDays />
+      <ImplementationTimeline />
       <PyroSection />
       <FounderStory />
       <FitAndFaq />
