@@ -17,8 +17,7 @@ export function DentalMedspaClient() {
                 <p className="text-[11px] font-bold uppercase tracking-[.16em] text-phoenix">Dental & Medspa</p>
               </div>
               <h1 className="text-[clamp(36px,5vw,64px)] font-bold leading-[1.05] tracking-tight text-ink">
-                Clearer handoffs.<br />
-                <span className="text-phoenix">More responsive follow-up.</span>
+                Turn more consultation inquiries into attended visits.
               </h1>
               <p className="mt-6 max-w-[500px] text-[19px] leading-[1.65] text-warm">
                 High-consideration appointments need a clear path from inquiry to staff handoff, scheduling, reminders, and a recorded outcome. PhynyxPro connects that workflow.

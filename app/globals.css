@@ -28,7 +28,7 @@
     --card-foreground: 30 5% 8%;
     --popover: 0 0% 100%;
     --popover-foreground: 30 5% 8%;
-    --primary: 14 68% 50%;
+    --primary: 14 69% 42%;
     --primary-foreground: 0 0% 6%;
     --secondary: 30 20% 91%;
     --secondary-foreground: 30 5% 8%;
@@ -174,7 +174,7 @@
 }
 
 @media (max-width: 1023px) {
-  body:has([data-cta-placement="homepage_mobile_sticky"]) footer {
+  body:has([data-mobile-diagnostic-sticky="true"]) footer {
     padding-bottom: 4.75rem;
   }
 }

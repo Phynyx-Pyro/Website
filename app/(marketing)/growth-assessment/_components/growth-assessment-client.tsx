@@ -50,6 +50,17 @@ type AssessmentResult = {
   bookingContact: BookingContact
 }
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+function isValidContactEmail(value: string) {
+  return EMAIL_PATTERN.test(value.trim())
+}
+
+function isValidContactPhone(value: string) {
+  const digits = value.replace(/\D/g, '')
+  return digits.length >= 10 && digits.length <= 15
+}
+
 function getJourneyCopy(
   industry: AssessmentIndustry | undefined,
   healthcareAudience = false,
@@ -97,10 +108,13 @@ export function GrowthAssessmentClient() {
   const [healthcareAudience, setHealthcareAudience] = useState(false)
   const [website, setWebsite] = useState('')
   const [error, setError] = useState('')
+  const [contactTouched, setContactTouched] = useState({ email: false, phone: false })
   const submissionIdRef = useRef('')
   const prefillAppliedRef = useRef(false)
   const industryPrefillAppliedRef = useRef(false)
+  const stepFocusReadyRef = useRef(false)
   const resultHeadingRef = useRef<HTMLHeadingElement>(null)
+  const stepHeadingRef = useRef<HTMLHeadingElement>(null)
   const resultPath = assessmentResult?.path ?? null
   const selectedIndustry = parseAssessmentIndustry(form.industry)
   const healthcareContext = selectedIndustry
@@ -120,7 +134,10 @@ export function GrowthAssessmentClient() {
     const frame = window.requestAnimationFrame(() => {
       if (prefillAppliedRef.current) return
       prefillAppliedRef.current = true
-      const nextStep = prefill.phone.trim().length > 0 ? 2 : 1
+      const nextStep =
+        isValidContactEmail(prefill.email) && isValidContactPhone(prefill.phone)
+          ? 2
+          : 1
 
       setForm((current) => ({
         ...current,
@@ -158,6 +175,15 @@ export function GrowthAssessmentClient() {
   }, [])
 
   useEffect(() => {
+    if (!stepFocusReadyRef.current) {
+      stepFocusReadyRef.current = true
+      return
+    }
+    const frame = window.requestAnimationFrame(() => stepHeadingRef.current?.focus())
+    return () => window.cancelAnimationFrame(frame)
+  }, [step])
+
+  useEffect(() => {
     if (!resultPath) return
 
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -169,7 +195,12 @@ export function GrowthAssessmentClient() {
     setForm((prev) => ({ ...(prev ?? {}), [field]: value }))
   }
 
-  const canProceed1 = (form?.firstName?.trim?.()?.length ?? 0) > 0 && (form?.email?.trim?.()?.length ?? 0) > 0 && (form?.phone?.trim?.()?.length ?? 0) > 0
+  const emailInvalid = contactTouched.email && !isValidContactEmail(form.email)
+  const phoneInvalid = contactTouched.phone && !isValidContactPhone(form.phone)
+  const canProceed1 =
+    form.firstName.trim().length > 0 &&
+    isValidContactEmail(form.email) &&
+    isValidContactPhone(form.phone)
   const canProceed2 =
     (form?.businessName?.trim?.()?.length ?? 0) > 0 &&
     (form?.industry?.trim?.()?.length ?? 0) > 0 &&
@@ -248,11 +279,11 @@ export function GrowthAssessmentClient() {
                 <CheckCircle2 className="h-16 w-16 text-phoenix mx-auto mb-6" />
                 <h1 ref={resultHeadingRef} tabIndex={-1} className="text-[clamp(32px,5vw,48px)] font-bold leading-tight text-ink outline-none">
                   {resultPath === 'calendar'
-                    ? 'Your revenue and budget responses cleared the fit check.'
+                    ? 'Your fit check is complete. Choose a diagnostic time.'
                     : 'Let’s review the investment context together.'}
                 </h1>
                 <p className="mt-4 mx-auto max-w-[660px] text-[17px] leading-[1.65] text-warm">
-                  Thank you, {bookingContact.firstName || 'there'}. Choose a convenient time below for the working diagnostic. Bring last month&apos;s {journeyCopy.metrics}.
+                  Thank you, {bookingContact.firstName || 'there'}. Choose a convenient time below for the 30-minute diagnostic. Bring the numbers you have; missing data is part of what we’ll map.
                 </p>
                 <BookingCalendar contact={bookingContact} />
                 <Link href="/" className="mt-8 inline-flex items-center gap-2 text-[14px] font-semibold text-phoenix hover:underline">
@@ -266,7 +297,7 @@ export function GrowthAssessmentClient() {
                   Before you book, review the initial investment fit.
                 </h1>
                 <p className="mt-4 text-[16px] leading-[1.65] text-warm">
-                  The fit check compares the annual revenue and monthly marketing budget you entered with the initial thresholds. Your answers suggest one or both should be discussed before deciding whether to work together.
+                  The fit check uses $500K in annual revenue and $3K in planned monthly marketing budget as initial screening thresholds. These are fit criteria, not package prices. Your answers suggest one or both should be discussed before deciding whether to work together.
                 </p>
 
                 <div className="mt-7 grid gap-3 text-left sm:grid-cols-2">
@@ -319,17 +350,20 @@ export function GrowthAssessmentClient() {
         <div className="mx-auto max-w-[800px] px-6 text-center">
           <AnimatedSection>
             <h1 className="text-[clamp(32px,5vw,56px)] font-bold leading-[1.05] tracking-tight text-ink">
-              Book your <span className="text-phoenix">{diagnosticName}.</span>
+              Start your <span className="text-phoenix">{diagnosticName}.</span>
             </h1>
             <p className="mt-5 max-w-[560px] mx-auto text-[17px] leading-[1.65] text-warm">
-              Start with a 3-minute fit check, then choose a time for a working diagnostic focused on the gaps between {journeyCopy.stages}.
+              Start with a 3-minute fit check, then choose a time for a 30-minute diagnostic focused on the gaps between {journeyCopy.stages}.
             </p>
             <div className="mt-6 flex items-center justify-center gap-6 text-[13px] text-warm">
               <span className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-phoenix" /> 3-minute fit check</span>
-              <span className="flex items-center gap-1.5"><Shield className="h-4 w-4 text-phoenix" /> Fit-first process</span>
+              <span className="flex items-center gap-1.5"><Shield className="h-4 w-4 text-phoenix" /> 30-minute diagnostic</span>
             </div>
             <p className="mt-4 mx-auto max-w-[620px] text-[13px] leading-[1.6] text-warm">
-              Bring last month&apos;s {journeyCopy.metrics} to the working session.
+              Bring the numbers you have. Missing data is part of what we’ll map.
+            </p>
+            <p className="mt-3 mx-auto max-w-[620px] text-[12.5px] leading-[1.6] text-warm">
+              The fit check uses $500K in annual revenue and $3K in planned monthly marketing budget as initial screening thresholds. These are fit criteria, not package prices.
             </p>
           </AnimatedSection>
         </div>
@@ -385,7 +419,7 @@ export function GrowthAssessmentClient() {
           {step === 1 && (
             <AnimatedSection>
               <div className="rounded-2xl bg-white p-8 shadow-xl">
-                <h2 className="text-[22px] font-semibold text-ink mb-6">About you</h2>
+                <h2 ref={stepHeadingRef} tabIndex={-1} className="text-[22px] font-semibold text-ink mb-6 outline-none">About you</h2>
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -399,11 +433,13 @@ export function GrowthAssessmentClient() {
                   </div>
                   <div>
                     <label htmlFor="assessment-email" className="block text-[13px] font-medium text-ink mb-1.5">Email *</label>
-                    <input id="assessment-email" required autoComplete="email" type="email" value={form?.email ?? ''} onChange={(e) => update('email', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink placeholder:text-warm/50 focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition" placeholder="andrew@example.com" />
+                    <input id="assessment-email" required autoComplete="email" type="email" value={form?.email ?? ''} onChange={(e) => update('email', e?.target?.value ?? '')} onBlur={() => setContactTouched((current) => ({ ...current, email: true }))} aria-invalid={emailInvalid} aria-describedby={emailInvalid ? 'assessment-email-error' : undefined} className={`w-full rounded-lg border bg-ivory px-4 py-3 text-[15px] text-ink placeholder:text-warm/50 focus:ring-1 outline-none transition ${emailInvalid ? 'border-red-600 focus:border-red-600 focus:ring-red-600' : 'border-ink/15 focus:border-phoenix focus:ring-phoenix'}`} placeholder="andrew@example.com" />
+                    {emailInvalid && <p id="assessment-email-error" role="alert" className="mt-1.5 text-[12.5px] font-medium text-red-700">Enter a valid email address.</p>}
                   </div>
                   <div>
                     <label htmlFor="assessment-phone" className="block text-[13px] font-medium text-ink mb-1.5">Phone *</label>
-                    <input id="assessment-phone" required autoComplete="tel" type="tel" value={form?.phone ?? ''} onChange={(e) => update('phone', e?.target?.value ?? '')} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink placeholder:text-warm/50 focus:border-phoenix focus:ring-1 focus:ring-phoenix outline-none transition" placeholder="(555) 123-4567" />
+                    <input id="assessment-phone" required autoComplete="tel" type="tel" value={form?.phone ?? ''} onChange={(e) => update('phone', e?.target?.value ?? '')} onBlur={() => setContactTouched((current) => ({ ...current, phone: true }))} aria-invalid={phoneInvalid} aria-describedby={phoneInvalid ? 'assessment-phone-error' : undefined} className={`w-full rounded-lg border bg-ivory px-4 py-3 text-[15px] text-ink placeholder:text-warm/50 focus:ring-1 outline-none transition ${phoneInvalid ? 'border-red-600 focus:border-red-600 focus:ring-red-600' : 'border-ink/15 focus:border-phoenix focus:ring-phoenix'}`} placeholder="(555) 123-4567" />
+                    {phoneInvalid && <p id="assessment-phone-error" role="alert" className="mt-1.5 text-[12.5px] font-medium text-red-700">Enter a valid phone number, including area code.</p>}
                   </div>
                 </div>
                 <button
@@ -417,6 +453,10 @@ export function GrowthAssessmentClient() {
                 >
                   Continue <ArrowRight className="h-4 w-4" />
                 </button>
+                <p className="mt-4 text-center text-[12px] leading-[1.55] text-warm">
+                  Your details are used to evaluate fit and coordinate the diagnostic. Read our{' '}
+                  <Link href="/privacy-policy" className="font-semibold text-phoenix underline-offset-2 hover:underline">Privacy Policy</Link>.
+                </p>
               </div>
             </AnimatedSection>
           )}
@@ -425,7 +465,7 @@ export function GrowthAssessmentClient() {
           {step === 2 && (
             <AnimatedSection>
               <div className="rounded-2xl bg-white p-8 shadow-xl">
-                <h2 className="text-[22px] font-semibold text-ink mb-6">About your business</h2>
+                <h2 ref={stepHeadingRef} tabIndex={-1} className="text-[22px] font-semibold text-ink mb-6 outline-none">About your business</h2>
                 <div className="space-y-4">
                   <div>
                     <label htmlFor="assessment-business-name" className="block text-[13px] font-medium text-ink mb-1.5">Business Name *</label>
@@ -479,7 +519,7 @@ export function GrowthAssessmentClient() {
           {step === 3 && (
             <AnimatedSection>
               <div className="rounded-2xl bg-white p-8 shadow-xl">
-                <h2 className="text-[22px] font-semibold text-ink mb-6">Your growth context</h2>
+                <h2 ref={stepHeadingRef} tabIndex={-1} className="text-[22px] font-semibold text-ink mb-6 outline-none">Your growth context</h2>
                 <div className="space-y-4">
                   <div>
                     <label htmlFor="assessment-biggest-challenge" className="block text-[13px] font-medium text-ink mb-1.5">Biggest challenge right now</label>
@@ -527,7 +567,7 @@ export function GrowthAssessmentClient() {
                 </div>
 
                 <p className="mt-4 text-[12px] text-warm text-center">
-                  Revenue and budget determine the fit-check path. The remaining details help coordinate the diagnostic and follow-up.
+                  The $500K annual revenue and $3K planned monthly marketing-budget thresholds determine the initial fit-check path. They are screening criteria, not package prices. The remaining details help coordinate the diagnostic and follow-up.
                 </p>
               </div>
             </AnimatedSection>

@@ -24,8 +24,7 @@ export function GrowthSystemClient() {
           <AnimatedSection>
             <p className="text-[11px] font-bold uppercase tracking-[.16em] text-warm mb-4">The Growth System</p>
             <h1 className="text-[clamp(36px,5.5vw,72px)] font-bold leading-[1.05] tracking-tight text-ink max-w-[800px]">
-              One connected system.<br />
-              <span className="text-phoenix">Three connected jobs.</span>
+              Ads, follow-up, and reporting—working as one system.
             </h1>
             <p className="mt-6 max-w-[560px] text-[19px] leading-[1.65] text-warm">
               Most agencies sell isolated tactics. PhynyxPro connects advertising, follow-up, and operations so the team can coordinate them around shared data.

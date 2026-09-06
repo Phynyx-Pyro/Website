@@ -61,8 +61,8 @@ export function IndustriesHubClient() {
           <AnimatedSection>
             <p className="text-[11px] font-bold uppercase tracking-[.16em] text-warm mb-4">Industries</p>
             <h1 className="text-[clamp(36px,5.5vw,72px)] font-bold leading-[1.05] tracking-tight text-ink max-w-[800px]">
-              Chiropractic-first.<br />
-              <span className="text-phoenix">Adaptable to appointment-driven workflows.</span>
+              Built for chiropractic.{' '}
+              <span className="text-phoenix">Adaptable to other appointment-driven businesses.</span>
             </h1>
             <p className="mt-6 max-w-[560px] text-[19px] leading-[1.65] text-warm">
               Explore how the same response, booking, and recorded-outcome framework can be configured for different appointment-driven businesses.

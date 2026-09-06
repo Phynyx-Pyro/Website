@@ -27,8 +27,7 @@ export function ChiropracticClient() {
                 <p className="text-[11px] font-bold uppercase tracking-[.16em] text-phoenix">Chiropractic</p>
               </div>
               <h1 className="text-[clamp(36px,5vw,64px)] font-bold leading-[1.05] tracking-tight text-ink">
-                Operator-led in chiropractic.<br />
-                <span className="text-phoenix">Built around the patient journey.</span>
+                A patient acquisition system built around your front desk.
               </h1>
               <p className="mt-6 max-w-[500px] text-[19px] leading-[1.65] text-warm">
                 Andrew Higdon, DC, is a practicing chiropractor and PhynyxPro&apos;s founder/operator. The system focuses on the handoffs from first inquiry through Day 1 Show and Start Care.

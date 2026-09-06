@@ -59,8 +59,8 @@ export function CtaSection() {
               Bring the funnel numbers. Map the next move.
             </h2>
             <p className="mt-5 max-w-[540px] text-[15.5px] leading-[1.65] text-white/70 lg:mt-6 lg:text-[17.5px]">
-              Start with a short fit check. If there is a potential match, choose a time
-              for a working diagnostic focused on the handoffs between
+              Start with a 3-minute fit check. If there is a potential match, choose a time
+              for a 30-minute diagnostic focused on the handoffs between
               paid lead and patient outcome.
             </p>
             <div className="mt-7 grid gap-4 text-[12.5px] text-white/70 sm:grid-cols-3 lg:mt-8 lg:text-[13px]">
@@ -70,11 +70,11 @@ export function CtaSection() {
               </span>
               <span className="flex items-start gap-2.5">
                 <CalendarClock className="mt-0.5 h-4 w-4 shrink-0 text-flame" aria-hidden="true" />
-                Working diagnostic
+                30-minute diagnostic
               </span>
               <span className="flex items-start gap-2.5">
                 <ClipboardList className="mt-0.5 h-4 w-4 shrink-0 text-flame" aria-hidden="true" />
-                Bring last month&apos;s stage data
+                Bring the numbers you have
               </span>
             </div>
           </AnimatedSection>
@@ -153,11 +153,11 @@ export function CtaSection() {
                 data-cta-placement="homepage-quick-form"
                 className="mt-6 flex w-full items-center justify-center gap-3 rounded-lg bg-phoenix px-5 py-4 text-[14px] font-semibold text-white transition-colors hover:bg-ember focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phoenix focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 lg:text-[15px]"
               >
-                {submitting ? 'Opening the fit check…' : 'Book My Patient Acquisition Diagnostic'}
+                {submitting ? 'Opening the fit check…' : 'Continue to Fit Check'}
                 {!submitting && <ArrowRight className="h-4 w-4" aria-hidden="true" />}
               </button>
               <p className="mt-4 text-center text-[11px] leading-[1.5] text-warm lg:text-[11.5px]">
-                Your information is used only to evaluate fit and coordinate the diagnostic.
+                Your information is used only to evaluate fit and coordinate the diagnostic. Missing data is part of what we’ll map.
               </p>
             </form>
           </AnimatedSection>

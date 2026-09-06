@@ -17,8 +17,7 @@ export function HomeServicesClient() {
                 <p className="text-[11px] font-bold uppercase tracking-[.16em] text-phoenix">Home Services</p>
               </div>
               <h1 className="text-[clamp(36px,5vw,64px)] font-bold leading-[1.05] tracking-tight text-ink">
-                Connect the inquiry.<br />
-                <span className="text-phoenix">To scheduled work.</span>
+                Turn more inquiries into scheduled estimates and jobs.
               </h1>
               <p className="mt-6 max-w-[500px] text-[19px] leading-[1.65] text-warm">
                 Roofing, plumbing, and HVAC businesses depend on timely handoffs from inquiry to estimate request, scheduled work, and recorded outcome. PhynyxPro connects that workflow.

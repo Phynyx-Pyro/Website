@@ -36,7 +36,7 @@ const faqs = [
   },
   {
     q: 'What does this cost?',
-    a: 'The public site does not quote a package before scope and operational fit are reviewed. The diagnostic separates implementation, ongoing system operation, and paid media so the investment can be evaluated clearly.',
+    a: 'We’ll separate implementation, ongoing system operation, and ad spend so you can evaluate the investment clearly.',
   },
   {
     q: 'Do you guarantee patient volume?',

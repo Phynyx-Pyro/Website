@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Menu, X, ChevronDown } from 'lucide-react'
@@ -40,6 +40,7 @@ export function SiteHeader() {
   const [scrolled, setScrolled] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const mobileMenuButtonRef = useRef<HTMLButtonElement>(null)
   const pageIndustry = getIndustryForPath(pathname)
   const isAssessmentPage = pathname.startsWith('/growth-assessment')
   const healthcareAudience = pathname.startsWith(
@@ -63,10 +64,25 @@ export function SiteHeader() {
   useEffect(() => {
     if (mobileOpen) {
       document.body.style.overflow = 'hidden'
+      document.body.dataset.mobileMenuOpen = 'true'
     } else {
       document.body.style.overflow = ''
+      delete document.body.dataset.mobileMenuOpen
     }
-    return () => { document.body.style.overflow = '' }
+    window.dispatchEvent(new CustomEvent('phynyx:mobile-menu', { detail: mobileOpen }))
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || !mobileOpen) return
+      setMobileOpen(false)
+      window.requestAnimationFrame(() => mobileMenuButtonRef.current?.focus())
+    }
+    document.addEventListener('keydown', handleEscape)
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape)
+      document.body.style.overflow = ''
+      delete document.body.dataset.mobileMenuOpen
+    }
   }, [mobileOpen])
 
   return (
@@ -172,6 +188,7 @@ export function SiteHeader() {
 
         {/* Mobile menu button */}
         <button
+          ref={mobileMenuButtonRef}
           type="button"
           onClick={() => setMobileOpen(!mobileOpen)}
           className="lg:hidden flex h-10 w-10 items-center justify-center rounded-lg border border-black/10"

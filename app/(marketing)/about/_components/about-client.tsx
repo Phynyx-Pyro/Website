@@ -19,7 +19,7 @@ export function AboutClient() {
       <section className="bg-ivory grain-subtle pt-32 pb-20 md:pt-40 md:pb-28">
         <div className="mx-auto max-w-[1200px] px-6 lg:px-10">
           <div className="grid lg:grid-cols-12 gap-10 items-center">
-            <AnimatedSection className="lg:col-span-5">
+            <AnimatedSection className="order-2 lg:order-1 lg:col-span-5">
               <div className="relative overflow-hidden rounded-xl bg-ink text-white shadow-lift grain-dark">
                 <div className="relative flex aspect-[3/4] flex-col justify-between p-7 sm:p-9">
                   <div className="relative h-12 w-12">
@@ -39,10 +39,10 @@ export function AboutClient() {
               </div>
             </AnimatedSection>
 
-            <AnimatedSection className="lg:col-span-7" delay={150}>
+            <AnimatedSection className="order-1 lg:order-2 lg:col-span-7" delay={150}>
               <p className="text-[11px] font-bold uppercase tracking-[.16em] text-warm mb-4">About PhynyxPro</p>
               <h1 className="text-[clamp(36px,5vw,64px)] font-bold leading-[1.05] tracking-tight text-ink">
-                Led by a practicing chiropractor. <span className="text-phoenix">Focused on the handoffs.</span>
+                Built with a practicing chiropractor’s perspective.
               </h1>
               <p className="mt-6 text-[19px] leading-[1.65] text-warm">
                 Andrew Higdon, DC, is a practicing chiropractor and the founder of PhynyxPro. His operator perspective shapes a system centered on what happens between first inquiry, appointment request, attendance, and the recorded outcome.

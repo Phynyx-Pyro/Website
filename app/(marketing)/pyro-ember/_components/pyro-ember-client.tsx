@@ -38,7 +38,7 @@ export function PyroEmberClient() {
                 Your AI receptionist.
               </h1>
               <p className="mt-6 max-w-[480px] text-[19px] leading-[1.65] text-white/70">
-                PYRO coordinates response, qualification, appointment requests, confirmations, reminders, and reporting. Ember is the AI receptionist inside PYRO, handling approved conversations and handing off to staff when human judgment is needed.
+                Ember handles approved inquiries and scheduling requests. PYRO keeps the record, follow-up, and team handoff connected.
               </p>
               <div className="mt-8" aria-hidden="true">
                 <Waveform className="opacity-60" />

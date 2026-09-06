@@ -74,7 +74,7 @@ export function SupportClient() {
             <HelpCircle className="h-12 w-12 text-phoenix mx-auto mb-4" />
             <h1 className="text-[36px] font-bold text-ink">Contact PhynyxPro</h1>
             <p className="mt-3 text-[17px] leading-[1.65] text-warm">
-              Use this form to record a general question about your account, the PYRO platform, or PhynyxPro. It is not an emergency or guaranteed-response channel.
+              Send a question about PhynyxPro or your PYRO account. This is not an emergency or guaranteed-response channel.
             </p>
             <p className="mt-3 text-[14px] leading-[1.6] text-warm">
               Current clients with an urgent operational issue should use the contact route listed in their signed client agreement.
