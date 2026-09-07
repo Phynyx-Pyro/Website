@@ -17,7 +17,7 @@ export function HomeServicesClient() {
                 <p className="text-[11px] font-bold uppercase tracking-[.16em] text-phoenix">Home Services</p>
               </div>
               <h1 className="text-[clamp(36px,5vw,64px)] font-bold leading-[1.05] tracking-tight text-ink">
-                Turn more inquiries into scheduled estimates and jobs.
+                Turn More Inquiries Into Scheduled Estimates and Jobs
               </h1>
               <p className="mt-6 max-w-[500px] text-[19px] leading-[1.65] text-warm">
                 Roofing, plumbing, and HVAC businesses depend on timely handoffs from inquiry to estimate request, scheduled work, and recorded outcome. PhynyxPro connects that workflow.
@@ -46,7 +46,7 @@ export function HomeServicesClient() {
         <div className="mx-auto max-w-[1200px] px-6 lg:px-10">
           <AnimatedSection>
             <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink max-w-[600px]">
-              What the system does for home service businesses.
+              What the System Does for Home Service Businesses
             </h2>
           </AnimatedSection>
           <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -73,7 +73,7 @@ export function HomeServicesClient() {
       <section className="bg-ivory grain-subtle py-20 md:py-28">
         <div className="mx-auto max-w-[1200px] px-6 lg:px-10 text-center">
           <AnimatedSection>
-            <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink">Ready to tighten the path from inquiry to scheduled work?</h2>
+            <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink">Ready to Tighten the Path From Inquiry to Scheduled Work?</h2>
             <p className="mt-4 max-w-[500px] mx-auto text-[17px] leading-[1.65] text-warm">
               Start with a 3-minute fit check. If there may be a match, continue to a working diagnostic using last month&apos;s spend, leads, estimate or booking requests, scheduled visits, and completed jobs.
             </p>

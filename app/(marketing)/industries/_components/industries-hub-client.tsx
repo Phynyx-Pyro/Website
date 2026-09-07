@@ -61,8 +61,8 @@ export function IndustriesHubClient() {
           <AnimatedSection>
             <p className="text-[11px] font-bold uppercase tracking-[.16em] text-warm mb-4">Industries</p>
             <h1 className="text-[clamp(36px,5.5vw,72px)] font-bold leading-[1.05] tracking-tight text-ink max-w-[800px]">
-              Built for chiropractic.{' '}
-              <span className="text-phoenix">Adaptable to other appointment-driven businesses.</span>
+              Built for Chiropractic.{' '}
+              <span className="text-phoenix">Adaptable to Other Appointment-Driven Businesses</span>
             </h1>
             <p className="mt-6 max-w-[560px] text-[19px] leading-[1.65] text-warm">
               Explore how the same response, booking, and recorded-outcome framework can be configured for different appointment-driven businesses.
@@ -124,7 +124,7 @@ export function IndustriesHubClient() {
       <section className="bg-ivory grain-subtle py-20 md:py-28">
         <div className="mx-auto max-w-[1200px] px-6 lg:px-10 text-center">
           <AnimatedSection>
-            <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink">Not sure if PhynyxPro is right for your industry?</h2>
+            <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink">Not Sure if PhynyxPro Is Right for Your Industry?</h2>
             <p className="mt-4 max-w-[500px] mx-auto text-[17px] leading-[1.65] text-warm">
               Start with a 3-minute fit check. If there may be a match, continue to a working diagnostic with your current acquisition numbers and handoff questions.
             </p>

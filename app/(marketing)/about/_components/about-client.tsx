@@ -42,7 +42,7 @@ export function AboutClient() {
             <AnimatedSection className="order-1 lg:order-2 lg:col-span-7" delay={150}>
               <p className="text-[11px] font-bold uppercase tracking-[.16em] text-warm mb-4">About PhynyxPro</p>
               <h1 className="text-[clamp(36px,5vw,64px)] font-bold leading-[1.05] tracking-tight text-ink">
-                Built with a practicing chiropractor’s perspective.
+                Built With a Practicing Chiropractor’s Perspective
               </h1>
               <p className="mt-6 text-[19px] leading-[1.65] text-warm">
                 Andrew Higdon, DC, is a practicing chiropractor and the founder of PhynyxPro. His operator perspective shapes a system centered on what happens between first inquiry, appointment request, attendance, and the recorded outcome.
@@ -63,7 +63,7 @@ export function AboutClient() {
         <div className="mx-auto max-w-[1200px] px-6 lg:px-10">
           <AnimatedSection>
             <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink max-w-[500px]">
-              What we believe.
+              What We Believe
             </h2>
           </AnimatedSection>
           <div className="mt-12 grid sm:grid-cols-2 gap-6">
@@ -87,7 +87,7 @@ export function AboutClient() {
             <AnimatedSection>
               <Users className="h-8 w-8 text-phoenix mb-4" />
               <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink">
-                A working model built for clarity.
+                A Working Model Built for Clarity
               </h2>
               <p className="mt-5 text-[17px] leading-[1.65] text-warm">
                 The engagement model emphasizes documented responsibilities, visible handoffs, and a shared review cadence so the business and the operating team can work from the same record.
@@ -116,7 +116,7 @@ export function AboutClient() {
         <div className="mx-auto max-w-[1200px] px-6 lg:px-10 text-center">
           <AnimatedSection>
             <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink">
-              Let&apos;s find out if we&apos;re the right fit.
+              Let&apos;s Find Out if We&apos;re the Right Fit
             </h2>
             <p className="mt-4 max-w-[500px] mx-auto text-[17px] leading-[1.65] text-warm">
               Start with a 3-minute fit check. If there may be a match, continue to a working diagnostic with last month&apos;s acquisition numbers.

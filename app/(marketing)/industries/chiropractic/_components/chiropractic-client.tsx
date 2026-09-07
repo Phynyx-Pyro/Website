@@ -27,7 +27,7 @@ export function ChiropracticClient() {
                 <p className="text-[11px] font-bold uppercase tracking-[.16em] text-phoenix">Chiropractic</p>
               </div>
               <h1 className="text-[clamp(36px,5vw,64px)] font-bold leading-[1.05] tracking-tight text-ink">
-                A patient acquisition system built around your front desk.
+                A Patient Acquisition System Built Around Your Front Desk
               </h1>
               <p className="mt-6 max-w-[500px] text-[19px] leading-[1.65] text-warm">
                 Andrew Higdon, DC, is a practicing chiropractor and PhynyxPro&apos;s founder/operator. The system focuses on the handoffs from first inquiry through Day 1 Show and Start Care.
@@ -58,7 +58,7 @@ export function ChiropracticClient() {
         <div className="mx-auto max-w-[1200px] px-6 lg:px-10">
           <AnimatedSection>
             <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink max-w-[600px]">
-              Common handoff breakdowns in chiropractic practices.
+              Common Handoff Breakdowns in Chiropractic Practices
             </h2>
           </AnimatedSection>
           <div className="mt-12 grid sm:grid-cols-2 gap-6">
@@ -81,7 +81,7 @@ export function ChiropracticClient() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <AnimatedSection>
               <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink">
-                The system that closes the gap.
+                The System That Closes the Gap
               </h2>
               <p className="mt-5 text-[17px] leading-[1.65] text-warm">
                 PhynyxPro connects paid acquisition with response, qualification, appointment requests, staff confirmation, reminders, and reporting. When an inquiry arrives by phone, chat, or form, PYRO coordinates the workflow and Ember can handle the approved conversation. Connected records make it easier to review requests, confirmed appointments, shows, and starts.
@@ -119,7 +119,7 @@ export function ChiropracticClient() {
           <AnimatedSection>
             <Bot className="h-10 w-10 text-phoenix mx-auto mb-4" />
             <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-white">
-              Meet Ember. Configured help for after-hours inquiries.
+              Meet Ember. Configured Help for After-Hours Inquiries
             </h2>
             <p className="mt-4 max-w-[520px] mx-auto text-[17px] leading-[1.65] text-white/70">
               When an inquiry arrives after hours, Ember can respond, gather approved details, and route an appointment request. PYRO records the known outcome, and your team can take over when human judgment is needed.
@@ -142,7 +142,7 @@ export function ChiropracticClient() {
         <div className="mx-auto max-w-[1200px] px-6 lg:px-10 text-center">
           <AnimatedSection>
             <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink">
-              Ready to grow your practice?
+              Ready to Grow Your Practice?
             </h2>
             <p className="mt-4 max-w-[500px] mx-auto text-[17px] leading-[1.65] text-warm">
               Start with a 3-minute fit check. If your practice may be a fit, the next step is a working diagnostic to review last month&apos;s spend, leads, appointment requests, shows, and starts.

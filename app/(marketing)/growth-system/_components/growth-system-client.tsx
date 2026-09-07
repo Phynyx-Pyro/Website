@@ -24,7 +24,7 @@ export function GrowthSystemClient() {
           <AnimatedSection>
             <p className="text-[11px] font-bold uppercase tracking-[.16em] text-warm mb-4">The Growth System</p>
             <h1 className="text-[clamp(36px,5.5vw,72px)] font-bold leading-[1.05] tracking-tight text-ink max-w-[800px]">
-              Ads, follow-up, and reporting—working as one system.
+              Ads, Follow-Up, and Reporting—Working as One System
             </h1>
             <p className="mt-6 max-w-[560px] text-[19px] leading-[1.65] text-warm">
               Most agencies sell isolated tactics. PhynyxPro connects advertising, follow-up, and operations so the team can coordinate them around shared data.
@@ -52,7 +52,7 @@ export function GrowthSystemClient() {
           <AnimatedSection>
             <p className="text-[11px] font-bold uppercase tracking-[.16em] text-warm mb-3">Visibility Across the Journey</p>
             <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink max-w-[600px]">
-              Keep requests, confirmations, and outcomes distinct.
+              Keep Requests, Confirmations, and Outcomes Distinct
             </h2>
           </AnimatedSection>
 
@@ -211,7 +211,7 @@ export function GrowthSystemClient() {
       <section className="bg-ivory grain-subtle py-20 md:py-28">
         <div className="mx-auto max-w-[1200px] px-6 lg:px-10 text-center">
           <AnimatedSection>
-            <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink">The system is the advantage.</h2>
+            <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink">The System Is the Advantage</h2>
             <p className="mt-5 max-w-[580px] mx-auto text-[17px] leading-[1.65] text-warm">
               Isolated tactics create fragmented workflows. When advertising, response, and appointment operations share the same data and strategy, the three functions are easier to coordinate and improve.
             </p>

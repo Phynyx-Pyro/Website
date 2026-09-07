@@ -5,7 +5,7 @@ import { AnimatedSection } from '../../_components/animated-section'
 const stages = [
   {
     period: 'Before day one',
-    title: 'Onboarding complete',
+    title: 'Onboarding Complete',
     description:
       'We confirm the inputs, access, and approvals required to start the core build.',
     details: [
@@ -16,7 +16,7 @@ const stages = [
   },
   {
     period: 'Days 1–3',
-    title: 'Campaign build',
+    title: 'Campaign Build',
     description:
       'We build the campaign strategy, Meta lead flow, creative, and source tracking.',
     details: [
@@ -27,7 +27,7 @@ const stages = [
   },
   {
     period: 'Days 4–7',
-    title: 'System configuration',
+    title: 'System Configuration',
     description:
       'We connect the pipeline, calendar, automations, and included handoff rules.',
     details: [
@@ -38,7 +38,7 @@ const stages = [
   },
   {
     period: 'Days 8–10',
-    title: 'QA and launch-ready',
+    title: 'QA and Launch-Ready',
     description:
       'We test the end-to-end journey, confirm ownership, and prepare for a controlled launch.',
     details: [
@@ -66,7 +66,7 @@ export function ImplementationTimeline() {
               id="implementation-timeline-heading"
               className="max-w-[720px] text-[36px] font-bold leading-[.98] tracking-[-.04em] lg:text-[52px]"
             >
-              Your core acquisition system, built in 7–10 days.
+              Your Core Acquisition System, Built in 7–10 Days
             </h2>
           </AnimatedSection>
 

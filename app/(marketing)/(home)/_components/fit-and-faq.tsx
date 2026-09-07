@@ -62,7 +62,7 @@ export function FitAndFaq() {
             <AnimatedSection>
               <p className="mb-4 text-[11px] font-bold uppercase tracking-[.2em] text-ember lg:mb-5">Selective fit</p>
               <h2 className="text-[34px] font-bold leading-[.98] tracking-[-.04em] lg:text-[48px]">
-                Built for established chiropractic practices.
+                Built for Established Chiropractic Practices
               </h2>
               <p className="mt-4 max-w-[430px] text-[15.5px] leading-[1.6] text-warm lg:mt-5 lg:text-[17px]">
                 The fit check compares stated revenue and monthly marketing budget with

@@ -41,7 +41,7 @@ export function FounderStory() {
             <AnimatedSection>
               <p className="mb-4 text-[11px] font-bold uppercase tracking-[.2em] text-phoenix lg:mb-5">Why the model is different</p>
               <h2 className="text-[36px] font-bold leading-[.98] tracking-[-.04em] lg:text-[50px]">
-                Built around the realities of a chiropractic front desk.
+                Built Around the Realities of a Chiropractic Front Desk
               </h2>
               <p className="mt-5 text-[15.5px] leading-[1.65] text-warm lg:mt-6 lg:text-[17px]">
                 Andrew Higdon, DC, is a practicing chiropractor and the founder of

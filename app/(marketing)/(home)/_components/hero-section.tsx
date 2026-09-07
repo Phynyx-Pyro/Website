@@ -40,9 +40,9 @@ export function HeroSection() {
 
             <AnimatedSection delay={80}>
               <h1 className="max-w-[720px] text-[42px] font-bold leading-[.98] tracking-[-.045em] sm:text-[54px] xl:text-[69px]">
-                From ad click to{' '}
+                From Ad Click to{' '}
                 <span className="relative inline-block">
-                  first visit.
+                  First Visit
                   <span className="absolute -bottom-1 left-0 h-[9px] w-full rounded-full bg-phoenix/25" aria-hidden="true" />
                 </span>
               </h1>

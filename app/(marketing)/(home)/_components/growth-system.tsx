@@ -27,7 +27,7 @@ export function GrowthSystem() {
             <AnimatedSection>
               <p className="mb-4 text-[11px] font-bold uppercase tracking-[.2em] text-ember lg:mb-5">The PhynyxPro system</p>
               <h2 className="text-[38px] font-bold leading-[.95] tracking-[-.042em] lg:text-[58px]">
-                One operating system. <span className="block">Three jobs.</span>
+                One Operating System. <span className="block">Three Jobs</span>
               </h2>
             </AnimatedSection>
           </div>
@@ -49,7 +49,7 @@ export function GrowthSystem() {
                 <span className="text-[13px] font-bold tracking-[.14em] text-phoenix">01</span>
                 <span className="text-[11px] font-bold uppercase tracking-[.16em] text-warm">Attract</span>
               </div>
-              <h3 className="mt-3 text-[25px] font-bold leading-[1.02] tracking-[-.03em] lg:mt-4 lg:text-[30px]">Build demand for your market.</h3>
+              <h3 className="mt-3 text-[25px] font-bold leading-[1.02] tracking-[-.03em] lg:mt-4 lg:text-[30px]">Build Demand for Your Market</h3>
               <p className="mt-3 text-[14.5px] leading-[1.6] text-warm lg:text-[15px]">
                 Managed paid acquisition, offer strategy, creative, and landing pages
                 designed for chiropractic new-patient demand.
@@ -80,7 +80,7 @@ export function GrowthSystem() {
                 <span className="text-[13px] font-bold tracking-[.14em] text-flame">02</span>
                 <span className="text-[11px] font-bold uppercase tracking-[.16em] text-white/60">Convert</span>
               </div>
-              <h3 className="mt-3 text-[25px] font-bold leading-[1.02] tracking-[-.03em] lg:mt-4 lg:text-[30px]">Give qualified inquiries a defined next step.</h3>
+              <h3 className="mt-3 text-[25px] font-bold leading-[1.02] tracking-[-.03em] lg:mt-4 lg:text-[30px]">Give Qualified Inquiries a Defined Next Step</h3>
               <p className="mt-3 text-[14.5px] leading-[1.6] text-white/70 lg:text-[15px]">
                 PYRO coordinates response, qualification, booking, confirmation,
                 reminders, and the handoff to your team.
@@ -103,7 +103,7 @@ export function GrowthSystem() {
                 <span className="text-[13px] font-bold tracking-[.14em] text-phoenix">03</span>
                 <span className="text-[11px] font-bold uppercase tracking-[.16em] text-warm">Operate &amp; improve</span>
               </div>
-              <h3 className="mt-3 text-[25px] font-bold leading-[1.02] tracking-[-.03em] lg:mt-4 lg:text-[30px]">Use the full journey to make decisions.</h3>
+              <h3 className="mt-3 text-[25px] font-bold leading-[1.02] tracking-[-.03em] lg:mt-4 lg:text-[30px]">Use the Full Journey to Make Decisions</h3>
               <p className="mt-3 text-[14.5px] leading-[1.6] text-warm lg:text-[15px]">
                 Review campaign activity alongside the appointment and patient stages
                 your practice records—without presenting ad-platform leads as outcomes.

@@ -6,19 +6,19 @@ import { ArrowRight, CalendarCheck, ClipboardCheck, MousePointerClick } from 'lu
 const handoffs = [
   {
     label: 'Lead captured',
-    title: 'The campaign did its job.',
+    title: 'The Campaign Did Its Job',
     description: 'Source and offer context enter the pipeline with the inquiry.',
     icon: MousePointerClick,
   },
   {
     label: 'Appointment request',
-    title: 'The handoff decides what happens next.',
+    title: 'The Handoff Decides What Happens Next',
     description: 'Response, qualification, and booking remove avoidable friction.',
     icon: CalendarCheck,
   },
   {
     label: 'Verified outcome',
-    title: 'The practice closes the loop.',
+    title: 'The Practice Closes the Loop',
     description: 'Confirmed, Day 1 Show, and Start Care are recorded separately.',
     icon: ClipboardCheck,
   },
@@ -39,7 +39,7 @@ export function ProblemReframe() {
           <AnimatedSection>
             <p className="mb-4 text-[11px] font-bold uppercase tracking-[.2em] text-ember lg:mb-5">The reframe</p>
             <h2 className="max-w-[520px] text-[38px] font-bold leading-[.96] tracking-[-.04em] lg:text-[58px]">
-              Buying more leads cannot fix what happens <span className="text-phoenix">after the click.</span>
+              Buying More Leads Cannot Fix What Happens <span className="text-phoenix">After the Click</span>
             </h2>
             <p className="mt-5 max-w-[470px] text-[15.5px] leading-[1.62] text-warm lg:mt-6 lg:text-[17px]">
               A campaign can fill the inbox while slow response, unclear qualification,

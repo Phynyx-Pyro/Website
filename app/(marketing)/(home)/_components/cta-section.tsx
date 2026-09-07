@@ -56,7 +56,7 @@ export function CtaSection() {
           <AnimatedSection>
             <p className="mb-4 text-[11px] font-bold uppercase tracking-[.2em] text-flame lg:mb-5">Patient acquisition diagnostic</p>
             <h2 className="text-[36px] font-bold leading-[.96] tracking-[-.042em] lg:text-[54px]">
-              Bring the funnel numbers. Map the next move.
+              Bring the Funnel Numbers. Map the Next Move
             </h2>
             <p className="mt-5 max-w-[540px] text-[15.5px] leading-[1.65] text-white/70 lg:mt-6 lg:text-[17.5px]">
               Start with a 3-minute fit check. If there is a potential match, choose a time

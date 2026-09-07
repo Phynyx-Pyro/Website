@@ -52,7 +52,7 @@ export function JourneySection() {
           <AnimatedSection>
             <p className="mb-4 text-[11px] font-bold uppercase tracking-[.2em] text-phoenix">The measurable journey</p>
             <h2 className="max-w-[720px] text-[36px] font-bold leading-[.98] tracking-[-.04em] lg:text-[52px]">
-              One path. Five stages your practice can actually see.
+              One Path. Five Stages Your Practice Can Actually See
             </h2>
           </AnimatedSection>
           <AnimatedSection delay={100}>

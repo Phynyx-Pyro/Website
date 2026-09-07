@@ -90,7 +90,7 @@ export function PyroSection() {
               PYRO + Ember
             </p>
             <h2 className="max-w-[420px] text-[38px] font-bold leading-[.99] tracking-[-.04em] sm:text-[44px] lg:text-[46px]">
-              PYRO runs the workflow. Ember handles the conversation.
+              PYRO Runs the Workflow. Ember Handles the Conversation
             </h2>
             <p className="mt-5 max-w-[390px] text-[15.5px] leading-[1.65] text-white/70 lg:text-[16px]">
               PYRO is the platform connecting response, qualification, appointment
@@ -109,7 +109,7 @@ export function PyroSection() {
               <ol className="relative z-10 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-[1.2fr_1.03fr_1.03fr_.95fr_.9fr] lg:gap-0">
 
               <li className="relative min-h-[310px] rounded-xl border border-white/10 bg-white/[.025] p-4 lg:min-h-[338px] lg:rounded-none lg:border-0 lg:bg-transparent lg:px-3 lg:py-0">
-                <h3 className="text-center text-[12px] font-medium text-white/70">Active inquiry</h3>
+                <h3 className="text-center text-[12px] font-medium text-white/70">Active Inquiry</h3>
                 <div className="relative mt-3 min-h-[258px]">
                   <div className="pointer-events-none absolute left-[96px] right-[-12px] top-[70px] z-0 h-[104px] overflow-visible lg:hidden" aria-hidden="true">
                     <Waveform size="small" className="h-full w-full opacity-95" />
@@ -145,7 +145,7 @@ export function PyroSection() {
               </li>
 
               <li className="relative rounded-xl border border-white/10 bg-white/[.025] p-4 lg:rounded-none lg:border-y-0 lg:border-r-0 lg:border-l lg:border-l-white/10 lg:bg-transparent lg:px-3 lg:py-0">
-                <h3 className="text-center text-[12px] font-medium text-white/70">Appointment request</h3>
+                <h3 className="text-center text-[12px] font-medium text-white/70">Appointment Request</h3>
                 <div className="relative z-10 mt-7 space-y-3 lg:mt-8">
                   {appointmentBubbles.map((bubble) => (
                     <ConversationBubble key={bubble.text} {...bubble} />

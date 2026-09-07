@@ -23,7 +23,7 @@ export function ResultsClient() {
           <AnimatedSection>
             <p className="text-[11px] font-bold uppercase tracking-[.16em] text-warm mb-4">Measurement Approach</p>
             <h1 className="text-[clamp(36px,5.5vw,72px)] font-bold leading-[1.05] tracking-tight text-ink max-w-[800px]">
-              See the full journey.<br /><span className="text-phoenix">Not just the first click.</span>
+              See the Full Journey.<br /><span className="text-phoenix">Not Just the First Click</span>
             </h1>
             <p className="mt-6 max-w-[560px] text-[19px] leading-[1.65] text-warm">
               PhynyxPro connects available campaign, response, appointment, and outcome data so your team can see where follow-up needs attention.
@@ -37,7 +37,7 @@ export function ResultsClient() {
           <AnimatedSection>
             <p className="text-[11px] font-bold uppercase tracking-[.16em] text-warm mb-3">Measurement Framework</p>
             <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink max-w-[600px]">
-              From campaign spend to recorded outcomes.
+              From Campaign Spend to Recorded Outcomes
             </h2>
             <p className="mt-4 max-w-[540px] text-[17px] leading-[1.65] text-warm">
               Clicks and impressions are only the beginning. We connect early indicators to appointment and revenue outcomes when the underlying data is available.
@@ -71,7 +71,7 @@ export function ResultsClient() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <AnimatedSection>
               <Eye className="h-8 w-8 text-phoenix mb-4" />
-              <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink">Transparency is the methodology.</h2>
+              <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink">Transparency Is the Methodology</h2>
               <p className="mt-5 text-[17px] leading-[1.65] text-warm">
                 Connected reporting keeps available spend, lead, appointment, and outcome data visible in one place.
               </p>
@@ -93,7 +93,7 @@ export function ResultsClient() {
       <section className="bg-night grain-dark text-white py-20 md:py-28">
         <div className="mx-auto max-w-[1200px] px-6 lg:px-10">
           <AnimatedSection>
-            <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-white text-center">What the reporting view is designed to include.</h2>
+            <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-white text-center">What the Reporting View Is Designed to Include</h2>
           </AnimatedSection>
           <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
@@ -119,7 +119,7 @@ export function ResultsClient() {
       <section className="bg-linen py-20 md:py-28">
         <div className="mx-auto max-w-[1200px] px-6 lg:px-10 text-center">
           <AnimatedSection>
-            <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink">Ready to map your current acquisition path?</h2>
+            <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink">Ready to Map Your Current Acquisition Path?</h2>
             <p className="mt-4 max-w-[500px] mx-auto text-[17px] leading-[1.65] text-warm">
               Start with a 3-minute fit check. If aligned, bring last month&apos;s spend, leads, requests, completed appointments or jobs, and recorded outcomes to the working diagnostic.
             </p>

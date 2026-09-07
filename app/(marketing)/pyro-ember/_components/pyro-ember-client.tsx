@@ -35,7 +35,7 @@ export function PyroEmberClient() {
               <p className="text-[11px] font-bold uppercase tracking-[.16em] text-flame mb-4">PYRO by PhynyxPro</p>
               <h1 className="text-[clamp(36px,5vw,64px)] font-bold leading-[1.05] tracking-tight text-white">
                 Meet <span className="text-flame">Ember.</span><br />
-                Your AI receptionist.
+                Your AI Receptionist
               </h1>
               <p className="mt-6 max-w-[480px] text-[19px] leading-[1.65] text-white/70">
                 Ember handles approved inquiries and scheduling requests. PYRO keeps the record, follow-up, and team handoff connected.
@@ -117,7 +117,7 @@ export function PyroEmberClient() {
         <div className="mx-auto max-w-[1200px] px-6 lg:px-10">
           <AnimatedSection>
             <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink max-w-[600px]">
-              How PYRO supports the acquisition workflow.
+              How PYRO Supports the Acquisition Workflow
             </h2>
             <p className="mt-4 max-w-[540px] text-[17px] leading-[1.65] text-warm">
               PYRO is the operating platform inside the PhynyxPro system. Ember is the AI receptionist inside PYRO.
@@ -145,7 +145,7 @@ export function PyroEmberClient() {
             <AnimatedSection>
               <Headphones className="h-8 w-8 text-flame mb-4" />
               <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-white">
-                Designed for natural conversation.<br />Built for clear handoff.
+                Designed for Natural Conversation.<br />Built for Clear Handoff
               </h2>
               <p className="mt-5 text-[17px] leading-[1.65] text-white/70">
                 Ember can support configured inbound call flows, gather approved details, and route conversations to staff when human judgment is needed.
@@ -193,7 +193,7 @@ export function PyroEmberClient() {
             <div className="max-w-[600px] mx-auto text-center">
               <p className="text-[11px] font-bold uppercase tracking-[.16em] text-warm mb-3">How access works</p>
               <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink">
-                Configured around the workflow.
+                Configured Around the Workflow
               </h2>
               <div className="mt-8 rounded-2xl bg-ivory p-8 shadow-xl">
                 <p className="text-[28px] font-bold text-ink">PYRO is deployed as part of PhynyxPro.</p>
@@ -214,7 +214,7 @@ export function PyroEmberClient() {
         <div className="mx-auto max-w-[1200px] px-6 lg:px-10 text-center">
           <AnimatedSection>
             <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink">
-              Map PYRO and Ember into your current handoffs.
+              Map PYRO and Ember Into Your Current Handoffs
             </h2>
             <p className="mt-4 max-w-[500px] mx-auto text-[17px] leading-[1.65] text-warm">
               Start with a 3-minute fit check. If the business may be a fit, the next step is a working diagnostic to review the current journey and next steps.

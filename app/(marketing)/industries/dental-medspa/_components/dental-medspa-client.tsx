@@ -17,7 +17,7 @@ export function DentalMedspaClient() {
                 <p className="text-[11px] font-bold uppercase tracking-[.16em] text-phoenix">Dental & Medspa</p>
               </div>
               <h1 className="text-[clamp(36px,5vw,64px)] font-bold leading-[1.05] tracking-tight text-ink">
-                Turn more consultation inquiries into attended visits.
+                Turn More Consultation Inquiries Into Attended Visits
               </h1>
               <p className="mt-6 max-w-[500px] text-[19px] leading-[1.65] text-warm">
                 High-consideration appointments need a clear path from inquiry to staff handoff, scheduling, reminders, and a recorded outcome. PhynyxPro connects that workflow.
@@ -46,7 +46,7 @@ export function DentalMedspaClient() {
         <div className="mx-auto max-w-[1200px] px-6 lg:px-10">
           <AnimatedSection>
             <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink max-w-[600px]">
-              How the workflow supports dental and medspa teams.
+              How the Workflow Supports Dental and Medspa Teams
             </h2>
           </AnimatedSection>
           <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -73,7 +73,7 @@ export function DentalMedspaClient() {
       <section className="bg-ivory grain-subtle py-20 md:py-28">
         <div className="mx-auto max-w-[1200px] px-6 lg:px-10 text-center">
           <AnimatedSection>
-            <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink">Ready to map the path from request to confirmed appointment?</h2>
+            <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink">Ready to Map the Path From Request to Confirmed Appointment?</h2>
             <p className="mt-4 max-w-[500px] mx-auto text-[17px] leading-[1.65] text-warm">
               Start with a 3-minute fit check. If there may be a match, continue to a working diagnostic using last month&apos;s spend, leads, appointment requests, visits, and recorded outcomes.
             </p>

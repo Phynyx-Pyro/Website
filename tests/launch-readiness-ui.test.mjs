@@ -9,8 +9,8 @@ test('homepage hero uses the approved promise, support, and diagnostic explanati
     '../app/(marketing)/(home)/_components/hero-section.tsx',
   )
 
-  assert.match(source, /Turn more ad leads into/)
-  assert.match(source, /patients who show up\./)
+  assert.match(source, /From Ad Click to/)
+  assert.match(source, /First Visit/)
   assert.match(
     source,
     /We run your Meta ads and connect rapid response, booking, reminders, and team handoffs\. Track each lead from campaign source through confirmed appointments, first visits, and starts of care\./,
@@ -64,12 +64,12 @@ test('assessment validates contact fields and explains timing, thresholds, and p
 
 test('launch page headings and support opening use the approved copy', async () => {
   const expected = [
-    ['../app/(marketing)/growth-system/_components/growth-system-client.tsx', 'Ads, follow-up, and reporting—working as one system.'],
-    ['../app/(marketing)/industries/_components/industries-hub-client.tsx', 'Built for chiropractic.'],
-    ['../app/(marketing)/industries/chiropractic/_components/chiropractic-client.tsx', 'A patient acquisition system built around your front desk.'],
-    ['../app/(marketing)/industries/dental-medspa/_components/dental-medspa-client.tsx', 'Turn more consultation inquiries into attended visits.'],
-    ['../app/(marketing)/industries/home-services/_components/home-services-client.tsx', 'Turn more inquiries into scheduled estimates and jobs.'],
-    ['../app/(marketing)/about/_components/about-client.tsx', 'Built with a practicing chiropractor’s perspective.'],
+    ['../app/(marketing)/growth-system/_components/growth-system-client.tsx', 'Ads, Follow-Up, and Reporting—Working as One System'],
+    ['../app/(marketing)/industries/_components/industries-hub-client.tsx', 'Built for Chiropractic.'],
+    ['../app/(marketing)/industries/chiropractic/_components/chiropractic-client.tsx', 'A Patient Acquisition System Built Around Your Front Desk'],
+    ['../app/(marketing)/industries/dental-medspa/_components/dental-medspa-client.tsx', 'Turn More Consultation Inquiries Into Attended Visits'],
+    ['../app/(marketing)/industries/home-services/_components/home-services-client.tsx', 'Turn More Inquiries Into Scheduled Estimates and Jobs'],
+    ['../app/(marketing)/about/_components/about-client.tsx', 'Built With a Practicing Chiropractor’s Perspective'],
     ['../app/(marketing)/pyro-ember/_components/pyro-ember-client.tsx', 'Ember handles approved inquiries and scheduling requests. PYRO keeps the record, follow-up, and team handoff connected.'],
     ['../app/(marketing)/support/_components/support-client.tsx', 'Send a question about PhynyxPro or your PYRO account.'],
   ]

@@ -350,7 +350,7 @@ export function GrowthAssessmentClient() {
         <div className="mx-auto max-w-[800px] px-6 text-center">
           <AnimatedSection>
             <h1 className="text-[clamp(32px,5vw,56px)] font-bold leading-[1.05] tracking-tight text-ink">
-              Start your <span className="text-phoenix">{diagnosticName}.</span>
+              Start Your <span className="text-phoenix">{diagnosticName}</span>
             </h1>
             <p className="mt-5 max-w-[560px] mx-auto text-[17px] leading-[1.65] text-warm">
               Start with a 3-minute fit check, then choose a time for a 30-minute diagnostic focused on the gaps between {journeyCopy.stages}.
@@ -419,7 +419,7 @@ export function GrowthAssessmentClient() {
           {step === 1 && (
             <AnimatedSection>
               <div className="rounded-2xl bg-white p-8 shadow-xl">
-                <h2 ref={stepHeadingRef} tabIndex={-1} className="text-[22px] font-semibold text-ink mb-6 outline-none">About you</h2>
+                <h2 ref={stepHeadingRef} tabIndex={-1} className="text-[22px] font-semibold text-ink mb-6 outline-none">About You</h2>
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -465,7 +465,7 @@ export function GrowthAssessmentClient() {
           {step === 2 && (
             <AnimatedSection>
               <div className="rounded-2xl bg-white p-8 shadow-xl">
-                <h2 ref={stepHeadingRef} tabIndex={-1} className="text-[22px] font-semibold text-ink mb-6 outline-none">About your business</h2>
+                <h2 ref={stepHeadingRef} tabIndex={-1} className="text-[22px] font-semibold text-ink mb-6 outline-none">About Your Business</h2>
                 <div className="space-y-4">
                   <div>
                     <label htmlFor="assessment-business-name" className="block text-[13px] font-medium text-ink mb-1.5">Business Name *</label>
@@ -519,7 +519,7 @@ export function GrowthAssessmentClient() {
           {step === 3 && (
             <AnimatedSection>
               <div className="rounded-2xl bg-white p-8 shadow-xl">
-                <h2 ref={stepHeadingRef} tabIndex={-1} className="text-[22px] font-semibold text-ink mb-6 outline-none">Your growth context</h2>
+                <h2 ref={stepHeadingRef} tabIndex={-1} className="text-[22px] font-semibold text-ink mb-6 outline-none">Your Growth Context</h2>
                 <div className="space-y-4">
                   <div>
                     <label htmlFor="assessment-biggest-challenge" className="block text-[13px] font-medium text-ink mb-1.5">Biggest challenge right now</label>
