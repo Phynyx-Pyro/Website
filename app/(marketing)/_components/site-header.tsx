@@ -41,6 +41,7 @@ export function SiteHeader() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const mobileMenuButtonRef = useRef<HTMLButtonElement>(null)
+  const mobileMenuRef = useRef<HTMLDivElement>(null)
   const pageIndustry = getIndustryForPath(pathname)
   const isAssessmentPage = pathname.startsWith('/growth-assessment')
   const healthcareAudience = pathname.startsWith(
@@ -62,24 +63,60 @@ export function SiteHeader() {
   }, [])
 
   useEffect(() => {
+    let focusFrame: number | undefined
+
     if (mobileOpen) {
       document.body.style.overflow = 'hidden'
       document.body.dataset.mobileMenuOpen = 'true'
+      focusFrame = window.requestAnimationFrame(() => {
+        mobileMenuRef.current?.querySelector<HTMLElement>('a[href], button:not([disabled])')?.focus()
+      })
     } else {
       document.body.style.overflow = ''
       delete document.body.dataset.mobileMenuOpen
     }
     window.dispatchEvent(new CustomEvent('phynyx:mobile-menu', { detail: mobileOpen }))
 
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape' || !mobileOpen) return
-      setMobileOpen(false)
-      window.requestAnimationFrame(() => mobileMenuButtonRef.current?.focus())
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!mobileOpen) return
+
+      if (event.key === 'Escape') {
+        setMobileOpen(false)
+        window.requestAnimationFrame(() => mobileMenuButtonRef.current?.focus())
+        return
+      }
+
+      if (event.key !== 'Tab') return
+
+      const menu = mobileMenuRef.current
+      const focusable = Array.from(
+        menu?.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ) ?? [],
+      ).filter((element) => element.offsetParent !== null)
+
+      if (focusable.length === 0) {
+        event.preventDefault()
+        return
+      }
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      const activeElement = document.activeElement
+
+      if (event.shiftKey && (activeElement === first || !menu?.contains(activeElement))) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && (activeElement === last || !menu?.contains(activeElement))) {
+        event.preventDefault()
+        first.focus()
+      }
     }
-    document.addEventListener('keydown', handleEscape)
+    document.addEventListener('keydown', handleKeyDown)
 
     return () => {
-      document.removeEventListener('keydown', handleEscape)
+      document.removeEventListener('keydown', handleKeyDown)
+      if (focusFrame !== undefined) window.cancelAnimationFrame(focusFrame)
       document.body.style.overflow = ''
       delete document.body.dataset.mobileMenuOpen
     }
@@ -203,7 +240,7 @@ export function SiteHeader() {
 
       {/* Mobile overlay */}
       {mobileOpen && (
-        <div id="mobile-site-menu" className="fixed inset-0 top-[84px] z-[45] bg-ivory overflow-y-auto lg:hidden">
+        <div ref={mobileMenuRef} id="mobile-site-menu" className="fixed inset-0 top-[84px] z-[45] bg-ivory overflow-y-auto lg:hidden">
           <div className="px-6 py-8 space-y-2">
             {navLinks?.map((link: any) => (
               <div key={link?.href}>

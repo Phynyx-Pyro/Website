@@ -59,7 +59,7 @@ export function ImplementationTimeline() {
       <div className="mx-auto max-w-[1320px] px-5 lg:px-10">
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-12 lg:items-end lg:gap-10">
           <AnimatedSection className="lg:col-span-7">
-            <p className="mb-4 text-[11px] font-bold uppercase tracking-[.2em] text-phoenix">
+            <p className="mb-4 text-[11px] font-bold uppercase tracking-[.2em] text-ember">
               THE FIRST 7–10 DAYS
             </p>
             <h2

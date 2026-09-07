@@ -27,17 +27,17 @@ const handoffs = [
 export function ProblemReframe() {
   return (
     <section className="relative overflow-hidden bg-linen py-14 lg:py-[92px]">
-      <p className="font-hand pointer-events-none absolute left-[46px] top-[64px] hidden -rotate-[7deg] text-[25px] font-semibold text-phoenix/70 lg:block">
+      <p className="font-hand pointer-events-none absolute left-[46px] top-[64px] hidden -rotate-[7deg] text-[25px] font-semibold text-ember lg:block">
         this is where ad budget leaks →
       </p>
-      <p className="font-hand mb-4 -rotate-[3deg] px-5 text-[20px] font-semibold text-phoenix lg:hidden">
+      <p className="font-hand mb-4 -rotate-[3deg] px-5 text-[20px] font-semibold text-ember lg:hidden">
         this is where ad budget leaks
       </p>
 
       <div className="mx-auto grid max-w-[1320px] grid-cols-1 items-center gap-9 px-5 lg:grid-cols-12 lg:gap-10 lg:px-10">
         <div className="lg:col-span-5">
           <AnimatedSection>
-            <p className="mb-4 text-[11px] font-bold uppercase tracking-[.2em] text-phoenix lg:mb-5">The reframe</p>
+            <p className="mb-4 text-[11px] font-bold uppercase tracking-[.2em] text-ember lg:mb-5">The reframe</p>
             <h2 className="max-w-[520px] text-[38px] font-bold leading-[.96] tracking-[-.04em] lg:text-[58px]">
               Buying more leads cannot fix what happens <span className="text-phoenix">after the click.</span>
             </h2>

@@ -25,7 +25,7 @@ export function GrowthSystem() {
         <div className="grid grid-cols-1 items-end gap-6 lg:grid-cols-12 lg:gap-10">
           <div className="lg:col-span-7">
             <AnimatedSection>
-              <p className="mb-4 text-[11px] font-bold uppercase tracking-[.2em] text-phoenix lg:mb-5">The PhynyxPro system</p>
+              <p className="mb-4 text-[11px] font-bold uppercase tracking-[.2em] text-ember lg:mb-5">The PhynyxPro system</p>
               <h2 className="text-[38px] font-bold leading-[.95] tracking-[-.042em] lg:text-[58px]">
                 One operating system. <span className="block">Three jobs.</span>
               </h2>
@@ -88,7 +88,7 @@ export function GrowthSystem() {
               <ol className="mt-6 space-y-2.5 lg:mt-7">
                 {['New lead enters PYRO', 'Ember begins the approved conversation', 'Appointment request reaches the calendar', 'Confirmation, reminders, and human handoff'].map((item, index) => (
                   <li key={item} className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/[.045] px-3.5 py-3">
-                    <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[9px] font-bold ${index === 2 ? 'bg-flame text-white' : 'bg-white/[.08] text-white/60'}`}>{index + 1}</span>
+                    <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[9px] font-bold ${index === 2 ? 'bg-phoenix text-white' : 'bg-white/[.08] text-white/60'}`}>{index + 1}</span>
                     <span className="text-[11.5px] font-medium leading-[1.35] text-white/85">{item}</span>
                   </li>
                 ))}

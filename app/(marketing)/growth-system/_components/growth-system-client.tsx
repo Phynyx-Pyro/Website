@@ -124,8 +124,8 @@ export function GrowthSystemClient() {
           <div className="grid lg:grid-cols-12 gap-10 lg:gap-16 items-center">
             <AnimatedSection className="lg:col-span-5 order-2 lg:order-1">
               <div className="flex items-center gap-2 mb-4">
-                <MessageSquare className="h-5 w-5 text-phoenix" />
-                <p className="text-[11px] font-bold uppercase tracking-[.16em] text-phoenix">Pillar Two</p>
+                <MessageSquare className="h-5 w-5 text-ember" />
+                <p className="text-[11px] font-bold uppercase tracking-[.16em] text-ember">Pillar Two</p>
               </div>
               <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink">Convert</h2>
               <p className="mt-5 text-[17px] leading-[1.65] text-warm">
@@ -148,12 +148,12 @@ export function GrowthSystemClient() {
                 </div>
                 <div className="absolute bottom-4 right-4 w-[260px] rounded-xl bg-night/90 backdrop-blur-md p-4 shadow-xl">
                   <div className="flex items-center gap-2 mb-3">
-                    <Bot className="h-4 w-4 text-phoenix" />
-                    <p className="text-[12px] font-semibold text-phoenix">Ember AI · Example conversation</p>
+                    <Bot className="h-4 w-4 text-flame" />
+                    <p className="text-[12px] font-semibold text-flame">Ember AI · Example conversation</p>
                   </div>
                   <div className="space-y-2">
                     <div className="rounded-lg bg-white/10 px-3 py-2 text-[12px] text-white/80">Hi! I&apos;d like to schedule an appointment.</div>
-                    <div className="rounded-lg bg-phoenix/20 px-3 py-2 text-[12px] text-phoenix/90">I can capture your scheduling preference for the team. Would you prefer morning or afternoon?</div>
+                    <div className="rounded-lg bg-phoenix/20 px-3 py-2 text-[12px] text-flame">I can capture your scheduling preference for the team. Would you prefer morning or afternoon?</div>
                   </div>
                 </div>
               </div>
@@ -176,7 +176,7 @@ export function GrowthSystemClient() {
                   <div className="flex gap-3 w-full">
                     {[{ label: 'Campaign Context', val: 'Inputs' }, { label: 'Journey Records', val: 'Events' }, { label: 'Outcome Notes', val: 'Review' }].map((m) => (
                       <div key={m?.label} className="flex-1 rounded-lg bg-coal/80 backdrop-blur border border-white/10 px-3 py-3 text-center">
-                        <p className="text-[20px] font-bold text-phoenix">{m?.val}</p>
+                        <p className="text-[20px] font-bold text-flame">{m?.val}</p>
                         <p className="text-[11px] text-white/60">{m?.label}</p>
                       </div>
                     ))}
@@ -187,8 +187,8 @@ export function GrowthSystemClient() {
 
             <AnimatedSection className="lg:col-span-5" delay={150}>
               <div className="flex items-center gap-2 mb-4">
-                <BarChart3 className="h-5 w-5 text-phoenix" />
-                <p className="text-[11px] font-bold uppercase tracking-[.16em] text-phoenix">Pillar Three</p>
+                <BarChart3 className="h-5 w-5 text-flame" />
+                <p className="text-[11px] font-bold uppercase tracking-[.16em] text-flame">Pillar Three</p>
               </div>
               <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-white">Operate & Improve</h2>
               <p className="mt-5 text-[17px] leading-[1.65] text-white/70">
@@ -197,7 +197,7 @@ export function GrowthSystemClient() {
               <ul className="mt-6 space-y-3">
                 {['PYRO CRM & automation platform', 'Ember AI voice & chat receptionist', 'Permission-based database reactivation', 'Connected attribution reporting'].map((item) => (
                   <li key={item} className="flex items-start gap-3 text-[15px] text-white/90">
-                    <Zap className="h-4 w-4 text-phoenix mt-1 shrink-0" />
+                    <Zap className="h-4 w-4 text-flame mt-1 shrink-0" />
                     {item}
                   </li>
                 ))}

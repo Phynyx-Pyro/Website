@@ -32,9 +32,9 @@ export function PyroEmberClient() {
         <div className="mx-auto max-w-[1200px] px-6 lg:px-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <AnimatedSection>
-              <p className="text-[11px] font-bold uppercase tracking-[.16em] text-phoenix mb-4">PYRO by PhynyxPro</p>
+              <p className="text-[11px] font-bold uppercase tracking-[.16em] text-flame mb-4">PYRO by PhynyxPro</p>
               <h1 className="text-[clamp(36px,5vw,64px)] font-bold leading-[1.05] tracking-tight text-white">
-                Meet <span className="text-phoenix">Ember.</span><br />
+                Meet <span className="text-flame">Ember.</span><br />
                 Your AI receptionist.
               </h1>
               <p className="mt-6 max-w-[480px] text-[19px] leading-[1.65] text-white/70">
@@ -78,7 +78,7 @@ export function PyroEmberClient() {
                     <div className="absolute left-2 top-3 flex items-center gap-2 rounded-full border border-phoenix/30 bg-night/70 px-3.5 py-1.5 backdrop-blur">
                       <span className="h-2 w-2 rounded-full bg-phoenix" />
                       <span className="text-[12px] font-semibold text-white">Ember</span>
-                      <span className="text-[11px] text-phoenix">Illustrative</span>
+                      <span className="text-[11px] text-flame">Illustrative</span>
                     </div>
                   </div>
                 </div>
@@ -87,7 +87,7 @@ export function PyroEmberClient() {
                 <div className="relative z-10 mx-auto -mt-10 w-full max-w-[300px] sm:max-w-[340px] rounded-2xl border border-white/12 bg-coal/90 backdrop-blur-md p-4 shadow-2xl">
                   <div className="flex items-center gap-2.5 mb-3 pb-3 border-b border-white/10">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-phoenix/20">
-                      <Bot className="h-4 w-4 text-phoenix" />
+                      <Bot className="h-4 w-4 text-flame" />
                     </div>
                     <p className="text-[13px] font-semibold text-white">Example SMS workflow</p>
                     <span className="ml-auto text-[10px] text-white/45">Sample</span>
@@ -97,7 +97,7 @@ export function PyroEmberClient() {
                       <div key={i} className={`flex ${msg?.from === 'ember' ? 'justify-start' : 'justify-end'}`}>
                         <div className={`max-w-[86%] rounded-xl px-3 py-2 text-[12px] leading-[1.5] ${
                           msg?.from === 'ember'
-                            ? 'bg-phoenix/15 text-phoenix'
+                            ? 'bg-phoenix/15 text-flame'
                             : 'bg-white/10 text-white/80'
                         }`}>
                           {msg?.text}
@@ -143,7 +143,7 @@ export function PyroEmberClient() {
         <div className="mx-auto max-w-[1200px] px-6 lg:px-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <AnimatedSection>
-              <Headphones className="h-8 w-8 text-phoenix mb-4" />
+              <Headphones className="h-8 w-8 text-flame mb-4" />
               <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-white">
                 Designed for natural conversation.<br />Built for clear handoff.
               </h2>
@@ -175,7 +175,7 @@ export function PyroEmberClient() {
                     <Clock className="h-3.5 w-3.5" />
                     <span>Configured route: Ember</span>
                   </div>
-                  <div className="flex items-center gap-2 text-[12px] text-phoenix/80">
+                  <div className="flex items-center gap-2 text-[12px] text-flame">
                     <CalendarCheck className="h-3.5 w-3.5" />
                     <span>Example outcome: appointment request captured</span>
                   </div>

@@ -49,10 +49,10 @@ export function FitAndFaq() {
 
   return (
     <section className="relative overflow-hidden bg-linen py-14 lg:py-[92px]">
-      <p className="font-hand pointer-events-none absolute right-[54px] top-[70px] hidden rotate-[5deg] text-[25px] font-semibold text-phoenix/70 lg:block">
+      <p className="font-hand pointer-events-none absolute right-[54px] top-[70px] hidden rotate-[5deg] text-[25px] font-semibold text-ember lg:block">
         fit protects both sides
       </p>
-      <p className="font-hand mb-4 -rotate-[2deg] px-5 text-[20px] font-semibold text-phoenix lg:hidden">
+      <p className="font-hand mb-4 -rotate-[2deg] px-5 text-[20px] font-semibold text-ember lg:hidden">
         fit protects both sides
       </p>
 
@@ -60,7 +60,7 @@ export function FitAndFaq() {
         <div className="grid grid-cols-1 gap-9 lg:grid-cols-12 lg:gap-10">
           <div className="lg:col-span-5">
             <AnimatedSection>
-              <p className="mb-4 text-[11px] font-bold uppercase tracking-[.2em] text-phoenix lg:mb-5">Selective fit</p>
+              <p className="mb-4 text-[11px] font-bold uppercase tracking-[.2em] text-ember lg:mb-5">Selective fit</p>
               <h2 className="text-[34px] font-bold leading-[.98] tracking-[-.04em] lg:text-[48px]">
                 Built for established chiropractic practices.
               </h2>
@@ -108,7 +108,7 @@ export function FitAndFaq() {
 
           <div className="lg:col-span-7 lg:pt-2">
             <AnimatedSection>
-              <p className="mb-4 text-[11px] font-bold uppercase tracking-[.2em] text-phoenix lg:mb-6">Straight answers</p>
+              <p className="mb-4 text-[11px] font-bold uppercase tracking-[.2em] text-ember lg:mb-6">Straight answers</p>
             </AnimatedSection>
             <div className="divide-y divide-black/10 border-y border-black/10">
               {faqs.map((faq, index) => {

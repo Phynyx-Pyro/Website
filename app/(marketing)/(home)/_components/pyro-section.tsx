@@ -150,7 +150,7 @@ export function PyroSection() {
                   {appointmentBubbles.map((bubble) => (
                     <ConversationBubble key={bubble.text} {...bubble} />
                   ))}
-                  <div className="flex items-center gap-2 rounded-lg bg-flame px-3 py-2.5 text-white shadow-[0_0_20px_rgba(255,107,53,.18)]">
+                  <div className="flex items-center gap-2 rounded-lg bg-phoenix px-3 py-2.5 text-white shadow-[0_0_20px_rgba(255,107,53,.18)]">
                     <CheckCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                     <span className="text-[11px] font-bold">Appointment Request Captured</span>
                   </div>
@@ -169,7 +169,7 @@ export function PyroSection() {
                       </p>
                     ))}
                   </div>
-                  <div className="mt-3 rounded-md bg-flame px-2 py-2 text-center text-[10.5px] font-bold text-white">Updated</div>
+                  <div className="mt-3 rounded-md bg-phoenix px-2 py-2 text-center text-[10.5px] font-bold text-white">Updated</div>
                 </div>
               </li>
 
