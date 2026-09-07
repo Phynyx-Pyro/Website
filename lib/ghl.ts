@@ -2,6 +2,7 @@ import { env } from 'cloudflare:workers'
 import type { AssessmentAttribution } from './assessment-attribution'
 import type { FitAssessment } from './growth-assessment'
 import { normalizePhoneForComparison } from './public-form-security'
+import { CONSENT_VERSION, CONSENT_DISCLOSURES, type ContactConsent } from './contact-consent'
 
 const GHL_API_URL = 'https://services.leadconnectorhq.com'
 const GHL_API_VERSION = 'v3'
@@ -57,6 +58,7 @@ export type GhlGrowthAssessment = {
   monthlyBudget: string
   attribution: AssessmentAttribution
   fit: FitAssessment
+  consent?: ContactConsent
 }
 
 type ContactSummary = {
@@ -244,6 +246,12 @@ function buildAssessmentNote(input: GhlGrowthAssessment) {
     `Submission ID: ${input.submissionId}`,
     `Submitted: ${input.submittedAt}`,
     `Form: ${input.submissionType}`,
+    ...(input.consent ? [
+      `Consent version: ${CONSENT_VERSION}`,
+      `Consent captured at: ${input.submittedAt}`,
+      `Consent source: ${input.attribution.conversionPage}`,
+      ...Object.entries(CONSENT_DISCLOSURES).map(([key, text]) => `${key}: ${input.consent?.[key as keyof ContactConsent] ? 'YES' : 'NO'} | ${text}`),
+    ] : []),
     '',
     `Website assessment: ${fit.path === 'calendar' ? 'Good fit — show calendar immediately' : 'Investment context required before calendar'}`,
     `Assessment basis: ${fit.summary}`,
@@ -578,6 +586,19 @@ export async function syncGrowthAssessmentMetadata(
     [fieldEntry(GHL_CONTACT_FIELD_KEYS.submissionId, input.submissionId)],
     definitions,
   )
+  // Partial contact capture must not clear assessment answers or move a deal
+  // backward. It emits a distinct signal only after its consent record is saved.
+  if (input.submissionType === 'homepage-quick-form') {
+    await syncAssessmentNote(encodedContactId, input, notesResult)
+    await syncConsent(encodedContactId, input)
+    if (!opportunitiesResult?.opportunities?.length) {
+      await syncAssessmentOpportunity(contactId, input, opportunitiesResult, [], configuration)
+    }
+    if (!contactHasCustomFieldValue(contactResult?.contact, definitions, GHL_CONTACT_FIELD_KEYS.submissionId)) {
+      await ghlPost(`/contacts/${encodedContactId}/tags`, { tags: ['source:phynyx-website', 'automation:phynyx-web-v1', 'sales:assessment-incomplete'] })
+    }
+    return
+  }
   const fitTag =
     input.fit.path === 'calendar' ? 'fit:qualified' : 'fit:nurture'
   const opposingFitTag =
@@ -596,6 +617,7 @@ export async function syncGrowthAssessmentMetadata(
     opportunityCustomFields,
     configuration,
   )
+  await syncConsent(encodedContactId, input)
 
   await ghlDelete(`/contacts/${encodedContactId}/tags`, {
     tags: [opposingFitTag],
@@ -611,11 +633,30 @@ export async function syncGrowthAssessmentMetadata(
     ],
   })
 
+  const nextSequence = input.fit.path === 'calendar' ? 'sales:booking-followup' : 'sales:nurture'
+  const previousSequence = input.fit.path === 'calendar' ? 'sales:nurture' : 'sales:booking-followup'
+  await ghlDelete(`/contacts/${encodedContactId}/tags`, { tags: ['sales:assessment-incomplete', previousSequence] })
+  await ghlPost(`/contacts/${encodedContactId}/tags`, { tags: [nextSequence] })
+
   // Website Submission ID is the workflow re-entry signal. Write it only after
   // every other CRM record and tag is ready for the automation to consume.
   await ghlPut(`/contacts/${encodedContactId}`, {
     customFields: enrollmentCustomFields,
   })
+}
+
+async function syncConsent(contactId: string, input: GhlGrowthAssessment) {
+  if (!input.consent) return
+  const channels: Array<[keyof ContactConsent, string]> = [
+    ['smsMarketing', 'consent:sms-marketing'],
+    ['smsService', 'consent:sms-service'],
+    ['aiVoice', 'consent:ai-voice'],
+  ]
+  const granted = channels.filter(([key]) => input.consent?.[key]).map(([, tag]) => tag)
+  const declined = channels.filter(([key]) => !input.consent?.[key]).map(([, tag]) => tag)
+  if (declined.length) await ghlDelete(`/contacts/${contactId}/tags`, { tags: declined })
+  if (granted.length) await ghlPost(`/contacts/${contactId}/tags`, { tags: granted })
+  // Never clear DND or an operator's pause when recording a form selection.
 }
 
 export const syncNewGrowthAssessmentMetadata = syncGrowthAssessmentMetadata

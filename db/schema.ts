@@ -16,6 +16,7 @@ export const growthAssessments = sqliteTable(
     monthlyBudget: text('monthly_budget'),
     submissionType: text('submission_type').notNull(),
     payloadHash: text('payload_hash'),
+    consentSnapshot: text('consent_snapshot'),
     ghlContactId: text('ghl_contact_id'),
     status: text('status').notNull().default('new'),
     createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),

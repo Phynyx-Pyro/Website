@@ -40,8 +40,10 @@ function createDb(existing) {
 }
 
 async function loadRoute(stubs) {
+  globalThis.__CONSENT_MODULE__ = await importTypeScriptModule(new URL('../lib/contact-consent.ts', import.meta.url))
   globalThis.__GROWTH_ROUTE_TEST_STUBS__ = stubs
   return importTypeScriptModule(moduleUrl, [
+    ["import { CONSENT_VERSION, CONSENT_DISCLOSURES, parseContactConsent } from '@/lib/contact-consent'", 'const { CONSENT_VERSION, CONSENT_DISCLOSURES, parseContactConsent } = globalThis.__CONSENT_MODULE__'],
     [
       "import { getDb } from '@/db'",
       'const { getDb } = globalThis.__GROWTH_ROUTE_TEST_STUBS__',

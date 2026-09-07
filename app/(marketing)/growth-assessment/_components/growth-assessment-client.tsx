@@ -11,6 +11,8 @@ import {
 } from '@/lib/ghl-booking'
 import { BookingCalendar } from './booking-calendar'
 import { useAssessmentPrefill } from '../../_components/assessment-prefill-provider'
+import { ContactConsentFields } from '../../_components/contact-consent'
+import { EMPTY_CONSENT } from '@/lib/contact-consent'
 import {
   isHealthcareAssessmentIndustry,
   parseAssessmentIndustry,
@@ -102,6 +104,8 @@ export function GrowthAssessmentClient() {
   const [step, setStep] = useState(1)
   const [form, setForm] = useState<FormData>(initialForm)
   const [submitting, setSubmitting] = useState(false)
+  const [consent, setConsent] = useState(EMPTY_CONSENT)
+  const contactSubmissionIdRef = useRef('')
   const [assessmentResult, setAssessmentResult] =
     useState<AssessmentResult | null>(null)
   const [investmentAccepted, setInvestmentAccepted] = useState(false)
@@ -147,6 +151,7 @@ export function GrowthAssessmentClient() {
         phone: prefill.phone,
       }))
       setStep(nextStep)
+      if (prefill.consent) setConsent(prefill.consent)
       clearPrefill()
     })
 
@@ -206,6 +211,27 @@ export function GrowthAssessmentClient() {
     (form?.industry?.trim?.()?.length ?? 0) > 0 &&
     (form?.annualRevenue?.trim?.()?.length ?? 0) > 0
 
+  const saveContactAndContinue = async () => {
+    if (!canProceed1 || submitting) return
+    setSubmitting(true)
+    setError('')
+    try {
+      if (!contactSubmissionIdRef.current) contactSubmissionIdRef.current = crypto.randomUUID()
+      const response = await fetch('/api/growth-assessment', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ firstName: form.firstName, lastName: form.lastName, email: form.email, phone: form.phone, consent, website, submissionType: 'homepage-quick-form', submissionId: contactSubmissionIdRef.current, attribution: getAssessmentAttribution() }),
+      })
+      const result = await response.json() as { crmSynced?: boolean; code?: string; message?: string }
+      if (!response.ok || !result.crmSynced) {
+        if (result.code === 'SUBMISSION_CONFLICT') contactSubmissionIdRef.current = ''
+        throw new Error(result.message || 'We could not save your details. Please try again.')
+      }
+      setStep(2)
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Please try again.')
+    } finally { setSubmitting(false) }
+  }
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setSubmitting(true)
@@ -217,6 +243,7 @@ export function GrowthAssessmentClient() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
+          consent,
           website,
           submissionId: submissionIdRef.current,
           attribution: getAssessmentAttribution(),
@@ -442,16 +469,15 @@ export function GrowthAssessmentClient() {
                     {phoneInvalid && <p id="assessment-phone-error" role="alert" className="mt-1.5 text-[12.5px] font-medium text-red-700">Enter a valid phone number, including area code.</p>}
                   </div>
                 </div>
+                <ContactConsentFields value={consent} onChange={setConsent} />
+                {error && <p role="alert" className="mt-3 text-[13px] text-red-700">{error}</p>}
                 <button
                   type="button"
-                  onClick={() => {
-                    if (!canProceed1) return
-                    setStep(2)
-                  }}
-                  disabled={!canProceed1}
+                  onClick={saveContactAndContinue}
+                  disabled={!canProceed1 || submitting}
                   className={`mt-8 w-full inline-flex items-center justify-center gap-2 rounded-lg px-7 py-3.5 text-[15px] font-semibold transition-colors ${canProceed1 ? 'bg-phoenix text-white hover:bg-ember' : 'bg-ink/10 text-ink/40 cursor-not-allowed'}`}
                 >
-                  Continue <ArrowRight className="h-4 w-4" />
+                  {submitting ? 'Saving...' : 'Continue'} <ArrowRight className="h-4 w-4" />
                 </button>
                 <p className="mt-4 text-center text-[12px] leading-[1.55] text-warm">
                   Your details are used to evaluate fit and coordinate the diagnostic. Read our{' '}

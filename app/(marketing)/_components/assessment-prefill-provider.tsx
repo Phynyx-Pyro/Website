@@ -10,12 +10,14 @@ import {
   type ReactNode,
 } from 'react'
 import { captureAssessmentAttribution } from '@/lib/assessment-attribution'
+import type { ContactConsent } from '@/lib/contact-consent'
 
 export type AssessmentPrefill = {
   firstName: string
   lastName: string
   email: string
   phone: string
+  consent?: ContactConsent
 }
 
 type AssessmentPrefillContextValue = {

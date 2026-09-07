@@ -8,6 +8,7 @@ import {
   syncGrowthAssessmentMetadata,
 } from '@/lib/ghl'
 import { assessGrowthFit, type FitAssessment } from '@/lib/growth-assessment'
+import { CONSENT_VERSION, CONSENT_DISCLOSURES, parseContactConsent } from '@/lib/contact-consent'
 import {
   minimizeAttributionUrl,
   normalizeAssessmentCtaOrigin,
@@ -125,6 +126,9 @@ async function bookingReadyResponse(
 export async function POST(request: Request) {
   try {
     const payload = await readBoundedJson(request, MAX_REQUEST_BYTES)
+    const isPartial = payload.submissionType === 'homepage-quick-form'
+    const consent = parseContactConsent(payload.consent)
+    const partialResponse = () => Response.json({ success: true, crmSynced: true }, { headers: { 'Cache-Control': 'no-store' } })
 
     if (clean(payload.website, 200)) {
       return Response.json(
@@ -191,7 +195,7 @@ export async function POST(request: Request) {
       msclkid: cleanAttributionValue(rawAttribution.msclkid),
     }
 
-    if (!firstName || !email || !submittedPhone || !businessName || !industry) {
+    if (!firstName || !email || !submittedPhone || (!isPartial && (!businessName || !industry))) {
       throw new PublicFormError(
         400,
         'REQUIRED_FIELDS',
@@ -221,7 +225,7 @@ export async function POST(request: Request) {
       scope: 'growth-assessment',
       identity: email,
     })
-    const submissionType = 'full-assessment' as const
+    const submissionType = isPartial ? 'homepage-quick-form' as const : 'full-assessment' as const
     const fit = assessGrowthFit(annualRevenue, monthlyBudget)
     const now = new Date()
     let submittedAt = now
@@ -238,6 +242,8 @@ export async function POST(request: Request) {
         currentMarketing,
         monthlyBudget,
         attribution,
+        submissionType,
+        consent,
       ]),
     )
     const db = getDb()
@@ -257,6 +263,7 @@ export async function POST(request: Request) {
         monthlyBudget: monthlyBudget || null,
         submissionType,
         payloadHash,
+        consentSnapshot: JSON.stringify({ consent, version: CONSENT_VERSION, disclosures: CONSENT_DISCLOSURES, capturedAt: now.toISOString(), source: attribution.conversionPage }),
         ghlContactId: null,
         status: 'crm-pending',
         createdAt: now,
@@ -284,6 +291,7 @@ export async function POST(request: Request) {
       submittedAt = existing.createdAt
 
       if (existing.status === 'crm-synced' && existing.ghlContactId) {
+        if (isPartial) return partialResponse()
         return bookingReadyResponse(
           request,
           existing.id,
@@ -365,6 +373,7 @@ export async function POST(request: Request) {
       monthlyBudget,
       attribution,
       fit,
+      consent,
     }
 
     let contactId = resumeMetadataContactId
@@ -470,7 +479,7 @@ export async function POST(request: Request) {
       })
       .where(eq(growthAssessments.id, submissionId))
 
-    return bookingReadyResponse(request, submissionId, fit)
+    return isPartial ? partialResponse() : bookingReadyResponse(request, submissionId, fit)
   } catch (error) {
     if (error instanceof PublicFormError) return publicFormErrorResponse(error)
     console.error('Growth assessment submission failed', error)

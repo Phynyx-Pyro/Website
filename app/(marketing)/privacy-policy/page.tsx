@@ -11,18 +11,18 @@ export default function PrivacyPolicyPage() {
     <div className="bg-ivory grain-subtle min-h-screen pt-32 pb-20 md:pt-40 md:pb-28">
       <div className="mx-auto max-w-[800px] px-6 lg:px-10">
         <h1 className="text-[36px] font-bold text-ink">Privacy Policy</h1>
-        <p className="mt-2 text-[14px] text-warm">Last updated: September 4, 2026</p>
+        <p className="mt-2 text-[14px] text-warm">Last updated: September 7, 2026</p>
 
         <div className="mt-10 space-y-8 text-[16px] leading-[1.7] text-ink/80">
           <section>
             <h2 className="text-[22px] font-semibold text-ink mb-3">Information We Collect</h2>
             <p>When you submit an Acquisition Diagnostic fit-check form, contact form, or otherwise interact with PhynyxPro, we may collect your name, email address, phone number, business name, industry, and other information you voluntarily provide.</p>
-            <p className="mt-3">The assessment and support forms record a fit-check or inquiry, not marketing consent. They do not contain a marketing-consent opt-in. Any marketing consent must be collected separately for the relevant channel and purpose.</p>
+            <p className="mt-3">When you choose to continue from the contact-details step, we save those details so we can help you complete your fit check and coordinate your diagnostic by email. Our assessment forms offer separate, optional choices for marketing texts, appointment texts, and automated or AI-generated voice calls. We record your selections, the disclosure version, the submission time, and the source page. Submitting a form alone does not grant permission for texts or AI calls.</p>
           </section>
 
           <section>
             <h2 className="text-[22px] font-semibold text-ink mb-3">How We Use Your Information</h2>
-            <p>We use the information you provide to assess business fit, process and respond to inquiries, deliver our services, and send transactional communications related to your submission or account. An assessment or support submission is not treated as a marketing opt-in. We do not sell your personal information to third parties.</p>
+            <p>We use the information you provide to assess business fit, respond to inquiries, help complete requested assessments and bookings, deliver our services, and coordinate appointments. With your separate permission, we may send marketing texts, appointment texts, or make automated and AI-generated voice calls through Ember, our AI assistant. We do not sell your personal information. Mobile information and text-message opt-in data or consent are not shared with third parties or affiliates for their own marketing or promotional purposes.</p>
           </section>
 
           <section>
@@ -32,7 +32,7 @@ export default function PrivacyPolicyPage() {
 
           <section>
             <h2 className="text-[22px] font-semibold text-ink mb-3">Third-Party Services</h2>
-            <p>PhynyxPro uses Cloudflare and OpenAI Sites for website infrastructure and GoHighLevel for customer relationship management, website attribution, and appointment booking. When you submit an assessment and continue to scheduling, the contact information you provided is securely passed to the GoHighLevel calendar so you do not need to enter it a second time. These providers process information under their own privacy terms. We share only the information needed for these functions.</p>
+            <p>PhynyxPro uses Cloudflare and OpenAI Sites for website infrastructure and GoHighLevel for customer relationship management, communications, AI-assisted conversations, website attribution, and appointment booking. Contact details saved during your fit check are passed to our CRM and, when you book, to the calendar. Service providers process information as needed to operate these services, subject to applicable contractual and privacy obligations. AI conversations may be transcribed and summarized for the team. Please do not provide patient records or sensitive health information.</p>
           </section>
 
           <section>
@@ -43,6 +43,7 @@ export default function PrivacyPolicyPage() {
           <section>
             <h2 className="text-[22px] font-semibold text-ink mb-3">Your Rights</h2>
             <p>You may request access to, correction of, or deletion of your personal information by submitting an inquiry through our support page. Requests are handled subject to applicable law and any necessary identity verification.</p>
+            <p className="mt-3">Reply STOP to stop text messages, or HELP for assistance. You may revoke call consent by asking the caller to stop or emailing craig@phynyxpro.com. Declining these optional channels does not prevent you from requesting a diagnostic.</p>
           </section>
 
           <section>

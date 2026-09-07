@@ -1,0 +1,1 @@
+ALTER TABLE `growth_assessments` ADD `consent_snapshot` text;

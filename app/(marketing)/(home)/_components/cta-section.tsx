@@ -1,10 +1,13 @@
 'use client'
 
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { AnimatedSection } from '../../_components/animated-section'
 import { useAssessmentPrefill } from '../../_components/assessment-prefill-provider'
 import { ArrowRight, CalendarClock, ClipboardList, Clock3 } from 'lucide-react'
+import { getAssessmentAttribution } from '@/lib/assessment-attribution'
+import { EMPTY_CONSENT } from '@/lib/contact-consent'
+import { ContactConsentFields } from '../../_components/contact-consent'
 
 const ATTRIBUTION_QUERY_KEYS = [
   'utm_source',
@@ -22,8 +25,11 @@ export function CtaSection() {
   const { stagePrefill } = useAssessmentPrefill()
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '' })
   const [submitting, setSubmitting] = useState(false)
+  const [consent, setConsent] = useState(EMPTY_CONSENT)
+  const [error, setError] = useState('')
+  const submissionId = useRef('')
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const submitted = new FormData(event.currentTarget)
     const prefill = {
@@ -31,10 +37,29 @@ export function CtaSection() {
       lastName: String(submitted.get('lastName') ?? ''),
       email: String(submitted.get('email') ?? ''),
       phone: String(submitted.get('phone') ?? ''),
+      consent,
     }
 
     if (!prefill.firstName.trim() || !prefill.email.trim() || !prefill.phone.trim()) return
     setSubmitting(true)
+    setError('')
+    try {
+      if (!submissionId.current) submissionId.current = crypto.randomUUID()
+      const response = await fetch('/api/growth-assessment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...prefill, submissionType: 'homepage-quick-form', submissionId: submissionId.current, industry: 'chiropractic', attribution: getAssessmentAttribution() }),
+      })
+      const result = await response.json() as { crmSynced?: boolean; code?: string; message?: string }
+      if (!response.ok || !result.crmSynced) {
+        if (result.code === 'SUBMISSION_CONFLICT') submissionId.current = ''
+        throw new Error(result.message || 'We could not save your details. Please try again.')
+      }
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Please try again.')
+      setSubmitting(false)
+      return
+    }
     stagePrefill(prefill)
 
     const currentParams = new URLSearchParams(window.location.search)
@@ -147,6 +172,8 @@ export function CtaSection() {
                   className="mt-1.5 w-full rounded-lg border border-black/12 bg-ivory px-3.5 py-3 text-[14px] placeholder:text-warm/55 focus:outline-none focus:ring-2 focus:ring-phoenix/30"
                 />
               </label>
+              <ContactConsentFields value={consent} onChange={setConsent} />
+              {error && <p role="alert" className="mt-3 text-[13px] text-red-700">{error}</p>}
               <button
                 type="submit"
                 disabled={submitting || !form.firstName.trim() || !form.email.trim() || !form.phone.trim()}

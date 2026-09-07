@@ -46,6 +46,7 @@ const FIELD_KEY_BY_ID = new Map(
 )
 
 async function loadGhlModule() {
+  globalThis.__CONSENT_MODULE__ = await importTypeScriptModule(new URL('../lib/contact-consent.ts', import.meta.url))
   globalThis.__PHENYX_TEST_ENV__ = {
     GHL_LOCATION_ID: 'location-test',
     GHL_PIPELINE_ID: 'pipeline-test',
@@ -53,6 +54,7 @@ async function loadGhlModule() {
     GHL_PRIVATE_INTEGRATION_TOKEN: 'test-token-never-sent',
   }
   return importTypeScriptModule(moduleUrl, [
+    ["import { CONSENT_VERSION, CONSENT_DISCLOSURES, type ContactConsent } from './contact-consent'", 'const { CONSENT_VERSION, CONSENT_DISCLOSURES } = globalThis.__CONSENT_MODULE__'],
     [
       "import { env } from 'cloudflare:workers'",
       'const env = globalThis.__PHENYX_TEST_ENV__',
@@ -136,6 +138,85 @@ function valuesByFieldKey(customFields) {
 test.afterEach(() => {
   globalThis.fetch = originalFetch
   delete globalThis.__PHENYX_TEST_ENV__
+})
+
+test('partial capture records independent consent without clearing an existing assessment or deal', async () => {
+  const calls = []
+  globalThis.fetch = async (url, init = {}) => {
+    const call = recordCall(calls, url, init)
+    if (call.method === 'GET' && call.path === '/contacts/existing-contact') {
+      return Response.json({ contact: { id: 'existing-contact', dnd: true, customFields: [
+        { id: FIELD_ID_BY_KEY.get('contact.website_submission_id'), value: 'completed-assessment' },
+      ] } })
+    }
+    if (call.method === 'GET' && call.path.endsWith('/notes')) return Response.json({ notes: [] })
+    if (call.method === 'GET' && call.path === '/opportunities/search') return Response.json({ opportunities: [{ id: 'booked-deal' }] })
+    if (call.method === 'GET' && call.path.endsWith('/customFields')) return Response.json(customFieldDefinitions())
+    if (call.path.endsWith('/notes') || call.path.endsWith('/tags')) return Response.json({})
+    throw new Error(`Unexpected mutation: ${call.method} ${call.path}`)
+  }
+  const { syncGrowthAssessmentMetadata } = await loadGhlModule()
+  await syncGrowthAssessmentMetadata('existing-contact', {
+    ...assessmentInput(), submissionType: 'homepage-quick-form',
+    consent: { smsMarketing: false, smsService: true, aiVoice: false },
+  })
+  const mutations = calls.filter(call => call.method !== 'GET')
+  assert.deepEqual(mutations.map(call => [call.method, call.path]), [
+    ['POST', '/contacts/existing-contact/notes'],
+    ['DELETE', '/contacts/existing-contact/tags'],
+    ['POST', '/contacts/existing-contact/tags'],
+  ])
+  assert.deepEqual(mutations[1].body.tags, ['consent:sms-marketing', 'consent:ai-voice'])
+  assert.deepEqual(mutations[2].body.tags, ['consent:sms-service'])
+  assert.match(mutations[0].body.body, /phynyx-2026-09-07-v1/)
+  assert.equal(JSON.stringify(mutations).includes('"dnd"'), false)
+  assert.equal(JSON.stringify(mutations).includes('sales:assessment-incomplete'), false)
+})
+
+test('partial capture emits recovery only after consent and opportunity are persisted', async () => {
+  const calls = []
+  globalThis.fetch = async (url, init = {}) => {
+    const call = recordCall(calls, url, init)
+    if (call.method === 'GET' && call.path.endsWith('/customFields')) return Response.json(customFieldDefinitions())
+    if (call.method === 'GET' && call.path.endsWith('/notes')) return Response.json({ notes: [] })
+    if (call.method === 'GET' && call.path === '/opportunities/search') return Response.json({ opportunities: [] })
+    if (call.method === 'GET') return Response.json({ contact: { id: 'new-contact', customFields: [] } })
+    return Response.json({})
+  }
+  const { syncGrowthAssessmentMetadata } = await loadGhlModule()
+  await syncGrowthAssessmentMetadata('new-contact', {
+    ...assessmentInput(), submissionType: 'homepage-quick-form',
+    consent: { smsMarketing: false, smsService: false, aiVoice: false },
+  })
+  const mutations = calls.filter(call => call.method !== 'GET')
+  assert.deepEqual(mutations.map(call => [call.method, call.path]), [
+    ['POST', '/contacts/new-contact/notes'],
+    ['DELETE', '/contacts/new-contact/tags'],
+    ['POST', '/opportunities/'],
+    ['POST', '/contacts/new-contact/tags'],
+  ])
+  assert.ok(mutations.at(-1).body.tags.includes('sales:assessment-incomplete'))
+  assert.equal(mutations.some(call => call.method === 'PUT'), false)
+})
+
+test('nurture assessments never enroll in qualified booking recovery', async () => {
+  const calls = []
+  globalThis.fetch = async (url, init = {}) => {
+    const call = recordCall(calls, url, init)
+    if (call.method === 'GET' && call.path.endsWith('/customFields')) return Response.json(customFieldDefinitions())
+    if (call.method === 'GET' && call.path.endsWith('/notes')) return Response.json({ notes: [] })
+    if (call.method === 'GET' && call.path === '/opportunities/search') return Response.json({ opportunities: [] })
+    if (call.method === 'GET') return Response.json({ contact: { id: 'nurture-contact', customFields: [] } })
+    return Response.json({})
+  }
+  const { syncGrowthAssessmentMetadata } = await loadGhlModule()
+  const input = assessmentInput()
+  await syncGrowthAssessmentMetadata('nurture-contact', { ...input, fit: { ...input.fit, path: 'nurture' } })
+  const addedTags = calls.filter(call => call.method === 'POST' && call.path.endsWith('/tags')).flatMap(call => call.body.tags)
+  const removedTags = calls.filter(call => call.method === 'DELETE' && call.path.endsWith('/tags')).flatMap(call => call.body.tags)
+  assert.ok(addedTags.includes('sales:nurture'))
+  assert.ok(!addedTags.includes('sales:booking-followup'))
+  assert.ok(removedTags.includes('sales:booking-followup'))
 })
 
 test('matching existing contacts are securely resolved before metadata sync', async () => {
@@ -367,12 +448,14 @@ test('metadata sync creates one enriched opportunity and is retry-idempotent', a
 
   const firstMutationSequence = calls
     .filter((call) => call.method !== 'GET')
-    .slice(0, 6)
+    .slice(0, 8)
     .map((call) => `${call.method} ${call.path}`)
   assert.deepEqual(firstMutationSequence, [
     'PUT /contacts/new-contact',
     'POST /contacts/new-contact/notes',
     'POST /opportunities/',
+    'DELETE /contacts/new-contact/tags',
+    'POST /contacts/new-contact/tags',
     'DELETE /contacts/new-contact/tags',
     'POST /contacts/new-contact/tags',
     'PUT /contacts/new-contact',
@@ -382,7 +465,7 @@ test('metadata sync creates one enriched opportunity and is retry-idempotent', a
     (call) =>
       call.method === 'DELETE' && call.path === '/contacts/new-contact/tags',
   )
-  assert.equal(removeTagCalls.length, 2)
+  assert.equal(removeTagCalls.length, 4)
   assert.deepEqual(removeTagCalls[0].body.tags, ['fit:nurture'])
 
   const tagCalls = calls.filter(
