@@ -63,7 +63,7 @@ export function HeroSection() {
                   id="homepage-primary-cta"
                   className="group inline-flex items-center gap-3 rounded-lg bg-ink px-6 py-4 text-[14px] font-semibold text-white transition-colors hover:bg-coal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phoenix focus-visible:ring-offset-2 focus-visible:ring-offset-ivory sm:text-[15px]"
                 >
-                  Book My Patient Acquisition Diagnostic
+                  Get My New-Patient Growth Snapshot
                   <ArrowRight className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-1" aria-hidden="true" />
                 </AssessmentCtaLink>
                 <Link
@@ -75,7 +75,7 @@ export function HeroSection() {
                 </Link>
               </div>
               <p className="mt-4 max-w-[620px] text-[12.5px] leading-[1.55] text-warm xl:text-[13px]">
-                3-minute fit check → 30-minute diagnostic. We’ll map where inquiries stall and the next step to address it.
+                See where your new-patient journey is losing momentum and what improving it could mean. About 3 minutes.
               </p>
               <p className="mt-2 max-w-[620px] text-[12.5px] font-medium leading-[1.55] text-ink/75 xl:text-[13px]">
                 Bring the numbers you have. Missing data is part of what we’ll map.

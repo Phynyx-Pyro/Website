@@ -27,7 +27,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-[22px] font-semibold text-ink mb-3">Optional Texts and AI Calls</h2>
-            <p>PhynyxPro offers optional marketing texts about its services, fit checks, and diagnostic bookings; separate appointment texts for confirmations, reminders, and schedule changes; and automated or AI-generated voice calls with Ember. Each channel requires the relevant form selection. Consent is not required to purchase services or submit a fit check. Message frequency varies; message and data rates may apply.</p>
+            <p>PhynyxPro offers optional marketing texts about its services, growth snapshots, and diagnostic bookings; separate appointment texts for confirmations, reminders, and schedule changes; and automated or AI-generated voice calls with Ember. Each channel requires the relevant form selection. Consent is not required to purchase services or submit a growth snapshot. Message frequency varies; message and data rates may apply.</p>
             <p className="mt-3">Reply STOP to unsubscribe from texts. Reply HELP for help or email craig@phynyxpro.com. To stop calls, ask the caller or contact us. Carriers are not liable for delayed or undelivered messages. See our <a href="/privacy-policy" className="text-phoenix underline">Privacy Policy</a> for information about how we handle your data.</p>
           </section>
 

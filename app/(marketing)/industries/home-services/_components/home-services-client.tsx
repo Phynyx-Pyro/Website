@@ -28,7 +28,7 @@ export function HomeServicesClient() {
                 data-cta-placement="home_services_hero"
                 className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors"
               >
-                Book My Acquisition Diagnostic <ArrowRight className="h-4 w-4" />
+                Get My Growth Snapshot <ArrowRight className="h-4 w-4" />
               </AssessmentCtaLink>
             </AnimatedSection>
             <AnimatedSection delay={200}>
@@ -75,7 +75,7 @@ export function HomeServicesClient() {
           <AnimatedSection>
             <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink">Ready to Tighten the Path From Inquiry to Scheduled Work?</h2>
             <p className="mt-4 max-w-[500px] mx-auto text-[17px] leading-[1.65] text-warm">
-              Start with a 3-minute fit check. If there may be a match, continue to a working diagnostic using last month&apos;s spend, leads, estimate or booking requests, scheduled visits, and completed jobs.
+              Start with a 3-minute growth snapshot. Enter last month&apos;s leads, bookings, completed jobs, and media spend to see the largest visible drop-off.
             </p>
             <AssessmentCtaLink
               placement="home_services_final"
@@ -83,7 +83,7 @@ export function HomeServicesClient() {
               data-cta-placement="home_services_final"
               className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors"
             >
-              Book My Acquisition Diagnostic <ArrowRight className="h-4 w-4" />
+              Get My Growth Snapshot <ArrowRight className="h-4 w-4" />
             </AssessmentCtaLink>
           </AnimatedSection>
         </div>

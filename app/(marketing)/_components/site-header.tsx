@@ -53,8 +53,8 @@ export function SiteHeader() {
     isHealthcareAssessmentIndustry(pageIndustry) ||
     pathname.startsWith('/industries/dental-medspa')
   const diagnosticLabel = usesPatientAcquisitionLanguage
-    ? 'Book My Patient Acquisition Diagnostic'
-    : 'Book My Acquisition Diagnostic'
+    ? 'Get My New-Patient Growth Snapshot'
+    : 'Get My Growth Snapshot'
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window?.scrollY > 20)

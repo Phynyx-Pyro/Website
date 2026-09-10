@@ -18,7 +18,7 @@ export function ContactConsentFields({ value, onChange }: {
         </label>
       ))}
       <p className="text-[11px] leading-[1.6] text-warm">
-        Continuing saves your contact details so we can email you about your requested fit check and diagnostic.
+        Continuing saves your contact details so we can email you about your requested growth snapshot and diagnostic.
         {' '}<Link href="/privacy-policy" className="underline">Privacy Policy</Link>
         {' '}&middot;{' '}<Link href="/terms" className="underline">Terms</Link>
       </p>

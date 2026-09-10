@@ -84,14 +84,14 @@ export function CtaSection() {
               Bring the Funnel Numbers. Map the Next Move
             </h2>
             <p className="mt-5 max-w-[540px] text-[15.5px] leading-[1.65] text-white/70 lg:mt-6 lg:text-[17.5px]">
-              Start with a 3-minute fit check. If there is a potential match, choose a time
-              for a 30-minute diagnostic focused on the handoffs between
-              paid lead and patient outcome.
+              Use last month’s numbers or your best estimates. We’ll calculate the visible
+              conversion rates, identify the largest drop-off, and show what a modest
+              improvement could mean before you decide whether to book.
             </p>
             <div className="mt-7 grid gap-4 text-[12.5px] text-white/70 sm:grid-cols-3 lg:mt-8 lg:text-[13px]">
               <span className="flex items-start gap-2.5">
                 <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-flame" aria-hidden="true" />
-                3-minute fit check
+                3-minute growth snapshot
               </span>
               <span className="flex items-start gap-2.5">
                 <CalendarClock className="mt-0.5 h-4 w-4 shrink-0 text-flame" aria-hidden="true" />
@@ -113,11 +113,11 @@ export function CtaSection() {
               className="rounded-2xl border border-white/12 bg-white p-6 text-ink lift lg:p-8"
             >
               <div className="flex items-center justify-between gap-4">
-                <p className="text-[17px] font-bold tracking-[-.02em] lg:text-[19px]">Start the fit check</p>
-                <span className="text-[10px] font-bold uppercase tracking-[.12em] text-warm lg:text-[11px]">Contact details</span>
+                <p className="text-[17px] font-bold tracking-[-.02em] lg:text-[19px]">Build My Growth Snapshot</p>
+                <span className="text-[10px] font-bold uppercase tracking-[.12em] text-warm lg:text-[11px]">Save progress</span>
               </div>
               <p className="mt-2 text-[12px] leading-[1.5] text-warm lg:text-[13px]">
-                Enter your details here, then complete the practice questions on the next screen.
+                Save your progress here, then enter the practice and funnel numbers on the next screen.
               </p>
               <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:mt-6">
                 <label className="block">
@@ -180,11 +180,11 @@ export function CtaSection() {
                 data-cta-placement="homepage-quick-form"
                 className="mt-6 flex w-full items-center justify-center gap-3 rounded-lg bg-phoenix px-5 py-4 text-[14px] font-semibold text-white transition-colors hover:bg-ember focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phoenix focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 lg:text-[15px]"
               >
-                {submitting ? 'Opening the fit check…' : 'Continue to Fit Check'}
+                {submitting ? 'Opening the snapshot…' : 'Start My 3-Minute Snapshot'}
                 {!submitting && <ArrowRight className="h-4 w-4" aria-hidden="true" />}
               </button>
               <p className="mt-4 text-center text-[11px] leading-[1.5] text-warm lg:text-[11.5px]">
-                Your information is used only to evaluate fit and coordinate the diagnostic. Missing data is part of what we’ll map.
+                Your information is used to save the snapshot, evaluate fit, and coordinate a diagnostic only if you choose to book.
               </p>
             </form>
           </AnimatedSection>

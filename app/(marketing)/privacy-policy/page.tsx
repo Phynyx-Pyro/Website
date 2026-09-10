@@ -16,8 +16,8 @@ export default function PrivacyPolicyPage() {
         <div className="mt-10 space-y-8 text-[16px] leading-[1.7] text-ink/80">
           <section>
             <h2 className="text-[22px] font-semibold text-ink mb-3">Information We Collect</h2>
-            <p>When you submit an Acquisition Diagnostic fit-check form, contact form, or otherwise interact with PhynyxPro, we may collect your name, email address, phone number, business name, industry, and other information you voluntarily provide.</p>
-            <p className="mt-3">When you choose to continue from the contact-details step, we save those details so we can help you complete your fit check and coordinate your diagnostic by email. Our assessment forms offer separate, optional choices for marketing texts, appointment texts, and automated or AI-generated voice calls. We record your selections, the disclosure version, the submission time, and the source page. Submitting a form alone does not grant permission for texts or AI calls.</p>
+            <p>When you submit a Growth Snapshot, contact form, or otherwise interact with PhynyxPro, we may collect your name, email address, phone number, business name, industry, acquisition metrics, business-performance estimates, and other information you voluntarily provide.</p>
+            <p className="mt-3">When you choose to continue from the contact-details step, we save those details so we can help you complete your growth snapshot and coordinate a diagnostic by email. Our assessment forms offer separate, optional choices for marketing texts, appointment texts, and automated or AI-generated voice calls. We record your selections, the disclosure version, the submission time, and the source page. Submitting a form alone does not grant permission for texts or AI calls.</p>
           </section>
 
           <section>
@@ -32,7 +32,7 @@ export default function PrivacyPolicyPage() {
 
           <section>
             <h2 className="text-[22px] font-semibold text-ink mb-3">Third-Party Services</h2>
-            <p>PhynyxPro uses Cloudflare and OpenAI Sites for website infrastructure and GoHighLevel for customer relationship management, communications, AI-assisted conversations, website attribution, and appointment booking. Contact details saved during your fit check are passed to our CRM and, when you book, to the calendar. Service providers process information as needed to operate these services, subject to applicable contractual and privacy obligations. AI conversations may be transcribed and summarized for the team. Please do not provide patient records or sensitive health information.</p>
+            <p>PhynyxPro uses Cloudflare and OpenAI Sites for website infrastructure and GoHighLevel for customer relationship management, communications, AI-assisted conversations, website attribution, and appointment booking. Contact and qualification details saved during your growth snapshot are passed to our CRM and, when you book, to the calendar. Submitted KPI answers and calculated results are stored with the website assessment record. Service providers process information as needed to operate these services, subject to applicable contractual and privacy obligations. AI conversations may be transcribed and summarized for the team. Please do not provide patient records or sensitive health information.</p>
           </section>
 
           <section>

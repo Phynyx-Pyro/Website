@@ -253,7 +253,7 @@ function buildAssessmentNote(input: GhlGrowthAssessment) {
       ...Object.entries(CONSENT_DISCLOSURES).map(([key, text]) => `${key}: ${input.consent?.[key as keyof ContactConsent] ? 'YES' : 'NO'} | ${text}`),
     ] : []),
     '',
-    `Website assessment: ${fit.path === 'calendar' ? 'Good fit — show calendar immediately' : 'Investment context required before calendar'}`,
+    `Website assessment: ${fit.path === 'calendar' ? 'Ready now — show calendar after snapshot' : fit.path === 'readiness-review' ? 'Emerging — offer readiness review after snapshot' : 'Foundation first — do not show calendar'}`,
     `Assessment basis: ${fit.summary}`,
     '',
     present('Business', input.businessName),
@@ -383,7 +383,7 @@ function buildContactCustomFields(
   contact: ContactSummary | undefined,
   definitions: Map<string, string>,
 ) {
-  const fitResult = input.fit.path === 'calendar' ? 'qualified' : 'nurture'
+  const fitResult = input.fit.path === 'foundation' ? 'nurture' : 'qualified'
   const firstLandingPage = contactHasCustomFieldValue(
     contact,
     definitions,
@@ -600,9 +600,9 @@ export async function syncGrowthAssessmentMetadata(
     return
   }
   const fitTag =
-    input.fit.path === 'calendar' ? 'fit:qualified' : 'fit:nurture'
+    input.fit.path === 'foundation' ? 'fit:nurture' : 'fit:qualified'
   const opposingFitTag =
-    input.fit.path === 'calendar' ? 'fit:nurture' : 'fit:qualified'
+    input.fit.path === 'foundation' ? 'fit:qualified' : 'fit:nurture'
 
   // Mutations are deliberately sequential. If a request fails, no later write
   // is already in flight while the route records a retryable failure state.
@@ -633,8 +633,8 @@ export async function syncGrowthAssessmentMetadata(
     ],
   })
 
-  const nextSequence = input.fit.path === 'calendar' ? 'sales:booking-followup' : 'sales:nurture'
-  const previousSequence = input.fit.path === 'calendar' ? 'sales:nurture' : 'sales:booking-followup'
+  const nextSequence = input.fit.path === 'foundation' ? 'sales:nurture' : 'sales:booking-followup'
+  const previousSequence = input.fit.path === 'foundation' ? 'sales:booking-followup' : 'sales:nurture'
   await ghlDelete(`/contacts/${encodedContactId}/tags`, { tags: ['sales:assessment-incomplete', previousSequence] })
   await ghlPost(`/contacts/${encodedContactId}/tags`, { tags: [nextSequence] })
 

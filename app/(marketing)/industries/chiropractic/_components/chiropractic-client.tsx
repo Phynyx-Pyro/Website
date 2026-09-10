@@ -34,7 +34,7 @@ export function ChiropracticClient() {
               </p>
               <div className="mt-8 flex flex-col sm:flex-row gap-4">
                 <AssessmentCtaLink placement="chiropractic_hero" industry="chiropractic" className="inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors">
-                  Book My Patient Acquisition Diagnostic <ArrowRight className="h-4 w-4" />
+                  Get My New-Patient Growth Snapshot <ArrowRight className="h-4 w-4" />
                 </AssessmentCtaLink>
                 <Link href="/growth-system" className="inline-flex items-center gap-2 rounded-lg border border-ink/20 px-7 py-3.5 text-[15px] font-semibold text-ink hover:bg-ink hover:text-white transition-colors">
                   See the System
@@ -145,10 +145,10 @@ export function ChiropracticClient() {
               Ready to Grow Your Practice?
             </h2>
             <p className="mt-4 max-w-[500px] mx-auto text-[17px] leading-[1.65] text-warm">
-              Start with a 3-minute fit check. If your practice may be a fit, the next step is a working diagnostic to review last month&apos;s spend, leads, appointment requests, shows, and starts.
+              Start with a 3-minute growth snapshot. Enter last month&apos;s inquiries, bookings, shows, starts, and media spend to see the largest visible drop-off.
             </p>
             <AssessmentCtaLink placement="chiropractic_final" industry="chiropractic" className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors">
-              Book My Patient Acquisition Diagnostic <ArrowRight className="h-4 w-4" />
+              Get My New-Patient Growth Snapshot <ArrowRight className="h-4 w-4" />
             </AssessmentCtaLink>
           </AnimatedSection>
         </div>

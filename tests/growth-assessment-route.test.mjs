@@ -76,6 +76,17 @@ async function loadRoute(stubs) {
     ],
     [
       `import {
+  calculateGrowthSnapshot,
+  parseGrowthSnapshotInput,
+  type GrowthSnapshotResult,
+} from '@/lib/growth-snapshot'`,
+      `const {
+  calculateGrowthSnapshot,
+  parseGrowthSnapshotInput,
+} = globalThis.__GROWTH_ROUTE_TEST_STUBS__`,
+    ],
+    [
+      `import {
   minimizeAttributionUrl,
   normalizeAssessmentCtaOrigin,
 } from '@/lib/assessment-attribution'`,
@@ -161,9 +172,13 @@ test('a retry keeps its original submission time and recovers one stale contact 
     },
     assessGrowthFit: () => ({
       path: 'calendar',
-      tag: 'fit:qualified',
+      tier: 'ready-now',
+      tag: 'fit-ready-now',
+      score: 7,
       summary: 'Qualified by test rules.',
     }),
+    parseGrowthSnapshotInput: (value) => value,
+    calculateGrowthSnapshot: () => ({ trackedCoreMetrics: 6 }),
     minimizeAttributionUrl: (value) => value,
     normalizeAssessmentCtaOrigin: (value) => value,
     PublicFormError,
@@ -192,8 +207,13 @@ test('a retry keeps its original submission time and recovers one stale contact 
       industry: 'dental',
       annualRevenue: '500k-1m',
       monthlyBudget: '3k-5k',
+      capacity: '6-10',
+      decisionRole: 'owner',
+      implementationTiming: 'within-30-days',
+      followUpOwner: 'yes',
       biggestChallenge: 'not-enough-leads',
       currentMarketing: 'Referrals',
+      snapshot: { valid: true },
       attribution: {
         conversionPage: 'https://phynyx.example/growth-assessment',
         landingPage: 'https://phynyx.example/',

@@ -31,7 +31,7 @@ export function GrowthSystemClient() {
             </p>
             <div className="mt-8 flex flex-col items-start gap-4">
               <AssessmentCtaLink placement="growth_system_hero" className="inline-flex items-center gap-2 rounded-lg bg-ink px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg transition-colors hover:bg-coal">
-                Book My Acquisition Diagnostic <ArrowRight className="h-4 w-4" />
+                Get My Growth Snapshot <ArrowRight className="h-4 w-4" />
               </AssessmentCtaLink>
               <div className="max-w-[620px] rounded-xl border border-ink/10 bg-white/65 px-4 py-3">
                 <p className="text-[14px] font-semibold text-ink">
@@ -219,7 +219,7 @@ export function GrowthSystemClient() {
           <AnimatedSection delay={200}>
             <div className="mt-14 flex flex-col sm:flex-row items-center justify-center gap-4">
               <AssessmentCtaLink placement="growth_system_final" className="inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors">
-                Book My Acquisition Diagnostic <ArrowRight className="h-4 w-4" />
+                Get My Growth Snapshot <ArrowRight className="h-4 w-4" />
               </AssessmentCtaLink>
               <Link href="/results" className="inline-flex items-center gap-2 rounded-lg border border-ink/20 px-7 py-3.5 text-[15px] font-semibold text-ink hover:bg-ink hover:text-white transition-colors">
                 See How Measurement Works

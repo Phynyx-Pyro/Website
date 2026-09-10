@@ -5,22 +5,23 @@ import { AnimatedSection } from '../../_components/animated-section'
 import { Check, CircleCheck, CircleMinus, Minus, Plus } from 'lucide-react'
 
 const goodFit = [
-  'An established chiropractic practice with consistent patient flow',
   'Capacity for additional new-patient evaluations',
-  'Prepared to fund paid acquisition and the operating system around it',
-  'Willing to keep confirmation, show, and start-care stages current',
+  'Decision-maker access and intent to act within 90 days',
+  'A consistent paid-media budget and realistic growth expectations',
+  'A human owner for follow-up and outcome tracking',
 ]
 
 const notYet = [
   'No room on the calendar for new-patient evaluations',
-  'Looking only for the cheapest possible lead',
-  'Unable to assign a human owner for escalations and outcome updates',
+  'The goal is only the cheapest possible lead',
+  'No one can own escalations and outcome updates',
+  'Researching without access to the decision maker',
 ]
 
 const faqs = [
   {
     q: 'What happens after I click?',
-    a: 'You’ll complete a short fit check that takes about three minutes. If there appears to be a fit, you can choose a time for a working diagnostic. Bring last month’s spend, leads, appointment requests, shows, and starts.',
+    a: 'You’ll enter last month’s inquiries, bookings, shows, starts, and media spend. We calculate your visible conversion rates, identify the largest drop-off, and show a conservative improvement scenario before you decide whether to book.',
   },
   {
     q: 'Is PhynyxPro just ad management?',
@@ -36,7 +37,7 @@ const faqs = [
   },
   {
     q: 'What does this cost?',
-    a: 'We’ll separate implementation, ongoing system operation, and ad spend so you can evaluate the investment clearly.',
+    a: 'Paid media, implementation, and ongoing system operation are separate. Full campaign fits generally begin with at least $2,000 per month in paid media; the diagnostic determines whether the operating scope makes sense.',
   },
   {
     q: 'Do you guarantee patient volume?',
@@ -62,12 +63,12 @@ export function FitAndFaq() {
             <AnimatedSection>
               <p className="mb-4 text-[11px] font-bold uppercase tracking-[.2em] text-ember lg:mb-5">Selective fit</p>
               <h2 className="text-[34px] font-bold leading-[.98] tracking-[-.04em] lg:text-[48px]">
-                Built for Established Chiropractic Practices
+                Built for Practices Ready to Turn More Inquiries Into Patients
               </h2>
               <p className="mt-4 max-w-[430px] text-[15.5px] leading-[1.6] text-warm lg:mt-5 lg:text-[17px]">
-                The fit check compares stated revenue and monthly marketing budget with
-                initial thresholds. The working diagnostic reviews demand, capacity,
-                operating participation, and the wider context.
+                Revenue matters, but readiness also depends on capacity, decision access,
+                follow-up ownership, implementation timing, and the ability to track what
+                happens after each inquiry.
               </p>
             </AnimatedSection>
 
@@ -91,7 +92,7 @@ export function FitAndFaq() {
               <AnimatedSection delay={200}>
                 <div className="rounded-xl border border-black/10 bg-white/60 p-5 lg:p-6">
                   <p className="flex items-center gap-2 text-[11.5px] font-bold uppercase tracking-[.12em] text-warm lg:text-[13px]">
-                    <CircleMinus className="h-4 w-4" aria-hidden="true" /> Probably not yet
+                    <CircleMinus className="h-4 w-4" aria-hidden="true" /> What usually needs to be in place first
                   </p>
                   <ul className="mt-4 space-y-2.5 text-[14px] text-warm lg:text-[15px]">
                     {notYet.map((item) => (

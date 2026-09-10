@@ -109,7 +109,7 @@ export function JourneySection() {
         <AnimatedSection delay={220}>
           <div className="mt-11 flex flex-col items-start gap-4 border-t border-black/10 pt-7 sm:flex-row sm:items-center sm:justify-between">
             <p className="max-w-[570px] text-[13px] leading-[1.55] text-warm">
-              3-minute fit check → 30-minute diagnostic. Bring the numbers you have.
+              Start with a 3-minute growth snapshot. Use exact numbers, estimates, or mark what is not tracked.
               Missing data is part of what we&apos;ll map.
             </p>
             <AssessmentCtaLink
@@ -118,7 +118,7 @@ export function JourneySection() {
               data-cta-placement="homepage_journey"
               className="group inline-flex shrink-0 items-center gap-3 rounded-lg bg-phoenix px-6 py-3.5 text-[14px] font-semibold text-white transition-colors hover:bg-ember focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-phoenix focus-visible:ring-offset-2 focus-visible:ring-offset-ivory"
             >
-              Book My Patient Acquisition Diagnostic
+              Get My New-Patient Growth Snapshot
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
             </AssessmentCtaLink>
           </div>

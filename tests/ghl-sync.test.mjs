@@ -98,7 +98,9 @@ function assessmentInput() {
     },
     fit: {
       path: 'calendar',
-      tag: 'fit-good',
+      tier: 'ready-now',
+      tag: 'fit-ready-now',
+      score: 7,
       summary: 'Qualified by the deterministic website rules.',
     },
   }
@@ -211,7 +213,15 @@ test('nurture assessments never enroll in qualified booking recovery', async () 
   }
   const { syncGrowthAssessmentMetadata } = await loadGhlModule()
   const input = assessmentInput()
-  await syncGrowthAssessmentMetadata('nurture-contact', { ...input, fit: { ...input.fit, path: 'nurture' } })
+  await syncGrowthAssessmentMetadata('nurture-contact', {
+    ...input,
+    fit: {
+      ...input.fit,
+      path: 'foundation',
+      tier: 'foundation',
+      tag: 'fit-foundation',
+    },
+  })
   const addedTags = calls.filter(call => call.method === 'POST' && call.path.endsWith('/tags')).flatMap(call => call.body.tags)
   const removedTags = calls.filter(call => call.method === 'DELETE' && call.path.endsWith('/tags')).flatMap(call => call.body.tags)
   assert.ok(addedTags.includes('sales:nurture'))
@@ -495,9 +505,11 @@ test('existing contacts preserve first touch and update their open opportunity',
       ctaOrigin: '',
     },
     fit: {
-      path: 'investment-context',
-      tag: 'investment-confirmation-required',
-      summary: 'Investment context is required.',
+      path: 'foundation',
+      tier: 'foundation',
+      tag: 'fit-foundation',
+      score: 2,
+      summary: 'Foundation work is required.',
     },
   }
   const existingFirstLandingId = FIELD_ID_BY_KEY.get(
@@ -586,7 +598,7 @@ test('existing contacts preserve first touch and update their open opportunity',
       call.method === 'PUT' &&
       call.path === '/contacts/existing-contact/notes/existing-note',
   )
-  assert.match(noteUpdate.body.body, /Investment context required before calendar/)
+  assert.match(noteUpdate.body.body, /Foundation first — do not show calendar/)
 
   const opportunityUpdate = calls.find(
     (call) =>

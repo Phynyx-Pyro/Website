@@ -28,7 +28,7 @@ export function DentalMedspaClient() {
                 data-cta-placement="dental_medspa_hero"
                 className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors"
               >
-                Book My Patient Acquisition Diagnostic <ArrowRight className="h-4 w-4" />
+                Get My Patient Growth Snapshot <ArrowRight className="h-4 w-4" />
               </AssessmentCtaLink>
             </AnimatedSection>
             <AnimatedSection delay={200}>
@@ -75,7 +75,7 @@ export function DentalMedspaClient() {
           <AnimatedSection>
             <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink">Ready to Map the Path From Request to Confirmed Appointment?</h2>
             <p className="mt-4 max-w-[500px] mx-auto text-[17px] leading-[1.65] text-warm">
-              Start with a 3-minute fit check. If there may be a match, continue to a working diagnostic using last month&apos;s spend, leads, appointment requests, visits, and recorded outcomes.
+              Start with a 3-minute growth snapshot. Enter last month&apos;s inquiries, bookings, visits, outcomes, and media spend to see the largest visible drop-off.
             </p>
             <AssessmentCtaLink
               placement="dental_medspa_final"
@@ -83,7 +83,7 @@ export function DentalMedspaClient() {
               data-cta-placement="dental_medspa_final"
               className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors"
             >
-              Book My Patient Acquisition Diagnostic <ArrowRight className="h-4 w-4" />
+              Get My Patient Growth Snapshot <ArrowRight className="h-4 w-4" />
             </AssessmentCtaLink>
           </AnimatedSection>
         </div>

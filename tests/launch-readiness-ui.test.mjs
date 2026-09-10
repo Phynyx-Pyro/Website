@@ -15,7 +15,8 @@ test('homepage hero uses the approved promise, support, and diagnostic explanati
     source,
     /We run your Meta ads and connect rapid response, booking, reminders, and team handoffs\. Track each lead from campaign source through confirmed appointments, first visits, and starts of care\./,
   )
-  assert.match(source, /3-minute fit check → 30-minute diagnostic\./)
+  assert.match(source, /Get My New-Patient Growth Snapshot/)
+  assert.match(source, /what improving it could mean\. About 3 minutes\./)
   assert.match(source, /Bring the numbers you have\. Missing data is part of what we’ll map\./)
   assert.match(source, /id="homepage-primary-cta"/)
   assert.match(source, /xl:grid-cols-12/)
@@ -45,7 +46,7 @@ test('mobile diagnostic bar preserves attribution and yields to page content and
   assert.match(headerSource, /mobileMenuButtonRef\.current\?\.focus\(\)/)
 })
 
-test('assessment validates contact fields and explains timing, thresholds, and privacy', async () => {
+test('assessment validates contact fields and explains snapshot value, timing, and privacy', async () => {
   const source = await readSource(
     '../app/(marketing)/growth-assessment/_components/growth-assessment-client.tsx',
   )
@@ -56,10 +57,12 @@ test('assessment validates contact fields and explains timing, thresholds, and p
   assert.match(source, /aria-describedby=\{phoneInvalid \? 'assessment-phone-error'/)
   assert.match(source, /stepHeadingRef\.current\?\.focus\(\)/)
   assert.match(source, /href="\/privacy-policy"/)
-  assert.match(source, /3-minute fit check/)
-  assert.match(source, /30-minute diagnostic/)
-  assert.match(source, /\$500K in annual revenue and \$3K in planned monthly marketing budget/)
-  assert.match(source, /These are fit criteria, not package prices\./)
+  assert.match(source, /About 3 minutes/)
+  assert.match(source, /Immediate KPI snapshot/)
+  assert.match(source, /30-Minute Diagnostic/i)
+  assert.match(source, /\$300K–\$499,999/)
+  assert.match(source, /\$2,000–\$2,999\/mo/)
+  assert.match(source, /The best fit is determined by the ability to act, not revenue alone\./)
 })
 
 test('launch page headings and support opening use the approved copy', async () => {

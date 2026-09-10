@@ -2,42 +2,49 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { assessGrowthFit } from '../lib/growth-assessment.ts'
 
-test('current qualification behavior requires both revenue and budget thresholds', () => {
-  assert.equal(assessGrowthFit('500k-1m', '3k-5k').path, 'calendar')
-  assert.equal(assessGrowthFit('1m-5m', '10k-plus').path, 'calendar')
-  assert.equal(assessGrowthFit('250k-500k', '10k-plus').path, 'investment-context')
-  assert.equal(assessGrowthFit('5m-plus', '1k-3k').path, 'investment-context')
-  assert.equal(assessGrowthFit('', '').path, 'investment-context')
+const ready = {
+  annualRevenue: '300k-500k',
+  monthlyBudget: '2k-3k',
+  capacity: '6-10',
+  decisionRole: 'owner',
+  implementationTiming: 'within-30-days',
+  followUpOwner: 'yes',
+  trackedMetricCount: 5,
+}
+
+test('ready practices reach the calendar with the lower economic signals', () => {
+  const result = assessGrowthFit(ready)
+  assert.equal(result.path, 'calendar')
+  assert.equal(result.tier, 'ready-now')
+  assert.equal(result.score, 7)
 })
 
-test('every published revenue and budget boundary maps deterministically', () => {
-  const revenueRanges = [
-    ['under-250k', false],
-    ['250k-500k', false],
-    ['500k-1m', true],
-    ['1m-5m', true],
-    ['5m-plus', true],
-  ]
-  const budgetRanges = [
-    ['under-1k', false],
-    ['1k-3k', false],
-    ['3k-5k', true],
-    ['5k-10k', true],
-    ['10k-plus', true],
-  ]
+test('serious emerging practices can still reach a readiness review', () => {
+  const result = assessGrowthFit({
+    ...ready,
+    annualRevenue: '200k-300k',
+    monthlyBudget: '1k-2k',
+    capacity: '1-5',
+  })
+  assert.equal(result.path, 'readiness-review')
+  assert.equal(result.tier, 'emerging')
+})
 
-  for (const [revenue, revenueReady] of revenueRanges) {
-    for (const [budget, budgetReady] of budgetRanges) {
-      assert.equal(
-        assessGrowthFit(revenue, budget).path,
-        revenueReady && budgetReady ? 'calendar' : 'investment-context',
-        `${revenue} with ${budget}`,
-      )
-    }
+test('hard operating constraints route to foundation guidance', () => {
+  for (const input of [
+    { ...ready, capacity: 'none' },
+    { ...ready, decisionRole: 'researching' },
+    { ...ready, implementationTiming: 'researching' },
+    { ...ready, followUpOwner: 'no' },
+    { ...ready, annualRevenue: 'under-200k', monthlyBudget: 'under-1k' },
+  ]) {
+    const result = assessGrowthFit(input)
+    assert.equal(result.path, 'foundation')
+    assert.equal(result.tier, 'foundation')
   }
 })
 
-test('published assessment ranges are non-overlapping and visibly required', async () => {
+test('published revenue and paid-media ranges are non-overlapping and required', async () => {
   const { readFile } = await import('node:fs/promises')
   const source = await readFile(
     new URL(
@@ -48,16 +55,16 @@ test('published assessment ranges are non-overlapping and visibly required', asy
   )
 
   for (const label of [
-    'Annual business revenue (last 12 months) *',
-    '$250K – $499,999',
-    '$500K – $999,999',
-    '$1M – $4,999,999',
-    '$5M or more',
-    'Planned monthly marketing budget *',
-    '$1,000 – $2,999/mo',
-    '$3,000 – $4,999/mo',
-    '$5,000 – $9,999/mo',
-    '$10,000/mo or more',
+    'Under $200K',
+    '$200K–$299,999',
+    '$300K–$499,999',
+    '$500K–$999,999',
+    '$1M or more',
+    'Under $1,000/mo',
+    '$1,000–$1,999/mo',
+    '$2,000–$2,999/mo',
+    '$3,000–$4,999/mo',
+    '$5,000/mo or more',
   ]) {
     assert.ok(source.includes(label), `Missing non-overlapping label: ${label}`)
   }

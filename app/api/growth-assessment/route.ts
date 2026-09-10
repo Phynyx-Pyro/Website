@@ -8,6 +8,11 @@ import {
   syncGrowthAssessmentMetadata,
 } from '@/lib/ghl'
 import { assessGrowthFit, type FitAssessment } from '@/lib/growth-assessment'
+import {
+  calculateGrowthSnapshot,
+  parseGrowthSnapshotInput,
+  type GrowthSnapshotResult,
+} from '@/lib/growth-snapshot'
 import { CONSENT_VERSION, CONSENT_DISCLOSURES, parseContactConsent } from '@/lib/contact-consent'
 import {
   minimizeAttributionUrl,
@@ -39,6 +44,10 @@ const MAX_LENGTHS = {
   biggestChallenge: 120,
   currentMarketing: 2_000,
   monthlyBudget: 80,
+  capacity: 80,
+  decisionRole: 80,
+  implementationTiming: 80,
+  followUpOwner: 80,
   landingPage: 2_048,
   referrer: 2_048,
   attributionValue: 500,
@@ -54,20 +63,31 @@ const ALLOWED_INDUSTRIES = new Set([
 ])
 
 const ALLOWED_REVENUE = new Set([
-  'under-250k',
-  '250k-500k',
+  'under-200k',
+  '200k-300k',
+  '300k-500k',
   '500k-1m',
-  '1m-5m',
-  '5m-plus',
+  '1m-plus',
 ])
 
 const ALLOWED_BUDGET = new Set([
   'under-1k',
-  '1k-3k',
+  '1k-2k',
+  '2k-3k',
   '3k-5k',
-  '5k-10k',
-  '10k-plus',
+  '5k-plus',
 ])
+
+const ALLOWED_CAPACITY = new Set(['none', '1-5', '6-10', '11-20', '20-plus'])
+const ALLOWED_DECISION_ROLES = new Set(['owner', 'partner', 'influencer', 'researching'])
+const ALLOWED_TIMING = new Set([
+  'within-30-days',
+  '31-60-days',
+  '61-90-days',
+  'later',
+  'researching',
+])
+const ALLOWED_FOLLOW_UP_OWNERS = new Set(['yes', 'unsure', 'no'])
 
 const ALLOWED_CHALLENGES = new Set([
   'not-enough-leads',
@@ -101,19 +121,34 @@ function optionalAllowed(value: string, values: Set<string>, label: string) {
   throw new PublicFormError(400, 'INVALID_FIELD', `Please select a valid ${label}.`)
 }
 
-async function bookingReadyResponse(
+async function assessmentResultResponse(
   request: Request,
   submissionId: string,
   fit: FitAssessment,
+  snapshot: GrowthSnapshotResult | null,
 ) {
+  const responseBody = {
+    success: true,
+    crmSynced: true,
+    bookingReady: fit.path !== 'foundation',
+    fit: {
+      path: fit.path,
+      tier: fit.tier,
+      score: fit.score,
+      summary: fit.summary,
+    },
+    snapshot,
+  }
+
+  if (fit.path === 'foundation') {
+    return Response.json(responseBody, {
+      headers: { 'Cache-Control': 'no-store' },
+    })
+  }
+
   const bookingCookie = await issueBookingSession(submissionId, request.url)
   return Response.json(
-    {
-      success: true,
-      crmSynced: true,
-      bookingReady: true,
-      fit: { path: fit.path },
-    },
+    responseBody,
     {
       headers: {
         'Cache-Control': 'no-store',
@@ -158,6 +193,26 @@ export async function POST(request: Request) {
       ALLOWED_BUDGET,
       'monthly budget range',
     )
+    const capacity = optionalAllowed(
+      clean(payload.capacity, MAX_LENGTHS.capacity),
+      ALLOWED_CAPACITY,
+      'new-patient capacity',
+    )
+    const decisionRole = optionalAllowed(
+      clean(payload.decisionRole, MAX_LENGTHS.decisionRole),
+      ALLOWED_DECISION_ROLES,
+      'decision-making role',
+    )
+    const implementationTiming = optionalAllowed(
+      clean(payload.implementationTiming, MAX_LENGTHS.implementationTiming),
+      ALLOWED_TIMING,
+      'implementation timing',
+    )
+    const followUpOwner = optionalAllowed(
+      clean(payload.followUpOwner, MAX_LENGTHS.followUpOwner),
+      ALLOWED_FOLLOW_UP_OWNERS,
+      'follow-up owner',
+    )
     const biggestChallenge = optionalAllowed(
       clean(payload.biggestChallenge, MAX_LENGTHS.biggestChallenge),
       ALLOWED_CHALLENGES,
@@ -195,11 +250,33 @@ export async function POST(request: Request) {
       msclkid: cleanAttributionValue(rawAttribution.msclkid),
     }
 
-    if (!firstName || !email || !submittedPhone || (!isPartial && (!businessName || !industry))) {
+    const snapshotInput = isPartial
+      ? null
+      : parseGrowthSnapshotInput(payload.snapshot)
+    const snapshotResult = snapshotInput
+      ? calculateGrowthSnapshot(snapshotInput)
+      : null
+
+    if (
+      !firstName ||
+      !email ||
+      !submittedPhone ||
+      (!isPartial && (
+        !businessName ||
+        !industry ||
+        !annualRevenue ||
+        !monthlyBudget ||
+        !capacity ||
+        !decisionRole ||
+        !implementationTiming ||
+        !followUpOwner ||
+        !snapshotInput
+      ))
+    ) {
       throw new PublicFormError(
         400,
         'REQUIRED_FIELDS',
-        'Name, email, phone, business name, and industry are required.',
+        'Complete each required practice, readiness, and snapshot field.',
       )
     }
 
@@ -226,7 +303,15 @@ export async function POST(request: Request) {
       identity: email,
     })
     const submissionType = isPartial ? 'homepage-quick-form' as const : 'full-assessment' as const
-    const fit = assessGrowthFit(annualRevenue, monthlyBudget)
+    const fit = assessGrowthFit({
+      annualRevenue,
+      monthlyBudget,
+      capacity,
+      decisionRole,
+      implementationTiming,
+      followUpOwner,
+      trackedMetricCount: snapshotResult?.trackedCoreMetrics ?? 0,
+    })
     const now = new Date()
     let submittedAt = now
     const payloadHash = await hashText(
@@ -241,6 +326,12 @@ export async function POST(request: Request) {
         biggestChallenge,
         currentMarketing,
         monthlyBudget,
+        capacity,
+        decisionRole,
+        implementationTiming,
+        followUpOwner,
+        snapshotInput,
+        snapshotResult,
         attribution,
         submissionType,
         consent,
@@ -261,6 +352,11 @@ export async function POST(request: Request) {
         biggestChallenge: biggestChallenge || null,
         currentMarketing: currentMarketing || null,
         monthlyBudget: monthlyBudget || null,
+        funnelSnapshot: snapshotInput ? JSON.stringify(snapshotInput) : null,
+        snapshotResult: snapshotResult ? JSON.stringify(snapshotResult) : null,
+        readinessSnapshot: isPartial
+          ? null
+          : JSON.stringify({ capacity, decisionRole, implementationTiming, followUpOwner }),
         submissionType,
         payloadHash,
         consentSnapshot: JSON.stringify({ consent, version: CONSENT_VERSION, disclosures: CONSENT_DISCLOSURES, capturedAt: now.toISOString(), source: attribution.conversionPage }),
@@ -292,10 +388,11 @@ export async function POST(request: Request) {
 
       if (existing.status === 'crm-synced' && existing.ghlContactId) {
         if (isPartial) return partialResponse()
-        return bookingReadyResponse(
+        return assessmentResultResponse(
           request,
           existing.id,
-          assessGrowthFit(existing.annualRevenue ?? '', existing.monthlyBudget ?? ''),
+          fit,
+          snapshotResult,
         )
       }
 
@@ -371,6 +468,12 @@ export async function POST(request: Request) {
       biggestChallenge,
       currentMarketing,
       monthlyBudget,
+      capacity,
+      decisionRole,
+      implementationTiming,
+      followUpOwner,
+      snapshotInput,
+      snapshotResult,
       attribution,
       fit,
       consent,
@@ -479,7 +582,9 @@ export async function POST(request: Request) {
       })
       .where(eq(growthAssessments.id, submissionId))
 
-    return isPartial ? partialResponse() : bookingReadyResponse(request, submissionId, fit)
+    return isPartial
+      ? partialResponse()
+      : assessmentResultResponse(request, submissionId, fit, snapshotResult)
   } catch (error) {
     if (error instanceof PublicFormError) return publicFormErrorResponse(error)
     console.error('Growth assessment submission failed', error)

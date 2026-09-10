@@ -15,7 +15,7 @@ test('polished assessment retains the deployed submission and booking handoff', 
   const source = await readFile(assessmentClientUrl, 'utf8')
   const assessmentRequest = source.indexOf("fetch('/api/growth-assessment'")
   const bookingRequest = source.indexOf("fetch('/api/booking-session'")
-  const resultUpdate = source.indexOf('setAssessmentResult({')
+  const resultUpdate = source.indexOf('setAssessmentResult({', bookingRequest)
 
   assert.ok(assessmentRequest >= 0)
   assert.ok(bookingRequest > assessmentRequest)
@@ -24,14 +24,14 @@ test('polished assessment retains the deployed submission and booking handoff', 
     source.slice(bookingRequest, resultUpdate),
     /body:\s*'\{\}'/,
   )
-  assert.match(source, /onClick=\{\(\) => setInvestmentAccepted\(true\)\}/)
+  assert.match(source, /onClick=\{\(\) => setCalendarVisible\(true\)\}/)
   assert.doesNotMatch(
     source,
     /investmentContextAcknowledged|recording acknowledgement|record your acknowledgement/i,
   )
 })
 
-test('assessment fit inputs are visibly required without changing submitted field names', async () => {
+test('assessment readiness inputs are visibly required and submitted from the structured form', async () => {
   const source = await readFile(assessmentClientUrl, 'utf8')
 
   for (const id of [
@@ -42,10 +42,14 @@ test('assessment fit inputs are visibly required without changing submitted fiel
     'assessment-industry',
     'assessment-annual-revenue',
     'assessment-monthly-budget',
+    'assessment-capacity',
+    'assessment-decision-role',
+    'assessment-implementation-timing',
+    'assessment-follow-up-owner',
   ]) {
     assert.match(
       source,
-      new RegExp(`<(?:input|select) id=["']${id}["'][^>]*\\brequired\\b`),
+      new RegExp(`<(?:input|select|SelectField) id=["']${id}["'][^>]*\\brequired\\b`),
       `${id} should be required`,
     )
   }
@@ -61,9 +65,15 @@ test('assessment fit inputs are visibly required without changing submitted fiel
     'biggestChallenge',
     'currentMarketing',
     'monthlyBudget',
+    'capacity',
+    'decisionRole',
+    'implementationTiming',
+    'followUpOwner',
   ]) {
-    assert.match(source, new RegExp(`name=["']${field}["']`))
+    assert.match(source, new RegExp(`${field}: string`))
   }
+  assert.match(source, /Object\.entries\(form\)/)
+  assert.match(source, /snapshot, consent, website, submissionId/)
 })
 
 test('calendar keeps the deployed secure prefill lifecycle', async () => {

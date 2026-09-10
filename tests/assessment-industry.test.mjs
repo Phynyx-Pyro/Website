@@ -64,7 +64,7 @@ test('combined dental-medspa CTAs do not force a dental prefill', async () => {
   assert.doesNotMatch(combinedPageSource, /industry=["']dental["']/)
   assert.equal(combinedPageSource.match(/<AssessmentCtaLink\b/g)?.length, 2)
   assert.equal(
-    combinedPageSource.match(/Book My Patient Acquisition Diagnostic/g)?.length,
+    combinedPageSource.match(/Get My Patient Growth Snapshot/g)?.length,
     2,
   )
 
@@ -89,7 +89,7 @@ test('combined dental-medspa CTAs do not force a dental prefill', async () => {
   assert.equal(homeServicesPageSource.match(/industry=["']home-services["']/g)?.length, 2)
 })
 
-test('an explicit non-healthcare selection overrides broad audience context', async () => {
+test('broad healthcare context applies only until an explicit industry is selected', async () => {
   const source = await readFile(
     new URL(
       '../app/(marketing)/growth-assessment/_components/growth-assessment-client.tsx',
@@ -98,9 +98,5 @@ test('an explicit non-healthcare selection overrides broad audience context', as
     'utf8',
   )
 
-  assert.match(
-    source,
-    /const healthcareContext = selectedIndustry\s*\?\s*isHealthcareAssessmentIndustry\(selectedIndustry\)\s*:\s*healthcareAudience/,
-  )
-  assert.match(source, /!selectedIndustry && healthcareAudience/)
+  assert.match(source, /getJourneyCopy\(selectedIndustry, !selectedIndustry && healthcareAudience\)/)
 })

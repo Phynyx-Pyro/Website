@@ -45,7 +45,7 @@ export function PyroEmberClient() {
               </div>
               <div className="mt-8 flex flex-col sm:flex-row gap-4">
                 <AssessmentCtaLink placement="pyro_hero" className="inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors">
-                  Book My Acquisition Diagnostic <ArrowRight className="h-4 w-4" />
+                  Get My Growth Snapshot <ArrowRight className="h-4 w-4" />
                 </AssessmentCtaLink>
               </div>
             </AnimatedSection>
@@ -217,10 +217,10 @@ export function PyroEmberClient() {
               Map PYRO and Ember Into Your Current Handoffs
             </h2>
             <p className="mt-4 max-w-[500px] mx-auto text-[17px] leading-[1.65] text-warm">
-              Start with a 3-minute fit check. If the business may be a fit, the next step is a working diagnostic to review the current journey and next steps.
+              Start with a 3-minute growth snapshot. See the largest visible drop-off before deciding whether to continue to a working diagnostic.
             </p>
             <AssessmentCtaLink placement="pyro_final" className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors">
-              Book My Acquisition Diagnostic <ArrowRight className="h-4 w-4" />
+              Get My Growth Snapshot <ArrowRight className="h-4 w-4" />
             </AssessmentCtaLink>
           </AnimatedSection>
         </div>

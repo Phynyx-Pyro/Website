@@ -62,7 +62,7 @@ export function MobileDiagnosticCta() {
         tabIndex={visible ? 0 : -1}
         className="mx-auto flex w-full max-w-[520px] items-center justify-center gap-2 rounded-lg bg-phoenix px-4 py-3 text-center text-[12.5px] font-semibold leading-tight text-white shadow-[0_10px_24px_-12px_rgba(184,68,32,.85)] transition-colors hover:bg-ember focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-flame focus-visible:ring-offset-2 focus-visible:ring-offset-ink"
       >
-        Book My Diagnostic
+        Get My Growth Snapshot
         <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
       </AssessmentCtaLink>
     </aside>

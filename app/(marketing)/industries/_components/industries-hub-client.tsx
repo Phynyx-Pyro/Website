@@ -44,12 +44,12 @@ const industries = [
     slug: '/growth-assessment',
     title: 'Other Service Businesses',
     tagline: 'See whether the workflow fits your business.',
-    desc: 'Appointment-driven businesses can use the fit check to compare stated revenue and planned marketing budget with the initial thresholds.',
+    desc: 'Appointment-driven businesses can use the growth snapshot to compare funnel visibility, operating readiness, capacity, and investment context.',
     image: '/images/industry-other.jpg',
     icon: Building2,
     proof: 'Fit check',
     assessment: true,
-    action: 'Book My Acquisition Diagnostic',
+    action: 'Get My Growth Snapshot',
   },
 ]
 
@@ -126,14 +126,14 @@ export function IndustriesHubClient() {
           <AnimatedSection>
             <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink">Not Sure if PhynyxPro Is Right for Your Industry?</h2>
             <p className="mt-4 max-w-[500px] mx-auto text-[17px] leading-[1.65] text-warm">
-              Start with a 3-minute fit check. If there may be a match, continue to a working diagnostic with your current acquisition numbers and handoff questions.
+              Start with a 3-minute growth snapshot. See the largest visible drop-off before deciding whether to continue to a working diagnostic.
             </p>
             <AssessmentCtaLink
               placement="industries_final"
               data-cta-placement="industries_final"
               className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors"
             >
-              Book My Acquisition Diagnostic <ArrowRight className="h-4 w-4" />
+              Get My Growth Snapshot <ArrowRight className="h-4 w-4" />
             </AssessmentCtaLink>
           </AnimatedSection>
         </div>

@@ -121,10 +121,10 @@ export function ResultsClient() {
           <AnimatedSection>
             <h2 className="text-[clamp(28px,3.5vw,44px)] font-semibold leading-[1.15] text-ink">Ready to Map Your Current Acquisition Path?</h2>
             <p className="mt-4 max-w-[500px] mx-auto text-[17px] leading-[1.65] text-warm">
-              Start with a 3-minute fit check. If aligned, bring last month&apos;s spend, leads, requests, completed appointments or jobs, and recorded outcomes to the working diagnostic.
+              Start with a 3-minute growth snapshot. Enter last month&apos;s spend and funnel counts to see the largest visible drop-off before deciding whether to book.
             </p>
             <AssessmentCtaLink placement="results_final" className="mt-8 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white shadow-lg hover:bg-ember transition-colors">
-              Book My Acquisition Diagnostic <ArrowRight className="h-4 w-4" />
+              Get My Growth Snapshot <ArrowRight className="h-4 w-4" />
             </AssessmentCtaLink>
           </AnimatedSection>
         </div>
