@@ -73,7 +73,17 @@ test('assessment readiness inputs are visibly required and submitted from the st
     assert.match(source, new RegExp(`${field}: string`))
   }
   assert.match(source, /Object\.entries\(form\)/)
-  assert.match(source, /snapshot, consent, website, submissionId/)
+  assert.match(source, /snapshot: snapshotInput, consent, website, submissionId/)
+})
+
+test('development previews calculate locally without saving contact data', async () => {
+  const source = await readFile(assessmentClientUrl, 'utf8')
+
+  assert.match(source, /developmentPreviewRef\.current = true/)
+  assert.match(source, /if \(developmentPreviewRef\.current\) \{/)
+  assert.match(source, /const snapshot = calculateGrowthSnapshot\(snapshotInput\)/)
+  assert.match(source, /Preview mode:.*not saved or sent to the CRM\./s)
+  assert.match(source, /Preview mode does not create a CRM contact or appointment\./)
 })
 
 test('calendar keeps the deployed secure prefill lifecycle', async () => {

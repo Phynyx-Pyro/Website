@@ -41,7 +41,7 @@ import {
   type GrowthSnapshotResult,
   type MetricConfidence,
 } from '@/lib/growth-snapshot'
-import type { FitPath, FitTier } from '@/lib/growth-assessment'
+import { assessGrowthFit, type FitPath, type FitTier } from '@/lib/growth-assessment'
 
 type FormData = {
   firstName: string
@@ -422,8 +422,10 @@ export function GrowthAssessmentClient() {
   const [consent, setConsent] = useState(EMPTY_CONSENT)
   const contactSubmissionIdRef = useRef('')
   const submissionIdRef = useRef('')
+  const developmentPreviewRef = useRef(false)
   const [assessmentResult, setAssessmentResult] = useState<AssessmentResult | null>(null)
   const [calendarVisible, setCalendarVisible] = useState(false)
+  const [developmentPreview, setDevelopmentPreview] = useState(false)
   const [healthcareAudience, setHealthcareAudience] = useState(false)
   const [website, setWebsite] = useState('')
   const [error, setError] = useState('')
@@ -442,7 +444,9 @@ export function GrowthAssessmentClient() {
     const preview = new URLSearchParams(window.location.search).get('preview')
     if (!preview) return
     demoAppliedRef.current = true
+    developmentPreviewRef.current = true
     const frame = window.requestAnimationFrame(() => {
+      setDevelopmentPreview(true)
       const demoSnapshot = calculateGrowthSnapshot(metricFormToInput(demoForm, demoMetrics))
       setForm(demoForm)
       setMetrics(demoMetrics)
@@ -512,6 +516,11 @@ export function GrowthAssessmentClient() {
 
   const saveContactAndContinue = async () => {
     if (!canProceed1 || submitting) return
+    if (developmentPreviewRef.current) {
+      setError('')
+      setStep(2)
+      return
+    }
     setSubmitting(true)
     setError('')
     try {
@@ -536,14 +545,29 @@ export function GrowthAssessmentClient() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!canSubmit) return
+    const snapshotInput = metricFormToInput(form, metrics)
+    if (developmentPreviewRef.current) {
+      const snapshot = calculateGrowthSnapshot(snapshotInput)
+      const fit = assessGrowthFit({
+        annualRevenue: form.annualRevenue,
+        monthlyBudget: form.monthlyBudget,
+        capacity: form.capacity,
+        decisionRole: form.decisionRole,
+        implementationTiming: form.implementationTiming,
+        followUpOwner: form.followUpOwner,
+        trackedMetricCount: snapshot.trackedCoreMetrics,
+      })
+      setError('')
+      setAssessmentResult({ fit, snapshot, bookingContact: null })
+      return
+    }
     setSubmitting(true)
     setError('')
     try {
       if (!submissionIdRef.current) submissionIdRef.current = crypto.randomUUID()
-      const snapshot = metricFormToInput(form, metrics)
       const response = await fetch('/api/growth-assessment', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, snapshot, consent, website, submissionId: submissionIdRef.current, attribution: getAssessmentAttribution() }),
+        body: JSON.stringify({ ...form, snapshot: snapshotInput, consent, website, submissionId: submissionIdRef.current, attribution: getAssessmentAttribution() }),
       })
       const result = await response.json().catch(() => null) as { code?: string; message?: string; bookingReady?: boolean; fit?: AssessmentResult['fit']; snapshot?: GrowthSnapshotResult } | null
       if (!response.ok || !result?.fit || !result.snapshot) {
@@ -581,11 +605,20 @@ export function GrowthAssessmentClient() {
                 <p className="mx-auto mt-3 max-w-[620px] text-[15px] leading-[1.65] text-warm">Your answers suggest that capacity, decision access, operating ownership, or acquisition investment should be strengthened before a full diagnostic. Begin by tracking the missing handoffs for one complete month.</p>
                 <Link href="/growth-system" className="mt-6 inline-flex items-center gap-2 rounded-lg bg-ink px-6 py-3.5 text-[14px] font-semibold text-white hover:bg-coal">Review the Growth System <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
               </div>
-            ) : calendarVisible && assessmentResult.bookingContact ? (
+            ) : calendarVisible && (assessmentResult.bookingContact || developmentPreview) ? (
               <div className="border-t border-ink/10 pt-8">
                 <h2 className="text-[30px] font-bold text-ink">Choose your diagnostic time.</h2>
-                <p className="mx-auto mt-3 max-w-[620px] text-[15px] leading-[1.65] text-warm">Your contact information will be passed securely to the calendar. Bring the source numbers behind your estimates where available.</p>
-                <BookingCalendar contact={assessmentResult.bookingContact} />
+                {assessmentResult.bookingContact ? (
+                  <>
+                    <p className="mx-auto mt-3 max-w-[620px] text-[15px] leading-[1.65] text-warm">Your contact information will be passed securely to the calendar. Bring the source numbers behind your estimates where available.</p>
+                    <BookingCalendar contact={assessmentResult.bookingContact} />
+                  </>
+                ) : (
+                  <div className="mx-auto mt-6 max-w-[620px] rounded-lg border border-ink/10 bg-white p-6 text-left shadow-sm">
+                    <p className="text-[14px] font-semibold text-ink">Calendar handoff preview</p>
+                    <p className="mt-2 text-[14px] leading-[1.6] text-warm">In the live flow, the secure scheduling calendar appears here after the assessment is saved. Preview mode does not create a CRM contact or appointment.</p>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="border-t border-ink/10 pt-8">
@@ -618,6 +651,7 @@ export function GrowthAssessmentClient() {
         <form name="growth-assessment-full" onSubmit={handleSubmit} className="mx-auto max-w-[760px] px-5">
           <div className="absolute left-[-10000px] h-px w-px overflow-hidden" aria-hidden="true"><label htmlFor="assessment-website">Website</label><input id="assessment-website" name="website" type="text" tabIndex={-1} autoComplete="off" value={website} onChange={(event) => setWebsite(event.target.value)} /></div>
           {Object.entries(form).map(([name, value]) => <input key={name} type="hidden" name={name} value={value} />)}
+          {developmentPreview ? <div className="mb-5 rounded-lg border border-phoenix/20 bg-white px-4 py-3 text-center text-[13px] font-medium text-warm"><span className="font-semibold text-phoenix">Preview mode:</span> your entries stay in this browser and are not saved or sent to the CRM.</div> : null}
           <div className="mb-8" role="progressbar" aria-label="Growth snapshot progress" aria-valuemin={1} aria-valuemax={4} aria-valuenow={step} aria-valuetext={`Step ${step} of 4`}>
             <div className="mb-2 flex items-center justify-between text-[12px] font-semibold text-warm"><span>Step {step} of 4</span><span>{['Save your snapshot', 'Practice baseline', 'Operating readiness', 'Funnel numbers'][step - 1]}</span></div>
             <div className="flex gap-2">{[1, 2, 3, 4].map((value) => <div key={value} className={`h-1.5 flex-1 rounded-full transition-colors ${value <= step ? 'bg-phoenix' : 'bg-ink/10'}`} />)}</div>
