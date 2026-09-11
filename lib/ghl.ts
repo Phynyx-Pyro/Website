@@ -185,8 +185,12 @@ function contactMatchesPhone(contact: ContactSummary, submittedPhone: string) {
   return Boolean(existingPhone && expectedPhone && existingPhone === expectedPhone)
 }
 
-async function findDuplicateContact(locationId: string, email: string) {
-  const query = new URLSearchParams({ locationId, email })
+async function findDuplicateContact(
+  locationId: string,
+  email: string,
+  phone: string,
+) {
+  const query = new URLSearchParams({ locationId, email, number: phone })
   const result = await ghlGet<ContactResponse>(
     `/contacts/search/duplicate?${query.toString()}`,
     true,
@@ -201,7 +205,11 @@ async function findDuplicateContact(locationId: string, email: string) {
 }
 
 async function createOrMatchContact(input: GhlGrowthAssessment, locationId: string) {
-  const existing = await findDuplicateContact(locationId, input.email)
+  const existing = await findDuplicateContact(
+    locationId,
+    input.email,
+    input.phone,
+  )
   if (existing) {
     if (!existing.id || !contactMatchesPhone(existing, input.phone)) {
       throw new GhlIdentityConflictError()
@@ -227,7 +235,11 @@ async function createOrMatchContact(input: GhlGrowthAssessment, locationId: stri
       throw error
     }
 
-    const racedDuplicate = await findDuplicateContact(locationId, input.email)
+    const racedDuplicate = await findDuplicateContact(
+      locationId,
+      input.email,
+      input.phone,
+    )
     if (!racedDuplicate?.id) throw error
     if (!contactMatchesPhone(racedDuplicate, input.phone)) {
       throw new GhlIdentityConflictError()

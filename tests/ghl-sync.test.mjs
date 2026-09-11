@@ -253,6 +253,37 @@ test('matching existing contacts are securely resolved before metadata sync', as
 
   assert.deepEqual(result, { contactId: 'existing-contact', isNew: false })
   assert.deepEqual(calls.map((call) => call.method), ['GET', 'GET'])
+  assert.equal(calls[0].searchParams.get('locationId'), 'location-test')
+  assert.equal(calls[0].searchParams.get('email'), 'qa@example.test')
+  assert.equal(calls[0].searchParams.get('number'), '+13125550100')
+})
+
+test('an existing phone contact is resolved when the submitted email is new', async () => {
+  const calls = []
+  globalThis.fetch = async (url, init = {}) => {
+    const call = recordCall(calls, url, init)
+    if (call.path === '/contacts/search/duplicate') {
+      assert.equal(call.searchParams.get('email'), 'qa@example.test')
+      assert.equal(call.searchParams.get('number'), '+13125550100')
+      return Response.json({ contact: { id: 'phone-match' } })
+    }
+    if (call.path === '/contacts/phone-match') {
+      return Response.json({
+        contact: {
+          id: 'phone-match',
+          email: 'older-address@example.test',
+          phone: '+1 (312) 555-0100',
+        },
+      })
+    }
+    throw new Error(`Unexpected request: ${url}`)
+  }
+
+  const { resolveGrowthAssessmentContact } = await loadGhlModule()
+  const result = await resolveGrowthAssessmentContact(assessmentInput())
+
+  assert.deepEqual(result, { contactId: 'phone-match', isNew: false })
+  assert.deepEqual(calls.map((call) => call.method), ['GET', 'GET'])
 })
 
 test('CRM lookup errors omit submitted identity from logs and error messages', async () => {
