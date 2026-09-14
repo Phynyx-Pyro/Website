@@ -2,9 +2,9 @@ import { buildPageMetadata } from '@/lib/page-metadata'
 import { GrowthAssessmentClient } from './_components/growth-assessment-client'
 
 export const metadata = buildPageMetadata({
-  title: 'Get Your Growth Snapshot',
+  title: 'Free Funnel Check and Growth Snapshot',
   description:
-    'Build a 3-minute growth snapshot, see your visible conversion rates and largest drop-off, then choose the right next step.',
+    'Check inquiry-to-booking and booking-to-visit rates without sharing contact details, then build a fuller growth snapshot when you are ready.',
   path: '/growth-assessment',
 })
 

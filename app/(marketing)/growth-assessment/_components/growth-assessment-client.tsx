@@ -42,6 +42,7 @@ import {
   type MetricConfidence,
 } from '@/lib/growth-snapshot'
 import { assessGrowthFit, type FitPath, type FitTier } from '@/lib/growth-assessment'
+import { calculatePublicFunnel, type PublicFunnelInput, type PublicFunnelResult } from '@/lib/public-funnel-calculator'
 
 type FormData = {
   firstName: string
@@ -415,9 +416,10 @@ function SnapshotResults({ result, firstName, copy }: { result: AssessmentResult
 
 export function GrowthAssessmentClient() {
   const { prefill, clearPrefill } = useAssessmentPrefill()
-  const [step, setStep] = useState(1)
+  const [step, setStep] = useState(0)
   const [form, setForm] = useState<FormData>(initialForm)
   const [metrics, setMetrics] = useState<MetricForm>(initialMetrics)
+  const [publicCounts, setPublicCounts] = useState<PublicFunnelInput>({ inquiries: '', booked: '', attended: '' })
   const [submitting, setSubmitting] = useState(false)
   const [consent, setConsent] = useState(EMPTY_CONSENT)
   const contactSubmissionIdRef = useRef('')
@@ -438,6 +440,7 @@ export function GrowthAssessmentClient() {
   const selectedIndustry = parseAssessmentIndustry(form.industry)
   const journeyCopy = getJourneyCopy(selectedIndustry, !selectedIndustry && healthcareAudience)
   const snapshotPreview = useMemo(() => calculateGrowthSnapshot(metricFormToInput(form, metrics)), [form, metrics])
+  const publicResult = useMemo(() => calculatePublicFunnel(publicCounts), [publicCounts])
 
   useEffect(() => {
     if (!import.meta.env.DEV || demoAppliedRef.current) return
@@ -451,6 +454,10 @@ export function GrowthAssessmentClient() {
       setForm(demoForm)
       setMetrics(demoMetrics)
 
+      if (preview === 'calculator') {
+        setStep(0)
+        return
+      }
       if (/^step[1-4]$/.test(preview)) {
         setStep(Number(preview.slice(-1)))
         return
@@ -513,6 +520,18 @@ export function GrowthAssessmentClient() {
   const canProceed2 = Boolean(form.businessName.trim() && form.industry && form.annualRevenue && form.monthlyBudget)
   const canProceed3 = Boolean(form.capacity && form.decisionRole && form.implementationTiming && form.followUpOwner && form.responseTime && form.followUpAttempts && form.attributionCoverage)
   const canSubmit = metricFields.every(({ key }) => metrics[key].confidence === 'not-tracked' || metrics[key].value.trim() !== '')
+
+  const continueFromCalculator = () => {
+    if (publicResult) {
+      setMetrics((current) => ({
+        ...current,
+        leads: { value: String(publicResult.inquiries), confidence: 'estimate' },
+        booked: { value: String(publicResult.booked), confidence: 'estimate' },
+        showed: { value: String(publicResult.attended), confidence: 'estimate' },
+      }))
+    }
+    setStep(1)
+  }
 
   const saveContactAndContinue = async () => {
     if (!canProceed1 || submitting) return
@@ -640,9 +659,9 @@ export function GrowthAssessmentClient() {
       <section className="pb-11 pt-32 md:pb-14 md:pt-40">
         <div className="mx-auto max-w-[820px] px-5 text-center">
           <AnimatedSection>
-            <h1 className="text-[36px] font-bold leading-[1.04] text-ink md:text-[54px]">Build Your <span className="text-phoenix">{journeyCopy.headline}</span></h1>
-            <p className="mx-auto mt-5 max-w-[650px] text-[16px] leading-[1.65] text-warm md:text-[17px]">Use your most recent complete 30-day period. Exact numbers are best, estimates are useful, and “not tracked” is a valid answer.</p>
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[13px] text-warm"><span className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-phoenix" aria-hidden="true" /> About 3 minutes</span><span className="flex items-center gap-1.5"><BarChart3 className="h-4 w-4 text-phoenix" aria-hidden="true" /> Immediate KPI snapshot</span><span className="flex items-center gap-1.5"><Shield className="h-4 w-4 text-phoenix" aria-hidden="true" /> No performance guarantee</span></div>
+            <h1 className="text-[36px] font-bold leading-[1.04] text-ink md:text-[54px]">{step === 0 ? <>See Where <span className="text-phoenix">Demand Stops Moving</span></> : <>Build Your <span className="text-phoenix">{journeyCopy.headline}</span></>}</h1>
+            <p className="mx-auto mt-5 max-w-[650px] text-[16px] leading-[1.65] text-warm md:text-[17px]">{step === 0 ? 'Use three numbers from a recent 30-day period to see two handoffs in your acquisition funnel. Try it free, without sharing contact details.' : 'Use your most recent complete 30-day period. Exact numbers are best, estimates are useful, and “not tracked” is a valid answer.'}</p>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-[13px] text-warm"><span className="flex items-center gap-1.5"><Clock className="h-4 w-4 text-phoenix" aria-hidden="true" /> {step === 0 ? 'About 30 seconds' : 'About 3 minutes'}</span><span className="flex items-center gap-1.5"><BarChart3 className="h-4 w-4 text-phoenix" aria-hidden="true" /> {step === 0 ? 'Live conversion math' : 'Immediate KPI snapshot'}</span><span className="flex items-center gap-1.5"><Shield className="h-4 w-4 text-phoenix" aria-hidden="true" /> No performance guarantee</span></div>
           </AnimatedSection>
         </div>
       </section>
@@ -652,12 +671,13 @@ export function GrowthAssessmentClient() {
           <div className="absolute left-[-10000px] h-px w-px overflow-hidden" aria-hidden="true"><label htmlFor="assessment-website">Website</label><input id="assessment-website" name="website" type="text" tabIndex={-1} autoComplete="off" value={website} onChange={(event) => setWebsite(event.target.value)} /></div>
           {Object.entries(form).map(([name, value]) => <input key={name} type="hidden" name={name} value={value} />)}
           {developmentPreview ? <div className="mb-5 rounded-lg border border-phoenix/20 bg-white px-4 py-3 text-center text-[13px] font-medium text-warm"><span className="font-semibold text-phoenix">Preview mode:</span> your entries stay in this browser and are not saved or sent to the CRM.</div> : null}
-          <div className="mb-8" role="progressbar" aria-label="Growth snapshot progress" aria-valuemin={1} aria-valuemax={4} aria-valuenow={step} aria-valuetext={`Step ${step} of 4`}>
+          {step > 0 ? <div className="mb-8" role="progressbar" aria-label="Growth snapshot progress" aria-valuemin={1} aria-valuemax={4} aria-valuenow={step} aria-valuetext={`Step ${step} of 4`}>
             <div className="mb-2 flex items-center justify-between text-[12px] font-semibold text-warm"><span>Step {step} of 4</span><span>{['Save your snapshot', 'Practice baseline', 'Operating readiness', 'Funnel numbers'][step - 1]}</span></div>
             <div className="flex gap-2">{[1, 2, 3, 4].map((value) => <div key={value} className={`h-1.5 flex-1 rounded-full transition-colors ${value <= step ? 'bg-phoenix' : 'bg-ink/10'}`} />)}</div>
-          </div>
+          </div> : null}
 
-          {step === 1 ? <ContactStep form={form} consent={consent} setConsent={setConsent} update={update} emailInvalid={emailInvalid} phoneInvalid={phoneInvalid} setContactTouched={setContactTouched} error={error} submitting={submitting} canProceed={canProceed1} onContinue={saveContactAndContinue} headingRef={stepHeadingRef} /> : null}
+          {step === 0 ? <PublicFunnelStep counts={publicCounts} setCounts={setPublicCounts} result={publicResult} onContinue={continueFromCalculator} headingRef={stepHeadingRef} isHomeServices={selectedIndustry === 'home-services'} /> : null}
+          {step === 1 ? <><button type="button" onClick={() => setStep(0)} className="mb-4 inline-flex items-center gap-2 text-[13px] font-semibold text-warm hover:text-ink"><ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back to free check</button><ContactStep form={form} consent={consent} setConsent={setConsent} update={update} emailInvalid={emailInvalid} phoneInvalid={phoneInvalid} setContactTouched={setContactTouched} error={error} submitting={submitting} canProceed={canProceed1} onContinue={saveContactAndContinue} headingRef={stepHeadingRef} /></> : null}
           {step === 2 ? <BaselineStep form={form} update={update} canProceed={canProceed2} onBack={() => setStep(1)} onContinue={() => setStep(3)} headingRef={stepHeadingRef} /> : null}
           {step === 3 ? <ReadinessStep form={form} update={update} canProceed={canProceed3} onBack={() => setStep(2)} onContinue={() => setStep(4)} headingRef={stepHeadingRef} /> : null}
           {step === 4 ? <MetricsStep fields={journeyCopy.metricFields} metrics={metrics} setMetrics={setMetrics} snapshotPreview={snapshotPreview} canSubmit={canSubmit} submitting={submitting} error={error} onBack={() => setStep(3)} headingRef={stepHeadingRef} /> : null}
@@ -668,6 +688,54 @@ export function GrowthAssessmentClient() {
 }
 
 type StepHeadingRef = RefObject<HTMLHeadingElement | null>
+
+function PublicFunnelStep({ counts, setCounts, result, onContinue, headingRef, isHomeServices }: {
+  counts: PublicFunnelInput
+  setCounts: Dispatch<SetStateAction<PublicFunnelInput>>
+  result: PublicFunnelResult | null
+  onContinue: () => void
+  headingRef: StepHeadingRef
+  isHomeServices: boolean
+}) {
+  const complete = counts.inquiries.trim() !== '' && counts.booked.trim() !== '' && counts.attended.trim() !== ''
+  const labels: { key: keyof PublicFunnelInput; label: string; hint: string }[] = [
+    { key: 'inquiries', label: 'New inquiries', hint: 'Calls, forms, chats, and other new leads' },
+    { key: 'booked', label: isHomeServices ? 'Visits booked' : 'First visits booked', hint: 'New prospects who selected a time' },
+    { key: 'attended', label: isHomeServices ? 'Visits completed' : 'First visits attended', hint: 'Booked prospects who actually showed up' },
+  ]
+
+  return <AnimatedSection>
+    <div className="rounded-lg bg-white p-6 shadow-xl md:p-8">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-[12px] font-bold uppercase text-phoenix">Free funnel check</p>
+          <h2 ref={headingRef} tabIndex={-1} className="mt-2 text-[23px] font-semibold text-ink outline-none">Your last complete 30 days</h2>
+        </div>
+        <BarChart3 className="h-6 w-6 shrink-0 text-phoenix" aria-hidden="true" />
+      </div>
+      <p className="mt-2 text-[14px] leading-[1.6] text-warm">Estimates are fine. Leave these blank if you do not track them yet.</p>
+      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+        {labels.map(({ key, label, hint }) => <div key={key}>
+          <label htmlFor={`public-${key}`} className="block text-[13px] font-semibold text-ink">{label}</label>
+          <p className="mt-1 min-h-[36px] text-[12px] leading-[1.45] text-warm">{hint}</p>
+          <input id={`public-${key}`} type="number" min="0" max="10000000" step="1" inputMode="numeric" value={counts[key]} onChange={(event) => setCounts((current) => ({ ...current, [key]: event.target.value }))} className="mt-2 w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[18px] font-semibold text-ink outline-none focus:border-phoenix focus:ring-1 focus:ring-phoenix" placeholder={key === 'inquiries' ? '80' : key === 'booked' ? '28' : '20'} />
+        </div>)}
+      </div>
+      <div aria-live="polite" className="mt-7 border-t border-ink/10 pt-6">
+        {result ? <>
+          <p className="text-[12px] font-bold uppercase text-warm">What your numbers show</p>
+          <div className="mt-4 grid gap-5 sm:grid-cols-2">
+            <div><p className="text-[30px] font-bold leading-none text-ink">{Math.round(result.bookingRate * 100)}%</p><p className="mt-2 text-[13px] font-semibold text-ink">Inquiry to booking</p><p className="mt-1 text-[12px] leading-[1.5] text-warm">{result.notBooked} of {result.inquiries} inquiries did not book.</p></div>
+            <div><p className="text-[30px] font-bold leading-none text-ink">{result.booked === 0 ? '—' : `${Math.round(result.attendanceRate * 100)}%`}</p><p className="mt-2 text-[13px] font-semibold text-ink">Booking to attended visit</p><p className="mt-1 text-[12px] leading-[1.5] text-warm">{result.booked === 0 ? 'No bookings to evaluate yet.' : `${result.didNotAttend} of ${result.booked} bookings did not attend.`}</p></div>
+          </div>
+          <p className="mt-5 border-l-2 border-phoenix pl-4 text-[13px] leading-[1.55] text-ink">The larger observed handoff gap is <strong>{result.largestGap === 'booking' ? 'inquiry to booking' : 'booking to attended visit'}</strong>. That is a place to investigate, not proof of why people dropped off.</p>
+        </> : <p className="text-[13px] leading-[1.55] text-warm">{complete ? 'Check the sequence: bookings cannot exceed inquiries, and attended visits cannot exceed bookings. Use whole numbers.' : 'Enter all three counts to see your conversion rates. No contact details are needed.'}</p>}
+      </div>
+      <button type="button" onClick={onContinue} className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-phoenix px-6 py-3.5 text-[15px] font-semibold text-white hover:bg-ember">{result ? 'Save My Full Snapshot' : 'Continue Without Numbers'} <ArrowRight className="h-4 w-4" aria-hidden="true" /></button>
+      <p className="mt-3 text-center text-[11.5px] leading-[1.5] text-warm">This calculation stays in your browser until you choose to continue. It is not a forecast or performance guarantee.</p>
+    </div>
+  </AnimatedSection>
+}
 
 function ContactStep({ form, consent, setConsent, update, emailInvalid, phoneInvalid, setContactTouched, error, submitting, canProceed, onContinue, headingRef }: {
   form: FormData
