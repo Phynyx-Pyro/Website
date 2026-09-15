@@ -41,7 +41,9 @@ hosting manifest into the personal configuration on main.
 - Normal email/SMS/voice workflow testing is authorized only for the privately
   configured acceptance recipient. Recovery dispatch now records explicit API
   removal/enrollment acknowledgments; these do not prove membership or delivery.
-  Browser trigger/channel configuration and booking acceptance remain gates.
+  Browser trigger/channel configuration was confirmed saved/published by the
+  coordinator September 15 at approximately 18:27 CDT. Live CRM/recovery and
+  booking acceptance remain unproven until the coordinated browser test.
 
 ## Configuration and live test sequence
 
@@ -52,7 +54,7 @@ hosting manifest into the personal configuration on main.
 `WEBSITE_ACCEPTANCE_WORKFLOWS_APPROVED=true`; it never creates a substitute contact
 or clears DND. Acceptance also requires `WEBSITE_RECOVERY_DISPATCH_ENABLED=true`.
 The dispatcher writes `company-v2` before trigger-producing tags/fields. Legacy
-002a–d tag triggers must use the reviewed positive `Website Form Version = v1`
+002a–d tag triggers must use the confirmed positive `Website Form Version = v1`
 filter; do not assume unsupported negative source-tag filters. These approval flags must represent completed browser checks, not
 be toggled to skip them. No test recipients belong in public source or docs.
 
@@ -94,7 +96,8 @@ The approved returning-nurture exception is separately configured using
 It preserves the same open nurture opportunity without resetting stage, value,
 owner or history. Other progressed/closed/booked paths remain protected.
 
-Read `WEBSITE_RECOVERY_CONTRACT.md` before activation: supported positive trigger
-filters, company-only Conversation AI branches, company recovery destinations
-and live receipt evidence are still required. The negative source-tag exclusion
+Read `WEBSITE_RECOVERY_CONTRACT.md` for the confirmed positive trigger filters,
+company-only email branches and company recovery destination. Environment
+revision 11 authorizes the configured acceptance recipient only. Live CRM,
+workflow and delivery receipts remain required; configuration is not test success. The negative source-tag exclusion
 proposal was not supported by the UI and was never saved.

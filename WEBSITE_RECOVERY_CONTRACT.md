@@ -8,8 +8,10 @@ Foundation qualification and nurture routing remain unchanged. No new pipeline
 stage, public identity bypass, paid service or personal-site deployment is added.
 
 The company source implements immutable assessment/report capture, bounded CRM
-receipts, single-use email verification and an API recovery dispatcher. Runtime
-activation remains separately gated pending the browser configuration below.
+receipts, single-use email verification and an API recovery dispatcher. The coordinator confirmed the browser configuration below as saved/published
+on September 15 at approximately 18:27 CDT and authorized bounded acceptance
+activation. Runtime environment revision 11 enables this configured recipient
+only; successful deployment is recorded in the release commit provenance.
 This is not full live parity. General public CRM capture, calendar acceptance,
 report-email delivery and dedicated foundation nurture implementation are not
 certified by this checkpoint.
@@ -44,7 +46,7 @@ get.phynyxpro.com, DNS, personal Site and sharing remain unchanged.
 
 ## Recovery transport and required browser configuration
 
-**Proposed activation contract, not a claim these UI changes are saved.** The
+**Saved/published configuration, coordinator-confirmed September 15, 18:27 CDT.** The
 coordinator found no negative source-tag operator on Contact Tag triggers. Do not
 assume source-tag exclusions exist. The UI does offer Website Form Version text
 `Exact match phrase`; the dispatcher is prepared for this positive discriminator:
@@ -52,20 +54,23 @@ assume source-tag exclusions exist. The UI does offer Website Form Version text
 1. On **every Contact Tag trigger in 002a, 002b, 002c and 002d**, preserve existing
    trigger conditions and ADD `Website Form Version — Exact match phrase — v1`
    using AND semantics. The personal adapter in this repository writes `v1`.
-   Review legacy blank/non-v1 records before accepting this filter: those records
-   would not enter through these tag triggers. Do not backfill them automatically.
+   The coordinator confirmed the original main adapter writes `v1` and accepted
+   this deliberate limitation: manual tag events on legacy blank/non-v1 records
+   no longer auto-enroll through these triggers. Do not backfill them automatically.
+   All four are confirmed saved/published; each has exactly ONE Contact Tag trigger.
 2. Company dispatch separately writes `company-v2` before adding the company
    origin marker, creating any opportunity, changing journey tags or publishing
    Submission ID. It then uses explicit workflow API enrollment. No automatic
    tag entry plus API enrollment for the same company event is intended.
 3. Keep **001 Submission ID changed** as the internal-notification event, with
    its existing markers/pause checks. Do not also API-enroll 001. September 14
-   observed only internal FYIs, no assignment/callback task. Reconfirm that its
-   current graph does not reset opportunity/owner or enroll recovery siblings.
+   observed only internal FYIs, no assignment/callback task. The coordinator
+   reconfirmed the LIVE graph: safety gate, FYI to Andrew, FYI to Craig, END.
+   No opportunity/owner update or sibling enrollment. It remains unchanged.
 4. For company-v2 contacts, 002a/b must not independently enroll 002c/d or start
    competing SMS/voice execution through Conversation AI activation. Retain the
-   normal email actions. Review a company-only branch using the same positive
-   version condition; preserve the personal branch. 002d owns SMS conversation
+   normal email actions. The saved company-only branches use Website Form
+   Version Is company-v2, and preserve each original personal branch. 002d owns SMS conversation
    activation, 002c owns voice. Do not silently remove recovery functionality.
 5. Keep 002e reply stops pending voice and booking/showed/pause cleanup. Recheck
    suppression, booked/closed state and required consent immediately before each
@@ -92,6 +97,35 @@ A suggested hybrid (first absent-tag addition uses automatic enrollment, repeats
 use API) is not implemented: it lacks an authoritative initial enrollment receipt,
 and different tag/consent triggers could make channel selection ambiguous. Do not
 activate that transport merely because adding a tag returned success.
+
+## Confirmed company-only branch edits
+
+The following node labels and topology were visually verified and confirmed
+saved/published by the coordinator. The MCP does not expose internal graph node
+IDs. Both company Yes branches terminate without rejoining the original path.
+
+| Workflow | Position and new condition | Company-v2 / Yes path | No path |
+| --- | --- | --- | --- |
+| 002a (`7780711c-043e-40a6-8d49-92210c96fcd9`) | After the 15-minute wait and successful existing eligibility gate, before Conversation AI activation: **Company assessment recovery?**; Website Form Version equals `company-v2` | Saved **Company - Ember - Finish Your Fit Check** email copy; visible text and href point to `https://phynyxpro-company-private.phynyx-6195.chatgpt.site/growth-assessment`, then end. Do not rejoin before AI activation. | Preserve the existing AI then email path, including its personal-site link. |
+| 002b (`2bf5b127-8c2d-4200-973c-aec295397aaa`) | At the equivalent point: **Company booking recovery?**; Website Form Version equals `company-v2` | Saved **Company - Ember - Book Your Diagnostic** email copy, then END; original shared-calendar URL retained. AI activation is bypassed. | Preserve AI then the existing email. |
+
+Reason: company email recovery must not activate other channels outside the
+separate consent/DND-checked dispatcher entries. AI activation by itself is not
+proof of a duplicate send. No extra company branch is required in 002c or 002d
+because the coordinator confirmed neither graph has cross-workflow actions;
+each contains its own AI activation and channel action. Preserve 002c/d delays, time windows,
+channel consent and DND checks. Keep 002e reply-stop and booking exits intact.
+
+For this acceptance test, 001 is confirmed to remain internal FYIs without
+owner/stage resets or sibling recovery enrollment. It stays Submission-ID-triggered and is
+never also explicitly API-enrolled.
+
+If verification expires while the form is prepared, do not bypass expiration or
+independently resend. After activation, the coordinator may submit the prepared
+full assessment once: it saves the report and holds CRM linking. That new full
+event can request its own link. Confirm in the same browser, then return to the
+final step and retry the same saved handoff. Cross-device confirmation grants
+only that device; it does not authorize the original browser automatically.
 
 ## Retry, concurrency and external acknowledgments
 
@@ -167,18 +201,28 @@ Verification pending remains a separate Site submission queue, never a tag
 attached to an unverified matched identity. Channels may overlap in actual
 membership. No new active-channel tags or workbook were authored here.
 
-The coordinator observed a v5 website-requested verification email in the
-intended GHL conversation. The matching D1 verification row has `sent` and a GHL
-message ID. At inspection, it was unclaimed. This establishes website-runtime
-message creation; inbox delivery, token confirmation and recovery execution are
-separate evidence, not inferred. No personal identifiers or message IDs are
-published in this repository.
+The coordinator verified that the v5 website-requested verification email arrived
+in the authorized recipient's Gmail inbox at 17:48 CDT on September 15. The
+subject was “Verify your PhynyxPro assessment”; the link used the configured CRM
+email-tracking domain. GHL conversation evidence and the matching D1 `sent` row
+corroborate runtime message creation. Inbox delivery is verified by the
+coordinator; token confirmation and normal recovery delivery remain unverified.
+The original token subsequently expired unclaimed. No browser security approval
+was bypassed and no resend was independently initiated. No recipient identities,
+message IDs, verification tokens or tracking URLs are published here.
 
 ## Activation and handoff
 
-- Keep dispatch/tracking disabled until the coordinator confirms the exact
-  supported trigger discriminator, company-only AI/channel branches, destinations
-  and guards. Verification remains independently testable.
+- The confirmed browser configuration releases the bounded acceptance gate.
+  Environment revision **11** sets `WEBSITE_ACCEPTANCE_WORKFLOWS_APPROVED`,
+  `WEBSITE_CRM_DISPATCH_ENABLED` and `WEBSITE_RECOVERY_DISPATCH_ENABLED` to `true`.
+  `WEBSITE_CRM_MODE=acceptance` and the existing private recipient/contact boundary
+  remain unchanged. Verification and the approved open-nurture exception remain
+  enabled. `WEBSITE_EXTERNAL_TRACKING_ENABLED=false`. No secret/access/DNS changes.
+- Enabling flags is not a live test result and never grants ownership. The
+  coordinator owns the next single browser submission and fresh verification
+  request. Email-tracking-domain browser approval still awaits the user; do not
+  bypass it. No automatic resend or historical replay is performed.
 - Required runtime API access includes contacts read/write, workflows readonly,
   configured location fields/pipeline/opportunity/appointment reads, opportunity
   write only for authorized creation, and conversations/message.write for email.
@@ -192,3 +236,15 @@ published in this repository.
 - Save/deploy exact tested source with unchanged audience; mirror the complete
   tree to the company GitHub branch. Never publish secrets, recipient identities,
   private audit/agency inventories or customer data. Keep main unchanged.
+
+## Release provenance
+
+This activation changes operational documentation and runtime flags only. The
+application logic is unchanged from tested Sites source
+`f54ae92d61c6459b47a7f5b4f308213a3986130d` (v6): 105 isolated tests passed, with
+lint/type checking and build passing. Those tests mock upstream GHL; they do not
+prove live CRM writes or recovery delivery. The final activation source SHA,
+Sites saved version, deployment ID/result, environment revision and matching tree
+are recorded in the GitHub activation commit message and implementation handoff.
+The public review branch is `company/assessment-capture-checkpoint`; main remains
+unchanged. Recipient identifiers and runtime secrets are excluded from source.
