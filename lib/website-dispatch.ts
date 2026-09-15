@@ -4,9 +4,10 @@ import { getDb } from '@/db'
 import { growthAssessments, websiteCreatedIdentities, websiteDispatchLocks, websiteDispatchReceipts } from '@/db/schema'
 import { grantCreatedContact, requireContactGrant, requireIntakeSession, type IntakeSession } from './intake-session'
 import { hashText, normalizePhone, PublicFormError } from './public-form-security'
+import { prepareRecoveryDispatch, enrollRecoveryDispatch, RecoveryDispatchError } from './website-recovery'
 import { GHL_CONTACT_FIELD_KEYS, type GhlGrowthAssessment } from './ghl'
 
-type Contact = { id: string; locationId: string; email?: string; phone?: string; tags?: string[]; dnd?: boolean; dndSettings?: Record<string, { status?: string }>; customFields?: Array<{ id: string; value?: unknown }> }
+export type Contact = { id: string; locationId: string; email?: string; phone?: string; tags?: string[]; dnd?: boolean; dndSettings?: Record<string, { status?: string }>; customFields?: Array<{ id: string; value?: unknown }> }
 type Opportunity = { id: string; contactId?: string; contact?: { id: string }; pipelineId: string; pipelineStageId: string; status: string }
 export type DispatchResult = { state: string; synced: boolean; recovery: string }
 const API = 'https://services.leadconnectorhq.com'
@@ -18,7 +19,7 @@ const HOLD_TAGS = ['automation:pause', 'stop bot', 'human handover']
 // Live mode is deliberately unavailable until the recovery consumer is accepted.
 export function dispatchAdmitted(email: string, phone: string) {
   const modeApproved = (env.WEBSITE_CRM_MODE === 'test' && env.WEBSITE_TEST_SUPPRESSION_APPROVED === 'true') ||
-    (env.WEBSITE_CRM_MODE === 'acceptance' && Boolean(env.WEBSITE_ACCEPTANCE_CONTACT_ID) && env.WEBSITE_ACCEPTANCE_WORKFLOWS_APPROVED === 'true')
+    (env.WEBSITE_CRM_MODE === 'acceptance' && Boolean(env.WEBSITE_ACCEPTANCE_CONTACT_ID) && env.WEBSITE_ACCEPTANCE_WORKFLOWS_APPROVED === 'true' && env.WEBSITE_RECOVERY_DISPATCH_ENABLED === 'true')
   return env.WEBSITE_CRM_DISPATCH_ENABLED === 'true' && modeApproved &&
     Boolean(env.WEBSITE_CRM_TEST_EMAIL && env.WEBSITE_CRM_TEST_PHONE) &&
     email === env.WEBSITE_CRM_TEST_EMAIL?.trim().toLowerCase() &&
@@ -74,7 +75,7 @@ export function recoveryChannelState(c: Contact, input: GhlGrowthAssessment, cha
   if (Object.entries(c.dndSettings || {}).some(([name, value]) => name.toLowerCase() === dndChannel && value.status === 'active')) return 'suppressed'
   if (c.tags?.includes('appt:booked')) return 'booked'
   if (input.submissionType === 'full-assessment' && input.fit.path === 'foundation') return 'foundation'
-  if (channel === 'sms' && !input.consent?.smsService) return 'consent_required'
+  if (channel === 'sms' && !input.consent?.smsMarketing) return 'consent_required'
   if (channel === 'voice' && !input.consent?.aiVoice) return 'consent_required'
   return 'awaiting_workflow_activation'
 }
@@ -166,7 +167,7 @@ export async function dispatchWebsiteSubmission(input: GhlGrowthAssessment, sess
     }
     // Existing fields only; stage is encoded in the durable receipt, not a new field.
     const eventField = field(GHL_CONTACT_FIELD_KEYS.submissionId, input.submissionId)
-    const metadata = [field(GHL_CONTACT_FIELD_KEYS.formName, 'growth-assessment'), field(GHL_CONTACT_FIELD_KEYS.formVersion, 'v1'),
+    const metadata = [field(GHL_CONTACT_FIELD_KEYS.formName, 'growth-assessment'), field(GHL_CONTACT_FIELD_KEYS.formVersion, acceptance ? 'company-v2' : 'v1'),
       field(GHL_CONTACT_FIELD_KEYS.conversionPage, input.attribution.conversionPage)]
     if (stage === 'completed') metadata.push(field(GHL_CONTACT_FIELD_KEYS.industry, input.industry),
       field(GHL_CONTACT_FIELD_KEYS.revenueRange, input.annualRevenue), field(GHL_CONTACT_FIELD_KEYS.budgetRange, input.monthlyBudget),
@@ -220,8 +221,25 @@ export async function dispatchWebsiteSubmission(input: GhlGrowthAssessment, sess
     const opportunities = await api<{ opportunities: Opportunity[]; meta?: { total?: number; nextPage?: unknown } }>(`/opportunities/search?${query}`)
     const opps = opportunities.opportunities
     if (!Array.isArray(opps) || opps.length > 1 || (opportunities.meta?.total ?? opps.length) > opps.length || opportunities.meta?.nextPage) throw new DispatchHold('opportunity_review_required')
-    if (opps.some(o => o.pipelineId !== pipelineId || (o.contactId || o.contact?.id) !== contactId || o.status !== 'open' || o.pipelineStageId !== stageId)) throw new DispatchHold('protected_opportunity')
+    const nurtureStage = env.WEBSITE_RETURNING_NURTURE_STAGE_ID?.trim()
+    const allowedNurture = env.WEBSITE_RETURNING_NURTURE_APPROVED === 'true' && nurtureStage &&
+      pipelines.pipelines.some(p => p.id === pipelineId && p.stages.some(s => s.id === nurtureStage))
+    if (opps.some(o => o.pipelineId !== pipelineId || (o.contactId || o.contact?.id) !== contactId || o.status !== 'open' ||
+      (o.pipelineStageId !== stageId && !(allowedNurture && o.pipelineStageId === nurtureStage)))) throw new DispatchHold('protected_opportunity')
     opportunityId = opps[0]?.id || null
+    const recoveryContext = { input, locationId, contactId, opportunityId, stage, now,
+      formVersionField: field(GHL_CONTACT_FIELD_KEYS.formVersion, 'company-v2'), api, mutate, readProtection: async () => {
+        const current = await readProtection()
+        const latest = await api<{ opportunities: Opportunity[]; meta?: { total?: number; nextPage?: unknown } }>(`/opportunities/search?${query}`)
+        if (!Array.isArray(latest.opportunities) || latest.opportunities.length > 1 || latest.meta?.nextPage ||
+          (latest.meta?.total ?? latest.opportunities.length) > latest.opportunities.length ||
+          (opportunityId && latest.opportunities[0]?.id !== opportunityId) ||
+          latest.opportunities.some(o => o.pipelineId !== pipelineId || (o.contactId || o.contact?.id) !== contactId || o.status !== 'open' ||
+            (o.pipelineStageId !== stageId && !(allowedNurture && o.pipelineStageId === nurtureStage)))) throw new DispatchHold('protected_opportunity')
+        return current
+      }, channelState: recoveryChannelState }
+    // The version discriminator and marker precede opportunity creation and legacy event fields/tags.
+    const recoveryPrepared = await prepareRecoveryDispatch(recoveryContext)
     if (!opportunityId) {
       const created = await mutate<{ opportunity: Opportunity }>('/opportunities/', 'POST', {
         locationId, contactId, pipelineId, pipelineStageId: stageId, status: 'open',
@@ -231,37 +249,33 @@ export async function dispatchWebsiteSubmission(input: GhlGrowthAssessment, sess
       opportunityId = created.opportunity.id
       await save('processing', 'opportunity_created')
     }
-    // Never update opportunity stage/status/owner, identity fields or DND.
-    // Record affirmative service-SMS consent only after a valid contact grant;
-    // never clear earlier consent, add marketing consent or authorize voice here.
-    // A partial capture after completion cannot regress current business state.
+    // Cancel only reviewed acquisition workflows before changing their context.
+    // No CRM identity, owner, opportunity state, DND or existing consent reset.
+    recoveryContext.opportunityId = opportunityId
     const priorCompleted = contact.tags?.some(t => ['sales:booking-followup', 'sales:nurture', 'fit:qualified', 'fit:nurture'].includes(t))
-    const regress = stage === 'quick-capture' && priorCompleted
-    if (!regress) {
-      await readProtection()
+    await readProtection()
+    // A new partial attempt can describe current progress without erasing the
+    // last completed qualification fields or any immutable assessment history.
+    if (!(stage === 'quick-capture' && priorCompleted)) {
       await mutate(`/contacts/${encodeURIComponent(contactId)}`, 'PUT', { customFields: metadata })
-      const next = stage === 'quick-capture' ? 'sales:assessment-incomplete' : input.fit.path === 'foundation' ? 'sales:nurture' : 'sales:booking-followup'
-      if (stage === 'completed') {
-        await mutate(`/contacts/${encodeURIComponent(contactId)}/tags`, 'DELETE', { tags: ['sales:assessment-incomplete', next === 'sales:nurture' ? 'sales:booking-followup' : 'sales:nurture', input.fit.path === 'foundation' ? 'fit:qualified' : 'fit:nurture'] })
-      }
-      await mutate(`/contacts/${encodeURIComponent(contactId)}/tags`, 'POST', { tags: ['source:phynyx-website', 'automation:phynyx-web-v1', 'form:growth-assessment', 'intent:assessment', next,
-        ...(acceptance && input.consent?.smsService ? ['consent:sms-service'] : []),
-        ...(stage === 'completed' ? [input.fit.path === 'foundation' ? 'fit:nurture' : 'fit:qualified'] : [])] })
     }
-    // Distinct quick/completed receipts survive even if contact metadata changes.
-    // No tag churn and no external enrollment call. Suppressed tests cannot send.
+    const next = stage === 'quick-capture' ? 'sales:assessment-incomplete' : input.fit.path === 'foundation' ? 'sales:nurture' : 'sales:booking-followup'
+    const remove = ['sales:assessment-incomplete', 'sales:booking-followup', 'sales:nurture'].filter(t => t !== next)
+    if (stage === 'completed') remove.push(input.fit.path === 'foundation' ? 'fit:qualified' : 'fit:nurture')
+    await mutate(`/contacts/${encodeURIComponent(contactId)}/tags`, 'DELETE', { tags: remove })
+    await mutate(`/contacts/${encodeURIComponent(contactId)}/tags`, 'POST', { tags: ['source:phynyx-website', 'automation:phynyx-web-v1', 'form:growth-assessment', 'intent:assessment', next,
+      ...(acceptance && input.consent?.smsService ? ['consent:sms-service'] : []),
+      ...(stage === 'completed' ? [input.fit.path === 'foundation' ? 'fit:nurture' : 'fit:qualified'] : [])] })
+    // Marketing/voice consent stays in the submission snapshot; existing CRM
+    // consent must ALSO permit those channels. No silent enrollment opt-in.
     await readProtection()
     await mutate(`/contacts/${encodeURIComponent(contactId)}`, 'PUT', { customFields: [eventField] })
-    for (const channel of ['email', 'sms', 'voice']) await db.insert(websiteDispatchReceipts).values({
-      key: `${locationId}:${input.submissionId}:${stage}:${channel}`, submissionId: input.submissionId, stage,
-      channel, locationId, contactId, opportunityId, state: channel === 'voice' ? 'not_authorized' : recoveryChannelState(contact, input, channel),
-      detail: regress ? 'prior_completed_journey_preserved' : acceptance ? 'workflow_receipt_required' : 'test_outreach_prohibited', createdAt: now, updatedAt: new Date(),
-    }).onConflictDoNothing()
-    const result = await save('applied', 'crm_capture_verified_by_responses', acceptance ? 'awaiting_workflow_activation' : 'suppressed')
+    const recovery = await enrollRecoveryDispatch(recoveryContext, recoveryPrepared)
+    const result = await save('applied', 'crm_capture_verified_by_responses', recovery)
     await release()
     return result
   } catch (error) {
-    const detail = error instanceof DispatchHold ? error.code : error instanceof PublicFormError ? 'verification_required' : 'upstream_or_storage_failure'
+    const detail = error instanceof DispatchHold || error instanceof RecoveryDispatchError ? error.code : error instanceof PublicFormError ? 'verification_required' : 'upstream_or_storage_failure'
     // Lost responses and partial mutations hold the locks. No blind write retry.
     const result = await save(mutationStarted ? 'reconcile' : 'held', detail, detail === 'verification_required' ? 'verification_pending' : 'held')
     if (!mutationStarted) await release()

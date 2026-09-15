@@ -1,235 +1,194 @@
-# Website assessment and recovery integration contract
+# Company website assessment and recovery contract
 
-## Scope and release boundary
+## Release boundary
 
-**Implementation update:** the company route now uses `lib/website-dispatch.ts`,
-with durable stage/channel receipts, identity/contact locks and fail-closed
-reconciliation after uncertain writes. It supports bounded synthetic creation
-and an existing-contact acceptance mode. Existing-contact mutation requires a
-real grant; configured test recipients are not an ownership bypass. The previous
-adapter route is retained only in a regression-test fixture.
+Appointment booking is the conversion. A fresh assessment/report is an
+intermediate step; eligible unbooked visitors remain in booking recovery.
+Foundation qualification and nurture routing remain unchanged. No new pipeline
+stage, public identity bypass, paid service or personal-site deployment is added.
 
-Email verification is implemented through the existing authenticated GHL
-conversation-message API, subject to runtime scope/sender acceptance. Tokens are
-hashed, single-use, expire after 15 minutes and require an explicit confirmation
-POST. Recovery enrollment/exit reconciliation and booking activation are still
-separate gates. No voice execution is authorized. See `ANDREW_HANDOFF.md` for
-runtime gates, test flow and editing boundaries. This supersedes the earlier
-capture-only implementation boundary below; neither implementation nor a saved
-version by itself proves runtime delivery.
+The company source implements immutable assessment/report capture, bounded CRM
+receipts, single-use email verification and an API recovery dispatcher. Runtime
+activation remains separately gated pending the browser configuration below.
+This is not full live parity. General public CRM capture, calendar acceptance,
+report-email delivery and dedicated foundation nurture implementation are not
+certified by this checkpoint.
 
-Appointment booking remains the conversion. A fresh assessment/report is an
-intermediate step. Eligible completed unbooked visitors remain recovery
-candidates; foundation qualification and nurture routing do not change.
+The source owner owns company source/tests/Sites/GitHub review branch. The
+coordinator owns workflow UI changes and the journey workbook. GitHub main,
+get.phynyxpro.com, DNS, personal Site and sharing remain unchanged.
 
-This company release implements **capture and fresh reports**, bounded CRM
-dispatch and single-use email verification, with independent runtime gates.
-It does not implement cross-device report recovery, the live recovery consumer,
-workflow editing, or Smart List creation. A pending response is not a delivery
-receipt. The old flag alone cannot activate CRM; the recovery integration below
-still needs acceptance. External tracking remains disabled.
+## Events, identity and durable state
 
-The company Site owner owns source, tests, saved versions and deployments. The
-coordinating manager owns GHL browser workflow configuration, Smart Lists and the
-customer journey workbook. Field/tag configuration must follow this mapping and
-be coordinated before creation. No tags were assigned or backfilled by this
-release. No workflow settings were changed by the source owner.
+- A fresh intentional submission has a UUID and stage (`quick-capture` or
+  `completed`). D1 receipts are keyed by location + UUID + stage + channel.
+  Website Submission ID is metadata/event publication, not an ownership token.
+- Identical retries reuse the receipt; changed content under the same ID fails.
+  Different sessions cannot read/replay someone else's saved submission.
+- Fresh reports use only newly submitted answers and survive CRM/automation
+  failure. Every raw/normalized contact detail, answer, fit and consent snapshot
+  remains in its immutable submission. No historical pending rows auto-export.
+- Existing-contact linking requires a genuine browser ownership grant, exact
+  location/email/normalized-phone agreement and unambiguous matching. Partial,
+  conflicting or duplicate matches never merge/update identities or reveal CRM
+  data. The configured acceptance recipient boundary is not proof of ownership.
+- Verification uses authenticated GHL conversation email to the stored contact,
+  with no recipient override. Tokens are hashed, single-use, expire after 15
+  minutes, and require explicit POST confirmation. A link grants only the
+  confirming browser. A different browser can verify then start a fresh attempt.
+  The old Magic Link workflow is not used because it creates/updates a contact
+  before sending. An API message ID is not proof of inbox delivery.
+- Stable journey tags describe current attempt state: incomplete, awaiting
+  booking, foundation/nurture, booked. They are never toggled as event pulses.
+  No active-recovery tags are used; actual workflow membership describes execution.
 
-## Events versus current state
+## Recovery transport and required browser configuration
 
-| Concept | Contract |
+**Proposed activation contract, not a claim these UI changes are saved.** The
+coordinator found no negative source-tag operator on Contact Tag triggers. Do not
+assume source-tag exclusions exist. The UI does offer Website Form Version text
+`Exact match phrase`; the dispatcher is prepared for this positive discriminator:
+
+1. On **every Contact Tag trigger in 002a, 002b, 002c and 002d**, preserve existing
+   trigger conditions and ADD `Website Form Version — Exact match phrase — v1`
+   using AND semantics. The personal adapter in this repository writes `v1`.
+   Review legacy blank/non-v1 records before accepting this filter: those records
+   would not enter through these tag triggers. Do not backfill them automatically.
+2. Company dispatch separately writes `company-v2` before adding the company
+   origin marker, creating any opportunity, changing journey tags or publishing
+   Submission ID. It then uses explicit workflow API enrollment. No automatic
+   tag entry plus API enrollment for the same company event is intended.
+3. Keep **001 Submission ID changed** as the internal-notification event, with
+   its existing markers/pause checks. Do not also API-enroll 001. September 14
+   observed only internal FYIs, no assignment/callback task. Reconfirm that its
+   current graph does not reset opportunity/owner or enroll recovery siblings.
+4. For company-v2 contacts, 002a/b must not independently enroll 002c/d or start
+   competing SMS/voice execution through Conversation AI activation. Retain the
+   normal email actions. Review a company-only branch using the same positive
+   version condition; preserve the personal branch. 002d owns SMS conversation
+   activation, 002c owns voice. Do not silently remove recovery functionality.
+5. Keep 002e reply stops pending voice and booking/showed/pause cleanup. Recheck
+   suppression, booked/closed state and required consent immediately before each
+   message/AI action, including after waits. Preserve Stop on response and time
+   windows. No global workflow disable or unrelated workflow change.
+6. In 002a, company-v2 recovery must link to the company assessment URL, not the
+   personal site. In 002b, the observed direct shared calendar link must remain
+   distinct from authenticated/prefilled Site access. Calendar duplicate/contact
+   effects and downstream confirmations require acceptance; no policy change.
+
+| Dispatcher channel | Existing workflow ID | Entry |
+| --- | --- | --- |
+| Incomplete email | `7780711c-043e-40a6-8d49-92210c96fcd9` (002a) | New authorized incomplete event, email allowed |
+| Completed email | `2bf5b127-8c2d-4200-973c-aec295397aaa` (002b) | Qualified completed/unbooked event, email allowed |
+| SMS | `7fa97577-9208-45bd-823f-3eed0e25ac09` (002d) | Completed/qualified, affirmative current SMS-marketing consent AND existing consent tag, SMS DND off |
+| Voice | `45d9da71-533d-43d7-9dce-07232fc5ad3b` (002c) | Completed/qualified, affirmative current AI-voice consent AND existing consent tag, Call DND off |
+
+Existing field: `contact.website_form_version`; values `v1` (personal adapter)
+and `company-v2` (company acceptance adapter). One new origin tag definition,
+`source:phynyx-company`, was created; it is not an authentication or active-state
+tag and has not been backfilled. No new custom fields are required.
+
+A suggested hybrid (first absent-tag addition uses automatic enrollment, repeats
+use API) is not implemented: it lacks an authoritative initial enrollment receipt,
+and different tag/consent triggers could make channel selection ambiguous. Do not
+activate that transport merely because adding a tag returned success.
+
+## Retry, concurrency and external acknowledgments
+
+The CRM adapter holds durable, non-expiring identity/contact locks throughout
+metadata publication and recovery handoff. A fresh intentional event explicitly
+replaces pending acquisition follow-up: it first removes this contact from 002a–d
+and requires success acknowledgments for **all four** before any new enrollment.
+It never removes booking/no-show/cancellation workflows or deletes a contact.
+A fresh event is allowed to restart pending acquisition follow-up; a retry is not.
+
+Each external removal/enrollment has a durable `exit_requested` or
+`enrollment_requested` receipt before the HTTP request, then an acknowledgment
+receipt only when the GHL response explicitly reports success. Both documented
+`succeeded` and `succeded` spellings are accepted. Lost, false or malformed
+acknowledgments retain the enclosing contact lock and require reconciliation;
+no timeout-based takeover or blind retry. A newer event cannot bypass that hold.
+After all acknowledged work, release the local lock. This protects submissions
+through this adapter; UI/other systems still require workflow guards.
+
+Workflow API acknowledgment is not authoritative evidence of current membership,
+queued-action cancellation, a send, delivery or conversion. Verify these in GHL
+execution history and the recipient channel. The connector exposes inventory and
+add/remove operations, not full graphs/settings or an active-membership read.
+Stop on response/external removal can bypass tail actions, so no tail-cleanup tag
+is used as execution truth. Finished membership is not a booking/delivery receipt.
+
+## Journey and protected sales transitions
+
+| Condition | Behavior |
 | --- | --- |
-| Submission event | Opaque submission UUID plus stage (`quick-capture` or `completed`); not an identity credential. Existing `contact.website_submission_id` is a CRM metadata field, not a complete event ledger or reliable dispatch signal. Publish only after authorization and required metadata are complete. |
-| Retry | Same event ID and same canonical payload; return the same result without another enrollment. Changed payload under the same ID returns 409. |
-| Intentional new assessment | Fresh event ID; preserve all prior submitted evidence. A page reload, timeout or double click is not a new sales intent. |
-| Start versus completion | Quick capture and full completion are distinct saved events (`submission_type`). Completion replaces incomplete recovery eligibility, not assessment history. |
-| Stable journey | Existing `sales:assessment-incomplete`, `sales:booking-followup`, `sales:nurture`, `appt:booked`, and fit tags. These describe state and eligibility, not an enrollment pulse. |
-| Channel state | Actual GHL Workflow (active) membership; channels may run in parallel. No new active-channel tags. |
-| Verification pending | An unlinked submission in the company database, never a tag written to an unverified matched contact. |
+| Unverified start/completion | Save attempt/report; keep verification pending; no existing-contact writes or recovery |
+| Authorized new partial attempt | Current journey becomes incomplete; preserve last completed qualification fields and all prior submitted history; email recovery only |
+| Authorized qualified completion | Remove incomplete/nurture journey tags, set qualified/awaiting-booking; dispatch eligible channels after guards |
+| Foundation completion | Preserve foundation rules, set nurture state, acknowledge cancellation of pending acquisition recovery, no booking-recovery enrollment |
+| Approved returning open nurture opportunity | Requalify the fresh assessment and start appropriate recovery while leaving the SAME opportunity's Nurture / Recycle stage, open status, value, owner and history unchanged |
+| Other progressed or Won/Lost opportunity, multiple opportunities, booked/upcoming appointment | Hold acquisition changes; never reopen/reset or create a substitute opportunity |
+| Pause, stop bot, human handover, global DND | Hold dispatch; do not clear suppression |
+| Per-channel DND or missing required consent | Skip that channel; preserve stored consent and the new submission's distinct snapshot |
+| Booking/reply | Existing workflow exits own the transition; no retry re-enrolls the same event |
 
-No new CRM custom field is needed for this proposed minimal mapping. Existing
-tags suffice for incomplete/complete/booked/foundation and operator pause. Do not
-remove/re-add journey tags solely to manufacture a trigger. The workflow owner
-must connect the fresh submission event to the correct recovery path and permit
-legitimate re-entry. Re-entry enabled alone does not make adding an already-present
-tag a fresh event.
+The returning-nurture exception is explicitly approved for the bounded live test
+and requires its named stage plus `WEBSITE_RETURNING_NURTURE_APPROVED=true`.
+The opportunity never moves automatically as part of requalification. This can
+show qualified current journey tags alongside an unchanged nurture pipeline
+stage; that difference is intentional, pending any separate sales-stage decision.
 
-**Current quick-capture limitation:** quick capture returns without writing
-Website Submission ID (`contact.website_submission_id`). A final-assessment ID
-alone therefore cannot restart legitimate repeated incomplete recovery. The
-capture-only checkpoint sends neither stage to CRM. At activation, use a durable
-stage-qualified receipt `(submission ID, quick-capture/completed, channel)`,
-scoped to the authorized location/contact, and an acknowledged dispatch/event
-signal for each eligible stage. Do not churn durable journey/status tags to
-generate events. The signal's transport and workflow integration still require
-implementation and acceptance; this is activation design, not an implemented
-dispatcher. Retries reuse the same stage receipt; a fresh intentional submission
-creates a new one, subject to active-run, qualification and suppression checks.
+Requested recovery, report delivery and marketing enrollment are separate
+purposes. Existing 002d uses marketing-SMS consent; service-SMS consent alone does
+not qualify it. No current checkbox silently clears old consent or DND; the
+adapter does not add marketing/voice consent tags. Dedicated foundation nurture
+execution remains an explicitly missing implementation, not a new funnel design.
 
-**Execution evidence:** use Workflow (active) membership. Stop on response and
-external removal can bypass tail cleanup, so active tags can become stranded.
-Workflow (finished) is not proof of appointment conversion or message delivery.
+## Observed operations and evidence
 
-## Transitions and ownership
+Keep the September 14 inventory in `GHL_WEBSITE_LEAD_SYSTEM.md` separate from the
+older September 4 specification and the following coordinator-provided September
+15 browser observations:
 
-| Event/condition | Journey and recovery effects |
+- Re-entry was saved ON for **002a–e**; 001 already had it ON. Multiple opportunities
+  remains OFF and Stop on response ON. 002c/d retain Contact timezone, Mon–Fri
+  9am–5pm. 002a/b retain Account timezone and no specific time window.
+- Five saved views exist; no historical tag backfill was performed:
+
+| View | Saved filter |
 | --- | --- |
-| Start, identity unverified | Save incomplete attempt in Site; verification pending; no matched-contact updates/enrollment. |
-| Start, authorized and eligible | Incomplete recovery candidate; preserve any established booked/closed/progressed state. A partial capture must not erase a completed assessment. |
-| Complete, identity unverified | Save report and answers; show only this submission's report; hold contact linking/recovery. |
-| Complete, authorized, qualified, unbooked | Remove incomplete eligibility; set booking-followup eligibility; consume this new event once after suppression checks. |
-| Complete, foundation | Preserve fit:nurture / sales:nurture routing after authorization; no booking recovery. Missing dedicated nurture implementation is a separate dependency. |
-| Already booked | Preserve appointment and owner; do not restart acquisition recovery. Do not create a second opportunity. |
-| Won/Lost or progressed sales record | Do not reset stage/status, reopen a deal or start acquisition recovery automatically. Retain the new assessment; request an explicit sales decision where appropriate. |
-| Reply / pause / stop bot / human handover | Exit affected recovery runs; retain consent evidence and the submission. No retry clears suppression. |
-| Booking | Booking is authoritative; remove incomplete/booking-recovery eligibility; exit actual recovery membership and cancel queued recovery before further sends. |
-| Cancel / no-show | Existing approved reschedule logic owns the transition. A submission alone never synthesizes a cancellation/no-show. |
+| Website — Active recovery | Active membership in 002a OR 002b OR 002c OR 002d OR 004b OR 004c |
+| Website — Assessment incomplete | Tag IS `sales:assessment-incomplete` |
+| Website — Awaiting booking | Tag IS `sales:booking-followup` |
+| Website — Appointment booked | Tag IS `appt:booked` AND Tag IS `source:phynyx-website` |
+| Website — Foundation nurture | Tag IS `sales:nurture` |
 
-Keep one valid owner and one open website opportunity. Do not reset DND, operator
-pause or existing consent to start a new attempt. Record each attempt's consent
-snapshot separately; any future contact consent update must be authorized and
-follow the approved per-channel policy. Requested report delivery, booking
-recovery and marketing enrollment are separate purposes and must not be conflated.
+Verification pending remains a separate Site submission queue, never a tag
+attached to an unverified matched identity. Channels may overlap in actual
+membership. No new active-channel tags or workbook were authored here.
 
-## Retry and concurrency contract before live dispatch
+The coordinator observed a v5 website-requested verification email in the
+intended GHL conversation. The matching D1 verification row has `sent` and a GHL
+message ID. At inspection, it was unclaimed. This establishes website-runtime
+message creation; inbox delivery, token confirmation and recovery execution are
+separate evidence, not inferred. No personal identifiers or message IDs are
+published in this repository.
 
-The current capture path uses a database primary key on the event ID plus a
-canonical payload hash and server-session binding. Parallel retries save one
-row; intentional new events retain separate rows. It performs no GHL or sender
-calls, so cannot create parallel enrollment, contacts or opportunities.
+## Activation and handoff
 
-The **future live dispatcher** must additionally provide:
-
-1. Durable receipt keyed by location, authorized contact, submission ID, stage
-   (`quick-capture` or `completed`) and channel, with an acknowledged dispatch/event
-   signal independent of durable status tags.
-2. One atomic active-run claim per location/contact/channel, independent of
-   browser/session. Different channels may run concurrently.
-3. Authorization and booking/closed-stage/DND/operator suppression checks before
-   claiming, immediately before enrollment, and before sends in GHL.
-4. An explicit policy for a new event while the same channel is active: retain
-   the fresh assessment, update current context safely, and do not launch a
-   duplicate or blindly restart the sequence.
-5. Acknowledged exit before releasing/replacing an active run. A timeout with an
-   unknown upstream outcome goes to reconciliation, never blind retry. Database
-   idempotency cannot alone guarantee exactly-once behavior in an external API.
-6. A per-contact synchronization claim around opportunity lookup/create and
-   metadata/event publication, with reconciliation for uncertain CRM outcomes.
-
-CRM stage receipts and durable identity/contact claims are now implemented.
-Channel receipts record suppression/activation holds; they do not perform or
-prove external enrollment. Cross-channel execution claims, authoritative workflow
-exit acknowledgment and the recovery consumer remain activation work. The legacy
-lease is confined to the previous-route test fixture and is not the dispatcher.
-
-## Smart List mapping
-
-Contact lists must be restricted to the website source/automation markers and
-must distinguish eligibility from actual channel activity.
-
-| List | Membership concept |
-| --- | --- |
-| Incomplete, eligible recovery | `sales:assessment-incomplete`, not booked, no relevant suppression/closed/progressed exclusion. |
-| Complete, awaiting booking | `sales:booking-followup` + qualified fit, not booked; eligible channels depend on consent and DND. |
-| Booked | `appt:booked`; no active recovery membership. |
-| Foundation/nurture | `fit:nurture` / `sales:nurture`; exclude from booking recovery. |
-| Paused/needs human action | Relevant `automation:pause`, `stop bot`, `human handover`, or downstream sales exclusion; no active recovery for blocked channels. |
-| Email / SMS / voice active | Actual Workflow (active) membership. Lists may overlap by channel. |
-| Verification pending | **Separate Site submission queue**, not a GHL contact list. Do not attach an unverified submission to a contact to make this list possible. |
-
-The Site queue is available through owner-authorized database inspection, not a
-new public/admin endpoint. Filter `recovery_state = 'verification_pending'` and
-`journey_state` = `incomplete`, `assessment_complete_unbooked` or `foundation`.
-`submission_snapshot` preserves submitted details, raw/normalized phone,
-attribution, answers, fit and consent. The primary key is the event ID. Historical
-rows get NULL new columns; no historical record is tagged, enrolled or migrated
-into a new journey automatically.
-
-## Verification and report boundary
-
-Current reports are calculated exclusively from newly submitted answers. A valid
-two-hour intake session permits saving/replaying that same submission, not access
-to an existing CRM identity. Copying an event ID/payload to another session fails.
-A fresh browser may start a new assessment. Print/save the current report before
-leaving; durable cross-device resume awaits ownership verification.
-
-Existing-contact grants, exact session/location/contact/identity checks and the
-protected booking handoff remain intact. No new grant is made from knowing an
-email or phone. Identity conflicts do not overwrite established details or expose
-previous reports. Verification-pending rows are never auto-exported even if a
-configuration switch changes later.
-
-Self-service verification remains blocked on an authorized HTTP-based sender and
-reviewed integration acceptance. The new implementation uses GHL's existing
-conversation-email API (`conversations/message.write`) and does not invoke the
-Magic Link workflow. Hosted Sites do not support raw TCP sockets; LC SMTP alone
-is not a supported direct transport here. Do not add a relay/provider or cost
-without approval. The existing Magic Link Email Sender is unsafe to reuse
-unchanged: its webhook path creates/updates a contact before sending the link.
-The effective GHL sender and website-token message scope require live acceptance.
-The new endpoint enforces its own token validation, expiry and replay protection;
-it does not rely on the old workflow's email wording. A returned message ID is
-an API acknowledgment, not delivery proof. No report-email delivery is promised.
-
-## Coordinated operational update — September 15, 2026
-
-The following is coordinator-provided browser evidence, separate from the
-September 14 observed inventory and older planned workflow specification:
-
-- **Five workflows changed:** Allow re-entry saved ON in 002a, 002b, 002c, 002d
-  and 002e Reply Stops Pending Voice. Multiple opportunities remains OFF and
-  Stop on response ON in each. 001 intake already had re-entry ON and remains
-  unchanged. 002c/d retain Contact timezone,
-  Monday–Friday 9am–5pm. Re-entry does not solve already-present-tag event delivery
-  or cross-submission concurrency by itself.
-- **Five views visibly saved:** exact filters are recorded below. Journey views
-  do not prove channel eligibility; suppression and qualification still apply
-  before execution. No contact tags, enrollments or CRM records were changed;
-  no historical backfill or live test outreach was performed.
-- **Read-only Magic Link inspection:** published inbound webhook, no displayed
-  trigger filters; checks `magic_link` and `email`, then Create/Update Contact
-  maps email and first name from the request before Send Magic Link Email. From
-  name/email are blank (inherited defaults unverified). Subject is “Your PYRO
-  sign-in link.” Body targets PYRO AI Agent Operations Center using the supplied
-  link and says 15 minutes; that text does not establish cryptographic expiry.
-  Click tracking and UTM are OFF. No webhook URL was copied or invoked.
-
-| Saved contact view | Observed filter |
-| --- | --- |
-| Website — Active recovery | Workflow (active) membership in 002a OR 002b OR 002c OR 002d OR 004b OR 004c; observed zero contacts. |
-| Website — Assessment incomplete | Tag IS `sales:assessment-incomplete`. |
-| Website — Awaiting booking | Tag IS `sales:booking-followup`. |
-| Website — Appointment booked | Tag IS `appt:booked` AND Tag IS `source:phynyx-website`. |
-| Website — Foundation nurture | Tag IS `sales:nurture`. |
-
-These updates do not establish full live parity. Sender readiness, repeat-event
-delivery, suppression at every send, recovery destinations, booking capture and
-duplicate effects still require review. No active-state tags are needed.
-
-Future verification must use an expiring, single-use hashed capability bound to
-the submission/email, with rate limits and an explicit confirmation action that
-email scanners cannot trigger automatically. Email control does not establish
-ownership of a changed phone, resolve shared-number collisions or authorize
-merging multiple contacts. Reports may remain available while such linking is held.
-
-## Deployment and activation checklist
-
-- Company environment: explicit company `SITE_URL`; CRM dispatch and external
-  tracking flags remain false/unset. No secret or access-policy changes.
-- Source owner: run migration-backed isolated tests, lint, type check, build and
-  sanitized diff/secret review. Save exact company commit/version and deploy with
-  the existing workspace audience. Record deployment results separately.
-- Public GitHub receives source, schema-only migrations, tests and sanitized
-  design/handoff. Never include private audits, agency-location inventory,
-  customer rows, credentials, signed URLs or local runtime files. Preserve the
-  personal hosting manifest on the shared main branch; company source keeps its
-  own manifest. A dedicated company branch can preserve the exact company source.
-- Workflow owner: finish approved event handling and suppression, verify actual
-  membership exits and Smart Lists; resolve sender dependencies and all
-  company recovery destinations. No historical enrollment/backfill.
-- Keep public sharing, sender activation and live test effects separate until
-  their required action-time authorization. Do not change DNS, personal Site,
-  calendar policy, unrelated workflows, or add paid services.
-- Do not enable CRM dispatch until the future live dispatcher safeguards,
-  verification, workflow contract and test isolation are implemented and reviewed.
-  Workspace-only visibility does not itself isolate shared GHL automation.
+- Keep dispatch/tracking disabled until the coordinator confirms the exact
+  supported trigger discriminator, company-only AI/channel branches, destinations
+  and guards. Verification remains independently testable.
+- Required runtime API access includes contacts read/write, workflows readonly,
+  configured location fields/pipeline/opportunity/appointment reads, opportunity
+  write only for authorized creation, and conversations/message.write for email.
+  A working MCP connection does not prove these website-private-token scopes.
+- Acceptance mode remains restricted to the privately configured recipient and
+  valid grant. No independent form submissions or message retries by the source
+  owner. The coordinator submits the prepared full form after readiness.
+- Record website POST, D1 CRM/channel receipts, independent GHL contact/opportunity
+  readback, workflow history and real delivery separately. Local mocks are not
+  deployed tests. General public/new-contact activation and booking remain separate.
+- Save/deploy exact tested source with unchanged audience; mirror the complete
+  tree to the company GitHub branch. Never publish secrets, recipient identities,
+  private audit/agency inventories or customer data. Keep main unchanged.

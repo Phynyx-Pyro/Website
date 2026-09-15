@@ -38,9 +38,10 @@ hosting manifest into the personal configuration on main.
   15-minute capability and an explicit confirmation POST. Opening a link alone
   grants nothing. A different device can verify and start a fresh assessment.
   No previous CRM/report information is loaded. No new sender subscription.
-- No calls are authorized. Recovery receipts do not prove workflow enrollment
-  or delivery. Automatic workflow entry, parallel-channel claims/exit handling,
-  and booking acceptance still require the workflow owner's evidence.
+- Normal email/SMS/voice workflow testing is authorized only for the privately
+  configured acceptance recipient. Recovery dispatch now records explicit API
+  removal/enrollment acknowledgments; these do not prove membership or delivery.
+  Browser trigger/channel configuration and booking acceptance remain gates.
 
 ## Configuration and live test sequence
 
@@ -49,7 +50,10 @@ hosting manifest into the personal configuration on main.
 `WEBSITE_TEST_SUPPRESSION_APPROVED=true`; creates use test marker, pause and DND.
 `WEBSITE_CRM_MODE=acceptance` instead requires a configured contact ID and
 `WEBSITE_ACCEPTANCE_WORKFLOWS_APPROVED=true`; it never creates a substitute contact
-or clears DND. These approval flags must represent completed browser checks, not
+or clears DND. Acceptance also requires `WEBSITE_RECOVERY_DISPATCH_ENABLED=true`.
+The dispatcher writes `company-v2` before trigger-producing tags/fields. Legacy
+002a–d tag triggers must use the reviewed positive `Website Form Version = v1`
+filter; do not assume unsupported negative source-tag filters. These approval flags must represent completed browser checks, not
 be toggled to skip them. No test recipients belong in public source or docs.
 
 `WEBSITE_VERIFICATION_ENABLED` separately allows the configured acceptance
@@ -64,10 +68,33 @@ The coordinator submits a **fresh** company assessment, requests the email,
 confirms the link in the assessment browser, then completes the full assessment
 or explicitly retries its final handoff. On another browser/device, complete a
 fresh assessment after verification there. Check service-SMS consent only if the
-test recipient explicitly wants that follow-up; leave AI voice unchecked.
+test recipient explicitly wants that follow-up. For existing 002d, current
+marketing-SMS consent plus the stored consent tag is required. Voice similarly
+requires current affirmative AI-voice consent and the stored tag; preserve DND.
 No historical pending submission is automatically exported.
 
 Do not call local mocked tests, page GETs or an MCP-created record a website
 integration test. Acceptance evidence must tie website POSTs to D1 receipts,
 runtime-created/linked contact and opportunity IDs, independent GHL readback and
 workflow/message outcomes. See `WEBSITE_RECOVERY_CONTRACT.md` for the state model.
+
+## Current recovery checkpoint
+
+`lib/website-recovery.ts` maps existing 002a–d and records stage/channel external
+operation receipts. A fresh intentional event replaces pending acquisition
+follow-up only after four acknowledged removals. Retries never restart it. Lost
+responses retain the contact lock for reconciliation. No active-state tags.
+
+001 remains driven by Submission ID changes; the adapter never enrolls it too.
+The observed 001 graph provides internal FYIs, not owner assignment. Keep its
+current behavior under review and preserve existing owners.
+
+The approved returning-nurture exception is separately configured using
+`WEBSITE_RETURNING_NURTURE_APPROVED` and `WEBSITE_RETURNING_NURTURE_STAGE_ID`.
+It preserves the same open nurture opportunity without resetting stage, value,
+owner or history. Other progressed/closed/booked paths remain protected.
+
+Read `WEBSITE_RECOVERY_CONTRACT.md` before activation: supported positive trigger
+filters, company-only Conversation AI branches, company recovery destinations
+and live receipt evidence are still required. The negative source-tag exclusion
+proposal was not supported by the UI and was never saved.

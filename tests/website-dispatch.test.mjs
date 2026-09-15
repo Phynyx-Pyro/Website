@@ -8,17 +8,19 @@ function req(path,body,cookie=''){return new Request(origin+'/api/'+path,{method
 function input(full=false){return {submissionId:crypto.randomUUID(),firstName:'Test',lastName:'Visitor',email:'authorized@owned.test',phone:'+13125550100',consent:{smsMarketing:false,smsService:false,aiVoice:false},attribution:{conversionPage:origin+'/growth-assessment'},...(full?{businessName:'Test Practice',industry:'dental',annualRevenue:'500k-1m',monthlyBudget:'3k-5k',capacity:'6-10',decisionRole:'owner',implementationTiming:'within-30-days',followUpOwner:'yes',snapshot:{metrics:Object.fromEntries(Object.entries({leads:100,contacted:60,booked:40,confirmed:35,showed:30,started:20,adSpend:3000,averageStartValue:1000}).map(([k,value])=>[k,{value,confidence:'exact'}])),responseTime:'5-15-minutes',followUpAttempts:'4-6',attributionCoverage:'some'}}:{submissionType:'homepage-quick-form'})}}
 async function setup(t,mode='test'){
  const h=await securityHarness();t.after(()=>h.close())
- Object.assign(h.env,{SITE_URL:origin,WEBSITE_CRM_DISPATCH_ENABLED:'true',WEBSITE_CRM_MODE:mode,WEBSITE_CRM_TEST_EMAIL:'authorized@owned.test',WEBSITE_CRM_TEST_PHONE:'+13125550100',WEBSITE_TEST_SUPPRESSION_APPROVED:'true',WEBSITE_ACCEPTANCE_WORKFLOWS_APPROVED:'true',WEBSITE_ACCEPTANCE_CONTACT_ID:'contact-1',WEBSITE_VERIFICATION_ENABLED:'true'})
- const contacts=[],opps=[],writes=[],messages=[],events=[];let failCreate=false
+ Object.assign(h.env,{SITE_URL:origin,WEBSITE_CRM_DISPATCH_ENABLED:'true',WEBSITE_CRM_MODE:mode,WEBSITE_CRM_TEST_EMAIL:'authorized@owned.test',WEBSITE_CRM_TEST_PHONE:'+13125550100',WEBSITE_TEST_SUPPRESSION_APPROVED:'true',WEBSITE_ACCEPTANCE_WORKFLOWS_APPROVED:'true',WEBSITE_RECOVERY_DISPATCH_ENABLED:mode==='acceptance'?'true':'false',WEBSITE_ACCEPTANCE_CONTACT_ID:'contact-1',WEBSITE_VERIFICATION_ENABLED:'true'})
+ const contacts=[],opps=[],writes=[],messages=[],events=[],enrollments=[];let failCreate=false
  const constants=await h.load('lib/ghl.ts');const definitions=Object.values(constants.GHL_CONTACT_FIELD_KEYS).map(fieldKey=>({id:fieldKey,fieldKey}))
  globalThis.fetch=async(url,options={})=>{
   assert.equal(options.headers.Version,'2021-07-28')
   const u=new URL(url),method=options.method||'GET',body=options.body?JSON.parse(options.body):null
   let data={}
   if(u.pathname==='/contacts/search'){const {field,value}=body.filters[0];const found=contacts.filter(c=>c[field]===value);return Response.json({contacts:found,total:found.length})}
-  if(u.pathname==='/opportunities/pipelines')return Response.json({pipelines:[{id:'pipeline-test',stages:[{id:'stage-test'}]}]})
+  if(u.pathname==='/opportunities/pipelines')return Response.json({pipelines:[{id:'pipeline-test',stages:[{id:'stage-test'},{id:'nurture-test'}]}]})
+  if(u.pathname==='/workflows/') {const {RECOVERY_WORKFLOWS}=await h.load('lib/website-recovery.ts');return Response.json({workflows:Object.values(RECOVERY_WORKFLOWS).map(w=>({...w,status:'published',locationId:'location-test'}))})}
   if(u.pathname.includes('/customFields'))return Response.json({customFields:definitions})
   if(method!=='GET')writes.push({path:u.pathname,method,body})
+  if(u.pathname.includes('/workflow/')){enrollments.push({path:u.pathname,method});return Response.json({succeeded:true})}
   if(u.pathname==='/contacts/'&&method==='POST'){
    if(failCreate)throw new Error('Synthetic lost create response')
    const c={...body,id:'contact-'+(contacts.length+1),customFields:[]};contacts.push(c);return Response.json({contact:c},{status:201})
@@ -36,7 +38,7 @@ async function setup(t,mode='test'){
  const route=await h.load('app/api/growth-assessment/route.ts'),bootstrap=await h.load('app/api/intake-session/route.ts')
  const cookie=(await bootstrap.POST(req('intake-session',{}))).headers.get('set-cookie').split(';')[0]
  const seed=()=>{const c={id:'contact-1',locationId:'location-test',email:'authorized@owned.test',phone:'+13125550100',tags:[],dnd:false,customFields:[]};contacts.push(c);return c}
- return {...h,route,cookie,bootstrap,contacts,opps,writes,messages,events,seed,setFailCreate:v=>{failCreate=v},post:async p=>{const r=await route.POST(req('growth-assessment',p,cookie));assert.equal(r.status,200);return r.json()}}
+ return {...h,route,cookie,bootstrap,contacts,opps,writes,messages,events,enrollments,seed,setFailCreate:v=>{failCreate=v},post:async p=>{const r=await route.POST(req('growth-assessment',p,cookie));assert.equal(r.status,200);return r.json()}}
 }
 
 test('deployed-route adapter creates once, preserves stage receipts/history and never clears DND or consent',async t=>{
@@ -97,7 +99,7 @@ test('verification is single-use, scanner-safe, sends to stored identity and per
  const replay=await h.post(p)
  assert.equal(replay.crmSynced,true,JSON.stringify({replay,receipts:h.sqlite.prepare('SELECT state,detail FROM website_dispatch_receipts').all()}))
  assert.equal(h.contacts.length,1);assert.equal(h.opps.length,1)
- assert.equal(h.sqlite.prepare("SELECT state FROM website_dispatch_receipts WHERE channel='voice'").get().state,'not_authorized')
+ assert.equal(h.sqlite.prepare("SELECT state FROM website_dispatch_receipts WHERE channel='voice'").get().state,'consent_required')
  assert.equal(h.messages.length,1) // recovery sends remain separately gated
 })
 test('expired or identity-changed verification and email DND cannot grant access or send',async t=>{
@@ -147,11 +149,69 @@ test('caller cannot override verification recipient; runtime 403 is retained wit
 test('call DND does not suppress authorized email/SMS, and historical appointments do not reset the current journey',async t=>{
  const h=await setup(t),mod=await h.load('lib/website-dispatch.ts')
  const c={tags:[],dnd:false,dndSettings:{call:{status:'active'},email:{status:'inactive'},sms:{status:'inactive'}}}
- const p={...input(true),submissionType:'full-assessment',fit:{path:'calendar'},consent:{smsService:true,aiVoice:false}}
+ const p={...input(true),submissionType:'full-assessment',fit:{path:'calendar'},consent:{smsService:true,smsMarketing:true,aiVoice:false}}
  assert.equal(mod.recoveryChannelState(c,p,'email'),'awaiting_workflow_activation')
  assert.equal(mod.recoveryChannelState(c,p,'sms'),'awaiting_workflow_activation')
  assert.equal(mod.recoveryChannelState(c,p,'voice'),'suppressed')
  await h.post(input());h.events.push({appointmentStatus:'confirmed',startTime:'2020-01-01T00:00:00Z'})
  assert.equal((await h.post(input(true))).crmSynced,true)
  assert.equal(h.events[0].appointmentStatus,'confirmed');assert.equal(h.opps.length,1)
+})
+
+async function verifyForRecovery(h,p){
+ await h.post(p)
+ const sender=await h.load('app/api/verification/request/route.ts'),confirm=await h.load('app/api/verification/confirm/route.ts')
+ assert.equal((await sender.POST(req('verification/request',{submissionId:p.submissionId},h.cookie))).status,200)
+ const token=h.messages.at(-1).html.match(/\/verify#([a-f0-9]{64})/)[1]
+ assert.equal((await confirm.POST(req('verification/confirm',{token},h.cookie))).status,200)
+}
+test('verified returning nurture: preserves opportunity, marker precedes mutations, acknowledged exits precede each channel, retry does not restart',async t=>{
+ const h=await setup(t,'acceptance'),c=h.seed();c.tags=['sales:nurture','fit:nurture','consent:sms-marketing','consent:ai-voice']
+ const opp={id:'existing',contactId:c.id,pipelineId:'pipeline-test',pipelineStageId:'nurture-test',status:'open',assignedTo:'preserved-owner',monetaryValue:0};h.opps.push(opp)
+ const before=structuredClone(opp),p=input(true);p.consent={smsMarketing:true,smsService:true,aiVoice:true}
+ Object.assign(h.env,{WEBSITE_RECOVERY_DISPATCH_ENABLED:'true',WEBSITE_RETURNING_NURTURE_APPROVED:'true',WEBSITE_RETURNING_NURTURE_STAGE_ID:'nurture-test'})
+ await verifyForRecovery(h,p);h.writes.length=0
+ const response=await h.post(p);assert.equal(response.crmSynced,true);assert.equal(response.recoveryState,'enrollment_acknowledged')
+ assert.deepEqual(h.opps,[before]);assert.equal(h.contacts.length,1)
+ assert.deepEqual(h.writes[0].body,{customFields:[{id:'contact.website_form_version',fieldValue:'company-v2'}]});assert.deepEqual(h.writes[1].body,{tags:['source:phynyx-company']})
+ assert.deepEqual(h.enrollments.map(e=>e.method),['DELETE','DELETE','DELETE','DELETE','POST','POST','POST'])
+ assert.equal(h.sqlite.prepare("SELECT count(*) n FROM website_dispatch_receipts WHERE state='enrollment_acknowledged'").get().n,3)
+ const writeCount=h.writes.length;await h.post(p);assert.equal(h.writes.length,writeCount)
+ await h.post({...p,submissionId:crypto.randomUUID()});assert.equal(h.enrollments.length,14);assert.deepEqual(h.opps,[before])
+ assert.equal(h.messages.length,1) // Only mocked verification; recovery is normal workflow API enrollment.
+})
+test('missing removal acknowledgment holds contact lock and never enrolls or blindly retries',async t=>{
+ const h=await setup(t,'acceptance');h.seed();const p=input(true)
+ h.env.WEBSITE_RECOVERY_DISPATCH_ENABLED='true';await verifyForRecovery(h,p)
+ const base=globalThis.fetch
+ globalThis.fetch=async(url,options)=>new URL(url).pathname.includes('/workflow/')?Response.json({succeeded:false}):base(url,options)
+ assert.equal((await h.post(p)).crmSynced,false)
+ assert.equal(h.sqlite.prepare("SELECT count(*) n FROM website_dispatch_receipts WHERE state='exit_requested'").get().n,1)
+ const count=h.writes.length;await h.post(p);await h.post(input(true));assert.equal(h.writes.length,count)
+ assert.equal(h.sqlite.prepare('SELECT count(*) n FROM website_dispatch_locks').get().n,3)
+ assert.equal(h.enrollments.length,0)
+})
+test('fresh partial after completion preserves qualification evidence; foundation stops pending recovery without enrolling',async t=>{
+ const h=await setup(t,'acceptance'),c=h.seed();const p=input(true)
+ h.env.WEBSITE_RECOVERY_DISPATCH_ENABLED='true';await verifyForRecovery(h,p);await h.post(p)
+ const fields=structuredClone(c.customFields.filter(f=>!f.id.endsWith('website_submission_id')).sort((a,b)=>a.id.localeCompare(b.id)))
+ await h.post(input());assert.ok(c.tags.includes('sales:assessment-incomplete'));assert.ok(!c.tags.includes('sales:booking-followup'))
+ assert.deepEqual(c.customFields.filter(f=>!f.id.endsWith('website_submission_id')).sort((a,b)=>a.id.localeCompare(b.id)),fields)
+ const foundation=input(true);foundation.monthlyBudget='under-1k';foundation.annualRevenue='under-200k'
+ const response=await h.post(foundation);assert.equal(response.fit.path,'foundation')
+ assert.equal(response.recoveryState,'foundation');assert.ok(c.tags.includes('sales:nurture'))
+ assert.deepEqual(h.enrollments.slice(-4).map(e=>e.method),['DELETE','DELETE','DELETE','DELETE'])
+})
+test('nurture requires explicit approval; per-channel DND and missing affirmative consent never enroll a channel',async t=>{
+ const h=await setup(t,'acceptance'),c=h.seed(),p=input(true);h.env.WEBSITE_RECOVERY_DISPATCH_ENABLED='true'
+ h.opps.push({id:'existing',contactId:c.id,pipelineId:'pipeline-test',pipelineStageId:'nurture-test',status:'open'})
+ await verifyForRecovery(h,p);h.writes.length=0
+ assert.equal((await h.post(p)).crmSynced,false);assert.equal(h.writes.length,0)
+ Object.assign(h.env,{WEBSITE_RETURNING_NURTURE_APPROVED:'true',WEBSITE_RETURNING_NURTURE_STAGE_ID:'nurture-test'})
+ c.tags=['consent:sms-marketing','consent:ai-voice'];c.dndSettings={call:{status:'active'}}
+ const next=input(true);next.consent={smsMarketing:true,smsService:true,aiVoice:true}
+ assert.equal((await h.post(next)).crmSynced,true)
+ const {RECOVERY_WORKFLOWS:w}=await h.load('lib/website-recovery.ts')
+ assert.deepEqual(h.enrollments.filter(e=>e.method==='POST').map(e=>e.path.split('/').at(-1)),[w.completed.id,w.sms.id])
+ assert.equal(h.sqlite.prepare("SELECT state FROM website_dispatch_receipts WHERE submission_id=? AND channel='voice'").get(next.submissionId).state,'suppressed')
 })
