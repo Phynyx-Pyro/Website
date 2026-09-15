@@ -1,5 +1,16 @@
 # Phynyx Website Lead System
 
+## Company implementation contract
+
+[WEBSITE_RECOVERY_CONTRACT.md](WEBSITE_RECOVERY_CONTRACT.md) defines the bounded
+company release: independent saved assessments/reports; unchanged appointment
+conversion and foundation rules; no unverified contact mutation; event IDs
+separate from current state; and coordinated repeat recovery/Smart Lists.
+This source checkpoint does not edit workflows or enable live dispatch. The
+September 14 inventory below remains an observation; historical specifications
+must not be treated as implemented actions. Private audit inventories and
+customer data are excluded from this public repository.
+
 ## Current verified inventory — September 14, 2026
 
 The live folder is **Phynyx — Website Sales**. All ten workflows below were observed as published. This supersedes the older implementation-status section below; the remainder of this document is the September 4 design specification, not a claim that every proposed action exists.

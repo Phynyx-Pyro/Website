@@ -43,6 +43,7 @@ async function loadRoute(stubs) {
   globalThis.__CONSENT_MODULE__ = await importTypeScriptModule(new URL('../lib/contact-consent.ts', import.meta.url))
   globalThis.__GROWTH_ROUTE_TEST_STUBS__ = stubs
   return importTypeScriptModule(moduleUrl, [
+    ["import { assessmentJourneyState, isWebsiteCrmDispatchEnabled, savedAssessmentResponse } from '@/lib/assessment-delivery'", "const assessmentJourneyState = () => 'assessment_complete_unbooked'; const isWebsiteCrmDispatchEnabled = () => true; const savedAssessmentResponse = () => Response.json({ success: true, saved: true, crmSynced: false, bookingReady: false })"],
     ["import { contactVerificationRequired, readIntakeSession, requireContactGrant, type IntakeSession } from '@/lib/intake-session'",
       "const readIntakeSession = async () => ({ tokenHash: 'authorized-test-session' }); const requireContactGrant = async () => {}; const contactVerificationRequired = () => new Error('CONTACT_VERIFICATION_REQUIRED')"],
     ["import { CONSENT_VERSION, CONSENT_DISCLOSURES, parseContactConsent } from '@/lib/contact-consent'", 'const { CONSENT_VERSION, CONSENT_DISCLOSURES, parseContactConsent } = globalThis.__CONSENT_MODULE__'],

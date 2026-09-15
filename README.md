@@ -2,6 +2,21 @@
 
 Recovered PhynyxPro marketing and lead-generation site, adapted from the original Abacus.AI export for OpenAI Sites.
 
+## Company implementation checkpoint
+
+The company copy now saves quick capture and full assessment answers and shows a
+fresh report without requiring CRM linking. CRM dispatch and external tracking
+fail closed unless explicitly enabled; keep both disabled until the integration
+contract is implemented and accepted. Verification, emailed reports, cross-device
+resume and live recovery are not enabled in this checkpoint. Reports can be
+printed/saved in the browser. Existing contact authorization is unchanged.
+
+See [Website recovery contract](WEBSITE_RECOVERY_CONTRACT.md) for event/state
+mapping, retry/concurrency requirements, Smart Lists, pending verification and
+the exact release boundary. The legacy CRM adapter described below remains for
+regression coverage; its configuration switch alone is not a production-ready
+repeat-assessment dispatcher.
+
 The recovery preserves the complete multi-page brand experience, local imagery, responsive layouts, and lead forms while replacing the Abacus-specific runtime and PostgreSQL dependency with a Sites-compatible foundation.
 
 ## Brand architecture
@@ -65,6 +80,8 @@ The production build is emitted to `dist/` in the Sites-compatible Worker format
 - `db/schema.ts` defines growth assessments, support requests, short-lived booking handoffs, intake sessions/contact grants, and public-form rate limits.
 - Generated D1 migrations live in `drizzle/` and are packaged with each Sites version.
 - `SITE_URL` optionally overrides the canonical metadata, sitemap, and robots origin. The source default is `https://phynyxpro.com`.
+- Hosted `SITE_URL` is read from the Worker environment. Set the company origin explicitly; do not change the personal Site's settings.
+- `WEBSITE_CRM_DISPATCH_ENABLED` and `WEBSITE_EXTERNAL_TRACKING_ENABLED` default to false. Keep them disabled at the capture-only checkpoint.
 - `GHL_LOCATION_ID`, `GHL_PIPELINE_ID`, and `GHL_PIPELINE_STAGE_ID` select the production sub-account and dedicated website-lead pipeline. `GHL_PRIVATE_INTEGRATION_TOKEN` is server-only and must never be committed or prefixed with `NEXT_PUBLIC_`.
 - The GoHighLevel private integration needs `contacts.readonly`, `contacts.write`, `locations/customFields.readonly`, `opportunities.readonly`, and `opportunities.write`. Keep the token limited to the Phynyx location and rotate it if it is ever exposed.
 

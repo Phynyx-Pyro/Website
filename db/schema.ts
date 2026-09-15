@@ -20,6 +20,10 @@ export const growthAssessments = sqliteTable(
     submissionType: text('submission_type').notNull(),
     payloadHash: text('payload_hash'),
     consentSnapshot: text('consent_snapshot'),
+    // Append-only submitted evidence; NULL on historical records (no backfill).
+    submissionSnapshot: text('submission_snapshot'),
+    journeyState: text('journey_state'),
+    recoveryState: text('recovery_state'),
     ghlContactId: text('ghl_contact_id'),
     intakeSessionHash: text('intake_session_hash'),
     status: text('status').notNull().default('new'),
@@ -29,6 +33,7 @@ export const growthAssessments = sqliteTable(
   (table) => [
     index('idx_growth_assessments_created_at').on(table.createdAt),
     index('idx_growth_assessments_email').on(table.email),
+    index('idx_growth_assessments_recovery_journey').on(table.recoveryState, table.journeyState),
   ],
 )
 

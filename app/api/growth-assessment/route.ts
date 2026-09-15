@@ -1,6 +1,7 @@
 import { getDb } from '@/db'
 import { growthAssessments } from '@/db/schema'
 import { issueBookingSession } from '@/lib/booking-session'
+import { assessmentJourneyState, isWebsiteCrmDispatchEnabled, savedAssessmentResponse } from '@/lib/assessment-delivery'
 import { contactVerificationRequired, readIntakeSession, requireContactGrant, type IntakeSession } from '@/lib/intake-session'
 import {
   GhlIdentityConflictError,
@@ -131,6 +132,7 @@ async function assessmentResultResponse(
 ) {
   const responseBody = {
     success: true,
+    saved: true,
     crmSynced: true,
     bookingReady: fit.path !== 'foundation',
     fit: {
@@ -148,7 +150,13 @@ async function assessmentResultResponse(
     })
   }
 
-  const bookingCookie = await issueBookingSession(submissionId, request.url, session)
+  let bookingCookie: string
+  try {
+    bookingCookie = await issueBookingSession(submissionId, request.url, session)
+  } catch {
+    // A calendar capability failure must not discard a freshly saved report.
+    return savedAssessmentResponse(submissionId, false, fit, snapshot)
+  }
   return Response.json(
     responseBody,
     {
@@ -165,7 +173,7 @@ export async function POST(request: Request) {
     const payload = await readBoundedJson(request, MAX_REQUEST_BYTES)
     const isPartial = payload.submissionType === 'homepage-quick-form'
     const consent = parseContactConsent(payload.consent)
-    const partialResponse = () => Response.json({ success: true, crmSynced: true }, { headers: { 'Cache-Control': 'no-store' } })
+    const partialResponse = () => Response.json({ success: true, saved: true, crmSynced: true }, { headers: { 'Cache-Control': 'no-store' } })
 
     if (clean(payload.website, 200)) {
       return Response.json(
@@ -317,6 +325,7 @@ export async function POST(request: Request) {
       trackedMetricCount: snapshotResult?.trackedCoreMetrics ?? 0,
     })
     const now = new Date()
+    const dispatchEnabled = isWebsiteCrmDispatchEnabled()
     let submittedAt = now
     const payloadHash = await hashText(
       canonicalPayloadHashInput([
@@ -364,9 +373,19 @@ export async function POST(request: Request) {
         submissionType,
         payloadHash,
         consentSnapshot: JSON.stringify({ consent, version: CONSENT_VERSION, disclosures: CONSENT_DISCLOSURES, capturedAt: now.toISOString(), source: attribution.conversionPage }),
+        submissionSnapshot: JSON.stringify({
+          version: 1, eventId: submissionId, submissionType,
+          firstName, lastName, email, submittedPhone, normalizedPhone: phone,
+          businessName, industry, annualRevenue, biggestChallenge, currentMarketing,
+          monthlyBudget, capacity, decisionRole, implementationTiming, followUpOwner,
+          snapshotInput, snapshotResult, fit, attribution,
+          consent, consentVersion: CONSENT_VERSION, submittedAt: now.toISOString(),
+        }),
+        journeyState: assessmentJourneyState(isPartial, fit),
+        recoveryState: 'verification_pending',
         ghlContactId: null,
         intakeSessionHash: session.tokenHash,
-        status: 'crm-pending',
+        status: dispatchEnabled ? 'crm-pending' : 'verification-pending',
         createdAt: now,
         updatedAt: now,
       })
@@ -392,6 +411,12 @@ export async function POST(request: Request) {
       // Legacy rows and another browser's UUID/payload never confer ownership.
       // Reject without changing the other session's record or processing lease.
       if (existing.intakeSessionHash !== session.tokenHash) throw contactVerificationRequired()
+      // Report continuity authorizes only the answers this session submitted.
+      // No CRM reads, grants, booking capabilities or status resets on this path.
+      // Verification-pending events are never automatically replayed into CRM.
+      if (!dispatchEnabled || existing.status === 'verification-pending' || existing.status === 'contact-verification-required') {
+        return savedAssessmentResponse(submissionId, isPartial, fit, snapshotResult)
+      }
       if (existing.ghlContactId) {
         await requireContactGrant(session, existing.ghlContactId, email, phone)
       }
@@ -468,6 +493,12 @@ export async function POST(request: Request) {
           )
         }
       }
+    }
+
+    // Fail closed while the coordinator completes verification and workflow
+    // dependencies. Unique submission IDs make parallel retries one saved event.
+    if (!dispatchEnabled) {
+      return savedAssessmentResponse(submissionId, isPartial, fit, snapshotResult)
     }
 
     const ghlInput = {
@@ -567,19 +598,11 @@ export async function POST(request: Request) {
         .where(eq(growthAssessments.id, submissionId))
 
       if (identityConflict) {
-        return publicFormErrorResponse(contactVerificationRequired())
+        return savedAssessmentResponse(submissionId, isPartial, fit, snapshotResult)
       }
 
       console.error('GoHighLevel growth assessment sync failed')
-      return Response.json(
-        {
-          success: false,
-          code: 'CRM_HANDOFF_FAILED',
-          message:
-            'Your assessment was saved, but we could not finish the handoff. Please try again.',
-        },
-        { status: 502, headers: { 'Cache-Control': 'no-store' } },
-      )
+      return savedAssessmentResponse(submissionId, isPartial, fit, snapshotResult)
     }
 
     await db

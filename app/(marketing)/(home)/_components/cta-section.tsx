@@ -52,8 +52,8 @@ export function CtaSection() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...prefill, submissionType: 'homepage-quick-form', submissionId: submissionId.current, industry: 'chiropractic', attribution: getAssessmentAttribution() }),
       })
-      const result = await response.json() as { crmSynced?: boolean; code?: string; message?: string }
-      if (!response.ok || !result.crmSynced) {
+      const result = await response.json() as { saved?: boolean; crmSynced?: boolean; code?: string; message?: string }
+      if (!response.ok || !(result.saved || result.crmSynced)) {
         if (result.code === 'SUBMISSION_CONFLICT') submissionId.current = ''
         throw new Error(result.message || 'We could not save your details. Please try again.')
       }

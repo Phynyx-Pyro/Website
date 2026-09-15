@@ -7,7 +7,7 @@ export function buildContentSecurityPolicy(nonce: string, isDevelopment = false)
     "default-src 'self'",
     "base-uri 'self'",
     "object-src 'none'",
-    "frame-ancestors 'none'",
+    "frame-ancestors 'self' https://chatgpt.com https://*.chatgpt.com",
     "form-action 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDevelopment ? " 'unsafe-eval'" : ''} https://link.phynyxpro.com`,
     "script-src-attr 'none'",

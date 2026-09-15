@@ -87,6 +87,7 @@ type AssessmentResult = {
   }
   snapshot: GrowthSnapshotResult
   bookingContact: BookingContact | null
+  handoffPending?: boolean
 }
 
 const initialForm: FormData = {
@@ -550,8 +551,8 @@ export function GrowthAssessmentClient() {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ firstName: form.firstName, lastName: form.lastName, email: form.email, phone: form.phone, consent, website, submissionType: 'homepage-quick-form', submissionId: contactSubmissionIdRef.current, attribution: getAssessmentAttribution() }),
       })
-      const result = await response.json() as { crmSynced?: boolean; code?: string; message?: string }
-      if (!response.ok || !result.crmSynced) {
+      const result = await response.json() as { saved?: boolean; crmSynced?: boolean; code?: string; message?: string }
+      if (!response.ok || !(result.saved || result.crmSynced)) {
         if (result.code === 'SUBMISSION_CONFLICT') contactSubmissionIdRef.current = ''
         throw new Error(result.message || 'We could not save your details. Please try again.')
       }
@@ -599,12 +600,15 @@ export function GrowthAssessmentClient() {
 
       let bookingContact: BookingContact | null = null
       if (result.bookingReady) {
-        const bookingResponse = await fetch('/api/booking-session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
-        const bookingResult = await bookingResponse.json().catch(() => null) as { message?: string; bookingContact?: unknown } | null
-        if (!bookingResponse.ok || !isBookingContact(bookingResult?.bookingContact)) throw new Error(bookingResult?.message || 'We could not prepare the calendar. Please try again.')
-        bookingContact = bookingResult.bookingContact
+        try {
+          const bookingResponse = await fetch('/api/booking-session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+          const bookingResult = await bookingResponse.json().catch(() => null) as { message?: string; bookingContact?: unknown } | null
+          if (bookingResponse.ok && isBookingContact(bookingResult?.bookingContact)) bookingContact = bookingResult.bookingContact
+        } catch {
+          // Keep the completed report even when the calendar handoff is offline.
+        }
       }
-      setAssessmentResult({ fit: result.fit, snapshot: result.snapshot, bookingContact })
+      setAssessmentResult({ fit: result.fit, snapshot: result.snapshot, bookingContact, handoffPending: !bookingContact })
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Something went wrong. Please try again.')
     } finally {
@@ -619,6 +623,10 @@ export function GrowthAssessmentClient() {
       <main className="min-h-screen bg-ivory pb-20 pt-32 grain-subtle">
         <div className="mx-auto px-5 lg:px-10">
           <SnapshotResults result={assessmentResult} firstName={form.firstName} copy={journeyCopy} />
+          <div className="mx-auto mt-6 max-w-[760px] text-center print:hidden">
+            <button type="button" onClick={() => window.print()} className="rounded-lg border border-ink/20 px-5 py-3 text-[14px] font-semibold text-ink hover:bg-white">Save or print this report</button>
+            {assessmentResult.handoffPending ? <p role="status" className="mt-4 rounded-lg border border-ink/15 bg-white p-4 text-[15px] leading-relaxed text-ink">Your assessment is saved and this report uses only the answers you just submitted. Email verification and online booking are not available yet. No report email has been sent. Save a copy before leaving this page; you can complete a fresh assessment at any time.</p> : null}
+          </div>
           <div className="mx-auto mt-8 max-w-[760px] text-center">
             {isFoundation ? (
               <div className="border-t border-ink/10 pt-8">
@@ -647,10 +655,21 @@ export function GrowthAssessmentClient() {
                 <CalendarClock className="mx-auto h-8 w-8 text-phoenix" aria-hidden="true" />
                 <h2 className="mt-4 text-[28px] font-bold text-ink">{isEmerging ? 'There may be a practical starting point.' : 'You appear ready for a working diagnostic.'}</h2>
                 <p className="mx-auto mt-3 max-w-[620px] text-[15px] leading-[1.65] text-warm">{isEmerging ? 'You may be earlier than our typical full-build client, but your operating answers suggest a focused conversation could still be productive.' : 'Use the diagnostic to validate the visible drop-off, review the handoffs behind it, and determine the most useful next move.'}</p>
-                <button type="button" onClick={() => setCalendarVisible(true)} className="mt-6 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-4 text-[15px] font-semibold text-white shadow-lg transition-colors hover:bg-ember">Map the Fix in a 30-Minute Diagnostic <ArrowRight className="h-4 w-4" aria-hidden="true" /></button>
+                {assessmentResult.handoffPending ? <p className="mt-6 text-[15px] leading-relaxed text-warm">The next step is a 30-minute diagnostic. Scheduling and follow-up are pending verification availability.</p> : <button type="button" onClick={() => setCalendarVisible(true)} className="mt-6 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-4 text-[15px] font-semibold text-white shadow-lg transition-colors hover:bg-ember">Map the Fix in a 30-Minute Diagnostic <ArrowRight className="h-4 w-4" aria-hidden="true" /></button>}
               </div>
             )}
-            <Link href="/" className="mt-8 inline-flex text-[13px] font-semibold text-warm hover:text-ink">Back to Home</Link>
+            <button type="button" onClick={() => {
+              contactSubmissionIdRef.current = ''
+              submissionIdRef.current = ''
+              setAssessmentResult(null)
+              setCalendarVisible(false)
+              setForm(initialForm)
+              setMetrics(initialMetrics)
+              setConsent(EMPTY_CONSENT)
+              setError('')
+              setStep(0)
+            }} className="mt-8 mr-6 inline-flex text-[14px] font-semibold text-phoenix hover:text-ember print:hidden">Start a new assessment</button>
+            <Link href="/" className="mt-8 inline-flex text-[14px] font-semibold text-warm hover:text-ink print:hidden">Back to Home</Link>
           </div>
         </div>
       </main>
@@ -754,7 +773,7 @@ function ContactStep({ form, consent, setConsent, update, emailInvalid, phoneInv
   onContinue: () => void
   headingRef: StepHeadingRef
 }) {
-  return <AnimatedSection><div className="rounded-2xl bg-white p-6 shadow-xl md:p-8"><h2 ref={headingRef} tabIndex={-1} className="text-[22px] font-semibold text-ink outline-none">Save Your Snapshot</h2><p className="mt-2 text-[13px] leading-[1.55] text-warm">We’ll save your progress and use these details to coordinate a diagnostic only if you choose to book.</p><div className="mt-6 space-y-4"><div className="grid gap-4 sm:grid-cols-2"><div><label htmlFor="assessment-first-name" className="mb-1.5 block text-[13px] font-medium text-ink">First Name *</label><input id="assessment-first-name" required autoComplete="given-name" type="text" value={form.firstName} onChange={(event) => update('firstName', event.target.value)} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink outline-none focus:border-phoenix focus:ring-1 focus:ring-phoenix" /></div><div><label htmlFor="assessment-last-name" className="mb-1.5 block text-[13px] font-medium text-ink">Last Name</label><input id="assessment-last-name" autoComplete="family-name" type="text" value={form.lastName} onChange={(event) => update('lastName', event.target.value)} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink outline-none focus:border-phoenix focus:ring-1 focus:ring-phoenix" /></div></div><div><label htmlFor="assessment-email" className="mb-1.5 block text-[13px] font-medium text-ink">Work Email *</label><input id="assessment-email" required autoComplete="email" type="email" value={form.email} onChange={(event) => update('email', event.target.value)} onBlur={() => setContactTouched((current) => ({ ...current, email: true }))} aria-invalid={emailInvalid} aria-describedby={emailInvalid ? 'assessment-email-error' : undefined} className={`w-full rounded-lg border bg-ivory px-4 py-3 text-[15px] text-ink outline-none focus:ring-1 ${emailInvalid ? 'border-red-600 focus:ring-red-600' : 'border-ink/15 focus:border-phoenix focus:ring-phoenix'}`} />{emailInvalid ? <p id="assessment-email-error" role="alert" className="mt-1.5 text-[12.5px] font-medium text-red-700">Enter a valid email address.</p> : null}</div><div><label htmlFor="assessment-phone" className="mb-1.5 block text-[13px] font-medium text-ink">Phone *</label><input id="assessment-phone" required autoComplete="tel" type="tel" value={form.phone} onChange={(event) => update('phone', event.target.value)} onBlur={() => setContactTouched((current) => ({ ...current, phone: true }))} aria-invalid={phoneInvalid} aria-describedby={phoneInvalid ? 'assessment-phone-error' : undefined} className={`w-full rounded-lg border bg-ivory px-4 py-3 text-[15px] text-ink outline-none focus:ring-1 ${phoneInvalid ? 'border-red-600 focus:ring-red-600' : 'border-ink/15 focus:border-phoenix focus:ring-phoenix'}`} />{phoneInvalid ? <p id="assessment-phone-error" role="alert" className="mt-1.5 text-[12.5px] font-medium text-red-700">Enter a valid phone number, including area code.</p> : null}</div></div><ContactConsentFields value={consent} onChange={setConsent} />{error ? <p role="alert" className="mt-3 text-[13px] text-red-700">{error}</p> : null}<button type="button" onClick={onContinue} disabled={!canProceed || submitting} className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white hover:bg-ember disabled:cursor-not-allowed disabled:opacity-40">{submitting ? 'Saving...' : 'Continue to Practice Baseline'} <ArrowRight className="h-4 w-4" aria-hidden="true" /></button><p className="mt-4 text-center text-[12px] text-warm">Read our <Link href="/privacy-policy" className="font-semibold text-phoenix hover:underline">Privacy Policy</Link>.</p></div></AnimatedSection>
+  return <AnimatedSection><div className="rounded-2xl bg-white p-6 shadow-xl md:p-8"><h2 ref={headingRef} tabIndex={-1} className="text-[22px] font-semibold text-ink outline-none">Save Your Snapshot</h2><p className="mt-2 text-[13px] leading-[1.55] text-warm">We’ll save your progress for your snapshot and requested diagnostic follow-up. Your contact preferences control the available channels.</p><div className="mt-6 space-y-4"><div className="grid gap-4 sm:grid-cols-2"><div><label htmlFor="assessment-first-name" className="mb-1.5 block text-[13px] font-medium text-ink">First Name *</label><input id="assessment-first-name" required autoComplete="given-name" type="text" value={form.firstName} onChange={(event) => update('firstName', event.target.value)} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink outline-none focus:border-phoenix focus:ring-1 focus:ring-phoenix" /></div><div><label htmlFor="assessment-last-name" className="mb-1.5 block text-[13px] font-medium text-ink">Last Name</label><input id="assessment-last-name" autoComplete="family-name" type="text" value={form.lastName} onChange={(event) => update('lastName', event.target.value)} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink outline-none focus:border-phoenix focus:ring-1 focus:ring-phoenix" /></div></div><div><label htmlFor="assessment-email" className="mb-1.5 block text-[13px] font-medium text-ink">Work Email *</label><input id="assessment-email" required autoComplete="email" type="email" value={form.email} onChange={(event) => update('email', event.target.value)} onBlur={() => setContactTouched((current) => ({ ...current, email: true }))} aria-invalid={emailInvalid} aria-describedby={emailInvalid ? 'assessment-email-error' : undefined} className={`w-full rounded-lg border bg-ivory px-4 py-3 text-[15px] text-ink outline-none focus:ring-1 ${emailInvalid ? 'border-red-600 focus:ring-red-600' : 'border-ink/15 focus:border-phoenix focus:ring-phoenix'}`} />{emailInvalid ? <p id="assessment-email-error" role="alert" className="mt-1.5 text-[12.5px] font-medium text-red-700">Enter a valid email address.</p> : null}</div><div><label htmlFor="assessment-phone" className="mb-1.5 block text-[13px] font-medium text-ink">Phone *</label><input id="assessment-phone" required autoComplete="tel" type="tel" value={form.phone} onChange={(event) => update('phone', event.target.value)} onBlur={() => setContactTouched((current) => ({ ...current, phone: true }))} aria-invalid={phoneInvalid} aria-describedby={phoneInvalid ? 'assessment-phone-error' : undefined} className={`w-full rounded-lg border bg-ivory px-4 py-3 text-[15px] text-ink outline-none focus:ring-1 ${phoneInvalid ? 'border-red-600 focus:ring-red-600' : 'border-ink/15 focus:border-phoenix focus:ring-phoenix'}`} />{phoneInvalid ? <p id="assessment-phone-error" role="alert" className="mt-1.5 text-[12.5px] font-medium text-red-700">Enter a valid phone number, including area code.</p> : null}</div></div><ContactConsentFields value={consent} onChange={setConsent} />{error ? <p role="alert" className="mt-3 text-[13px] text-red-700">{error}</p> : null}<button type="button" onClick={onContinue} disabled={!canProceed || submitting} className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-phoenix px-7 py-3.5 text-[15px] font-semibold text-white hover:bg-ember disabled:cursor-not-allowed disabled:opacity-40">{submitting ? 'Saving...' : 'Continue to Practice Baseline'} <ArrowRight className="h-4 w-4" aria-hidden="true" /></button><p className="mt-4 text-center text-[12px] text-warm">Read our <Link href="/privacy-policy" className="font-semibold text-phoenix hover:underline">Privacy Policy</Link>.</p></div></AnimatedSection>
 }
 
 function BaselineStep({ form, update, canProceed, onBack, onContinue, headingRef }: { form: FormData; update: (field: keyof FormData, value: string) => void; canProceed: boolean; onBack: () => void; onContinue: () => void; headingRef: StepHeadingRef }) {

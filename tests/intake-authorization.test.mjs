@@ -21,6 +21,8 @@ function payload(full = false) {
 }
 async function setup(t, existing = false) {
   const h = await securityHarness(); t.after(() => h.close())
+  // Explicitly exercise the retained legacy adapter. Production is capture-only.
+  h.env.WEBSITE_CRM_DISPATCH_ENABLED = 'true'
   const ghl = await h.load('lib/ghl.ts')
   const fields = [...Object.values(ghl.GHL_CONTACT_FIELD_KEYS), ...Object.values(ghl.GHL_OPPORTUNITY_FIELD_KEYS)]
   const contact = { id: 'contact-test', locationId:'location-test', email:'test@example.test', phone:'+13125550100', customFields:[] }
@@ -65,11 +67,11 @@ test('persistent grant storage failure holds the request without promising autom
   const h=await setup(t),cookie=await h.newCookie(),input=payload()
   h.failGrantWrites(3)
   const response=await h.route.POST(request('growth-assessment',input,cookie))
-  assert.equal(response.status,403)
-  assert.equal((await response.json()).code,'CONTACT_VERIFICATION_REQUIRED')
+  assert.equal(response.status,200)
+  assert.equal((await response.json()).crmSynced,false)
   assert.equal(h.calls.filter(c=>c.method!=='GET').length,1)
   assert.equal(h.sqlite.prepare('SELECT count(*) AS n FROM intake_contact_grants').get().n,0)
-  assert.equal((await h.route.POST(request('growth-assessment',input,cookie))).status,403)
+  assert.equal((await h.route.POST(request('growth-assessment',input,cookie))).status,200)
   assert.equal(h.calls.filter(c=>c.method!=='GET').length,1)
 })
 
@@ -99,10 +101,15 @@ test('browser bootstrap is serialized across callers before cookie installation 
 })
 
 for (const full of [false,true]) for (const email of ['test@example.test','unrelated@example.test']) {
-  test(`unverified existing contact rejected: ${full?'full':'quick'}, ${email}`, async t => {
+  test(`unverified existing contact stays unlinked while fresh answers succeed: ${full?'full':'quick'}, ${email}`, async t => {
     const h=await setup(t,true), cookie=await h.newCookie(), input={...payload(full),email}
     const response=await h.route.POST(request('growth-assessment',input,cookie))
-    assert.equal(response.status,403); assert.equal((await response.json()).code,'CONTACT_VERIFICATION_REQUIRED')
+    assert.equal(response.status,200)
+    const result = await response.json()
+    assert.equal(result.saved,true); assert.equal(result.crmSynced,false); assert.equal(result.bookingReady,false)
+    assert.equal(result.reportEmailSent,false)
+    assert.equal(Boolean(result.snapshot),full)
+    assert.equal('bookingContact' in result,false); assert.equal('contactId' in result,false)
     assert.equal(h.calls.filter(c=>c.method!=='GET').length,0)
     assert.equal(response.headers.get('set-cookie'),null)
     assert.equal(h.sqlite.prepare('SELECT status FROM growth_assessments').get().status,'contact-verification-required')
@@ -195,7 +202,8 @@ test('a creation-race duplicate never acquires a grant or starts metadata writes
     return base(url,init)
   }
   const response=await h.route.POST(request('growth-assessment',payload(),cookie))
-  assert.equal(response.status,403)
+  assert.equal(response.status,200)
+  assert.equal((await response.json()).crmSynced,false)
   assert.equal(h.calls.filter(c=>c.method!=='GET').length,0)
   assert.equal(h.sqlite.prepare('SELECT count(*) AS n FROM intake_contact_grants').get().n,0)
 })
@@ -206,7 +214,9 @@ test('an ambiguous 200 create response does not establish creation provenance',a
     if(new URL(url).pathname==='/contacts/' && init.method==='POST') return Response.json({contact:h.contact})
     return base(url,init)
   }
-  assert.equal((await h.route.POST(request('growth-assessment',payload(),cookie))).status,403)
+  const response = await h.route.POST(request('growth-assessment',payload(),cookie))
+  assert.equal(response.status,200)
+  assert.equal((await response.json()).crmSynced,false)
   assert.equal(h.sqlite.prepare('SELECT count(*) AS n FROM intake_contact_grants').get().n,0)
 })
 
@@ -217,7 +227,9 @@ test('authorized metadata-failure retry retains its grant, contact and original 
     if(fail && new URL(url).pathname.endsWith('/notes') && init.method==='POST') { fail=false; return Response.json({}, {status:503}) }
     return base(url,init)
   }
-  assert.equal((await h.route.POST(request('growth-assessment',input,cookie))).status,502)
+  const response = await h.route.POST(request('growth-assessment',input,cookie))
+  assert.equal(response.status,200)
+  assert.equal((await response.json()).crmSynced,false)
   const row=h.sqlite.prepare('SELECT created_at,ghl_contact_id,status FROM growth_assessments').get()
   assert.equal(row.status,'crm-metadata-failed')
   assert.equal(h.sqlite.prepare('SELECT count(*) AS n FROM intake_contact_grants').get().n,1)

@@ -1,5 +1,21 @@
 # Phynyx business handoff
 
+## Current company scope (supersedes original-first deployment instructions)
+
+Company-only implementation is authorized. Save/deploy with its existing
+audience; public sharing requires separate action-time coordination. The personal
+Site and get.phynyxpro.com/DNS remain unchanged. Public GitHub synchronization
+contains sanitized source/tests/design only, never private audit data or the
+agency-location inventory. Preserve the personal deployment identity on shared
+main and the deliberate company hosting/embedding differences in company source.
+
+The current company release saves submissions and fresh reports independently
+of CRM linking. CRM dispatch and external tracking are disabled while secure
+verification, workflow isolation and repeat-safe dispatch remain incomplete.
+No email/booking delivery is claimed. See WEBSITE_RECOVERY_CONTRACT.md for the
+coordinator mapping, Smart List boundary and activation dependencies. Do not
+automatically replay historical/pending submissions or manufacture contact grants.
+
 ## Source, hosting, and ownership
 
 - Canonical source: https://github.com/Phynyx-Pyro/Website (public repository).
@@ -28,7 +44,10 @@ Transient database grant writes retry without repeating contact creation. If per
 
 Migration 0005 adds session/grant tables and nullable session bindings to assessments and booking handoffs. Existing customer rows are retained; old rows and old handoffs deliberately receive no authorization grant. Package all generated migrations with the Sites build.
 
-Deploy the exact reviewed source to the original site first; confirm a terminal successful deployment and safe health checks. Keep the company clone private and its database separate. Historical-data transfer requires a protected export/import plan; do not assume code cloning also copied the live database.
+Deploy the exact reviewed source only to the company Site; confirm terminal
+success and preserve its current sharing. The personal Site is not a deployment
+target. Keep databases separate. Historical-data transfer requires a protected
+export/import plan; code cloning does not copy the live database.
 
 No domain cutover should occur until a company administrator securely provisions credentials, verifies supported channels/billing, approves a controlled end-to-end test, and decides how historical data is retained or migrated.
 
