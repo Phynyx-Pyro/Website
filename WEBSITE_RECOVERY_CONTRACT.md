@@ -23,7 +23,7 @@ release. No workflow settings were changed by the source owner.
 
 | Concept | Contract |
 | --- | --- |
-| Submission event | Existing `contact.website_submission_id`; an opaque UUID, not an identity credential. Publish only after authorized CRM metadata is complete. |
+| Submission event | Opaque submission UUID plus stage (`quick-capture` or `completed`); not an identity credential. Existing `contact.website_submission_id` is a CRM metadata field, not a complete event ledger or reliable dispatch signal. Publish only after authorization and required metadata are complete. |
 | Retry | Same event ID and same canonical payload; return the same result without another enrollment. Changed payload under the same ID returns 409. |
 | Intentional new assessment | Fresh event ID; preserve all prior submitted evidence. A page reload, timeout or double click is not a new sales intent. |
 | Start versus completion | Quick capture and full completion are distinct saved events (`submission_type`). Completion replaces incomplete recovery eligibility, not assessment history. |
@@ -37,6 +37,18 @@ remove/re-add journey tags solely to manufacture a trigger. The workflow owner
 must connect the fresh submission event to the correct recovery path and permit
 legitimate re-entry. Re-entry enabled alone does not make adding an already-present
 tag a fresh event.
+
+**Current quick-capture limitation:** quick capture returns without writing
+Website Submission ID (`contact.website_submission_id`). A final-assessment ID
+alone therefore cannot restart legitimate repeated incomplete recovery. The
+capture-only checkpoint sends neither stage to CRM. At activation, use a durable
+stage-qualified receipt `(submission ID, quick-capture/completed, channel)`,
+scoped to the authorized location/contact, and an acknowledged dispatch/event
+signal for each eligible stage. Do not churn durable journey/status tags to
+generate events. The signal's transport and workflow integration still require
+implementation and acceptance; this is activation design, not an implemented
+dispatcher. Retries reuse the same stage receipt; a fresh intentional submission
+creates a new one, subject to active-run, qualification and suppression checks.
 
 **Execution evidence:** use Workflow (active) membership. Stop on response and
 external removal can bypass tail cleanup, so active tags can become stranded.
@@ -72,7 +84,9 @@ calls, so cannot create parallel enrollment, contacts or opportunities.
 
 The **future live dispatcher** must additionally provide:
 
-1. Durable receipt keyed by location, contact, submission event and channel.
+1. Durable receipt keyed by location, authorized contact, submission ID, stage
+   (`quick-capture` or `completed`) and channel, with an acknowledged dispatch/event
+   signal independent of durable status tags.
 2. One atomic active-run claim per location/contact/channel, independent of
    browser/session. Different channels may run concurrently.
 3. Authorization and booking/closed-stage/DND/operator suppression checks before
@@ -140,16 +154,16 @@ remain unverified. No message is sent or promised in this release.
 The following is coordinator-provided browser evidence, separate from the
 September 14 observed inventory and older planned workflow specification:
 
-- **Saved:** Allow re-entry ON in 002a, 002b, 002c and 002d. Multiple opportunities
-  remains OFF and Stop on response ON in each. 002c/d retain Contact timezone,
+- **Five workflows changed:** Allow re-entry saved ON in 002a, 002b, 002c, 002d
+  and 002e Reply Stops Pending Voice. Multiple opportunities remains OFF and
+  Stop on response ON in each. 001 intake already had re-entry ON and remains
+  unchanged. 002c/d retain Contact timezone,
   Monday–Friday 9am–5pm. Re-entry does not solve already-present-tag event delivery
   or cross-submission concurrency by itself.
-- **Saved views:** Website — Active recovery uses OR active workflow membership
-  in 002a/b/c/d/004b/004c and showed zero contacts. Website — Assessment incomplete
-  filters `sales:assessment-incomplete`; Website — Awaiting booking filters
-  `sales:booking-followup`. The latter two are journey views, not proof of channel
-  eligibility; suppression and qualification still apply before execution.
-  No tag backfill, historical enrollment or live test outreach was performed.
+- **Five views visibly saved:** exact filters are recorded below. Journey views
+  do not prove channel eligibility; suppression and qualification still apply
+  before execution. No contact tags, enrollments or CRM records were changed;
+  no historical backfill or live test outreach was performed.
 - **Read-only Magic Link inspection:** published inbound webhook, no displayed
   trigger filters; checks `magic_link` and `email`, then Create/Update Contact
   maps email and first name from the request before Send Magic Link Email. From
@@ -157,6 +171,14 @@ September 14 observed inventory and older planned workflow specification:
   sign-in link.” Body targets PYRO AI Agent Operations Center using the supplied
   link and says 15 minutes; that text does not establish cryptographic expiry.
   Click tracking and UTM are OFF. No webhook URL was copied or invoked.
+
+| Saved contact view | Observed filter |
+| --- | --- |
+| Website — Active recovery | Workflow (active) membership in 002a OR 002b OR 002c OR 002d OR 004b OR 004c; observed zero contacts. |
+| Website — Assessment incomplete | Tag IS `sales:assessment-incomplete`. |
+| Website — Awaiting booking | Tag IS `sales:booking-followup`. |
+| Website — Appointment booked | Tag IS `appt:booked` AND Tag IS `source:phynyx-website`. |
+| Website — Foundation nurture | Tag IS `sales:nurture`. |
 
 These updates do not establish full live parity. Sender readiness, repeat-event
 delivery, suppression at every send, recovery destinations, booking capture and
