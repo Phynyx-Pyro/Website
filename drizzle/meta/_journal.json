@@ -50,6 +50,27 @@
       "when": 1789502392645,
       "tag": "0006_yellow_goliath",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1789509548905,
+      "tag": "0007_sour_purifiers",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1789509887290,
+      "tag": "0008_lush_electro",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1789510182099,
+      "tag": "0009_loud_randall_flagg",
+      "breakpoints": true
     }
   ]
 }

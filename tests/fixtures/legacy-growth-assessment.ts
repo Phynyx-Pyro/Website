@@ -1,12 +1,19 @@
 import { getDb } from '@/db'
 import { growthAssessments } from '@/db/schema'
-import { assessmentJourneyState, savedAssessmentResponse } from '@/lib/assessment-delivery'
-import { dispatchAdmitted, dispatchWebsiteSubmission } from '@/lib/website-dispatch'
-import { contactVerificationRequired, readIntakeSession } from '@/lib/intake-session'
-import { assessGrowthFit } from '@/lib/growth-assessment'
+import { issueBookingSession } from '@/lib/booking-session'
+import { assessmentJourneyState, isWebsiteCrmDispatchEnabled, savedAssessmentResponse } from '@/lib/assessment-delivery'
+import { contactVerificationRequired, readIntakeSession, requireContactGrant, type IntakeSession } from '@/lib/intake-session'
+import {
+  GhlIdentityConflictError,
+  isGhlContactNotFoundError,
+  resolveGrowthAssessmentContact,
+  syncGrowthAssessmentMetadata,
+} from '@/lib/ghl'
+import { assessGrowthFit, type FitAssessment } from '@/lib/growth-assessment'
 import {
   calculateGrowthSnapshot,
   parseGrowthSnapshotInput,
+  type GrowthSnapshotResult,
 } from '@/lib/growth-snapshot'
 import { CONSENT_VERSION, CONSENT_DISCLOSURES, parseContactConsent } from '@/lib/contact-consent'
 import {
@@ -23,9 +30,10 @@ import {
   publicFormErrorResponse,
   readBoundedJson,
 } from '@/lib/public-form-security'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 
 const MAX_REQUEST_BYTES = 24 * 1_024
+const PROCESSING_LEASE_MS = 2 * 60_000
 
 const MAX_LENGTHS = {
   firstName: 80,
@@ -115,11 +123,57 @@ function optionalAllowed(value: string, values: Set<string>, label: string) {
   throw new PublicFormError(400, 'INVALID_FIELD', `Please select a valid ${label}.`)
 }
 
+async function assessmentResultResponse(
+  request: Request,
+  submissionId: string,
+  fit: FitAssessment,
+  snapshot: GrowthSnapshotResult | null,
+  session: IntakeSession,
+) {
+  const responseBody = {
+    success: true,
+    saved: true,
+    crmSynced: true,
+    bookingReady: fit.path !== 'foundation',
+    fit: {
+      path: fit.path,
+      tier: fit.tier,
+      score: fit.score,
+      summary: fit.summary,
+    },
+    snapshot,
+  }
+
+  if (fit.path === 'foundation') {
+    return Response.json(responseBody, {
+      headers: { 'Cache-Control': 'no-store' },
+    })
+  }
+
+  let bookingCookie: string
+  try {
+    bookingCookie = await issueBookingSession(submissionId, request.url, session)
+  } catch {
+    // A calendar capability failure must not discard a freshly saved report.
+    return savedAssessmentResponse(submissionId, false, fit, snapshot)
+  }
+  return Response.json(
+    responseBody,
+    {
+      headers: {
+        'Cache-Control': 'no-store',
+        'Set-Cookie': bookingCookie,
+      },
+    },
+  )
+}
+
 export async function POST(request: Request) {
   try {
     const payload = await readBoundedJson(request, MAX_REQUEST_BYTES)
     const isPartial = payload.submissionType === 'homepage-quick-form'
     const consent = parseContactConsent(payload.consent)
+    const partialResponse = () => Response.json({ success: true, saved: true, crmSynced: true }, { headers: { 'Cache-Control': 'no-store' } })
 
     if (clean(payload.website, 200)) {
       return Response.json(
@@ -271,7 +325,8 @@ export async function POST(request: Request) {
       trackedMetricCount: snapshotResult?.trackedCoreMetrics ?? 0,
     })
     const now = new Date()
-    const dispatchEnabled = dispatchAdmitted(email, phone)
+    const dispatchEnabled = isWebsiteCrmDispatchEnabled()
+    let submittedAt = now
     const payloadHash = await hashText(
       canonicalPayloadHashInput([
         firstName,
@@ -330,34 +385,238 @@ export async function POST(request: Request) {
         recoveryState: 'verification_pending',
         ghlContactId: null,
         intakeSessionHash: session.tokenHash,
-        status: dispatchEnabled ? 'dispatch-ready' : 'verification-pending',
+        status: dispatchEnabled ? 'crm-pending' : 'verification-pending',
         createdAt: now,
         updatedAt: now,
       })
       .onConflictDoNothing()
       .returning({ id: growthAssessments.id })
 
+    let resumeMetadataContactId = ''
     if (!inserted) {
-      const [existing] = await db.select().from(growthAssessments).where(eq(growthAssessments.id, submissionId)).limit(1)
-      if (!existing || existing.payloadHash !== payloadHash) throw new PublicFormError(409, 'SUBMISSION_CONFLICT', 'This submission changed. Start a new assessment.')
+      const [existing] = await db
+        .select()
+        .from(growthAssessments)
+        .where(eq(growthAssessments.id, submissionId))
+        .limit(1)
+
+      if (!existing || existing.payloadHash !== payloadHash) {
+        throw new PublicFormError(
+          409,
+          'SUBMISSION_CONFLICT',
+          'This submission changed while it was being processed. Please try again.',
+        )
+      }
+
+      // Legacy rows and another browser's UUID/payload never confer ownership.
+      // Reject without changing the other session's record or processing lease.
       if (existing.intakeSessionHash !== session.tokenHash) throw contactVerificationRequired()
-      if (!dispatchEnabled || !existing.status.startsWith('dispatch-')) return savedAssessmentResponse(submissionId, isPartial, fit, snapshotResult)
-    }
-    let delivery = { synced: false, state: 'verification-pending', recovery: 'verification_pending' }
-    if (dispatchEnabled) {
-      try {
-        delivery = await dispatchWebsiteSubmission({
-          submissionId, submittedAt: now.toISOString(), submissionType,
-          firstName, lastName, email, phone, businessName, industry, annualRevenue,
-          biggestChallenge, currentMarketing, monthlyBudget, attribution, fit, consent,
-        }, session)
-      } catch {
-        // Persisted answers/report remain available when CRM or receipt storage fails.
-        console.error('Website dispatch unavailable', { submissionId })
+      // Report continuity authorizes only the answers this session submitted.
+      // No CRM reads, grants, booking capabilities or status resets on this path.
+      // Verification-pending events are never automatically replayed into CRM.
+      if (!dispatchEnabled || existing.status === 'verification-pending' || existing.status === 'contact-verification-required') {
+        return savedAssessmentResponse(submissionId, isPartial, fit, snapshotResult)
+      }
+      if (existing.ghlContactId) {
+        await requireContactGrant(session, existing.ghlContactId, email, phone)
+      }
+
+      submittedAt = existing.createdAt
+
+      if (existing.status === 'crm-synced' && existing.ghlContactId) {
+        if (isPartial) return partialResponse()
+        return assessmentResultResponse(
+          request,
+          existing.id,
+          fit,
+          snapshotResult,
+          session,
+        )
+      }
+
+      if (
+        ['crm-pending', 'crm-metadata-pending'].includes(existing.status) &&
+        now.getTime() - existing.updatedAt.getTime() < PROCESSING_LEASE_MS
+      ) {
+        throw new PublicFormError(
+          409,
+          'SUBMISSION_IN_PROGRESS',
+          'Your assessment is already being processed. Please wait a moment and try again.',
+        )
+      }
+
+      if (
+        existing.ghlContactId &&
+        ['crm-metadata-pending', 'crm-metadata-failed'].includes(existing.status)
+      ) {
+        resumeMetadataContactId = existing.ghlContactId
+        const [claimed] = await db
+          .update(growthAssessments)
+          .set({ status: 'crm-metadata-pending', updatedAt: now })
+          .where(
+            and(
+              eq(growthAssessments.id, submissionId),
+              eq(growthAssessments.status, existing.status),
+              eq(growthAssessments.updatedAt, existing.updatedAt),
+            ),
+          )
+          .returning({ id: growthAssessments.id })
+
+        if (!claimed) {
+          throw new PublicFormError(
+            409,
+            'SUBMISSION_IN_PROGRESS',
+            'Your assessment is already being processed. Please wait a moment and try again.',
+          )
+        }
+      } else {
+        if (!['crm-sync-failed', 'crm-pending'].includes(existing.status)) {
+          throw contactVerificationRequired()
+        }
+        const [claimed] = await db
+          .update(growthAssessments)
+          .set({ ghlContactId: null, status: 'crm-pending', updatedAt: now })
+          .where(
+            and(
+              eq(growthAssessments.id, submissionId),
+              eq(growthAssessments.status, existing.status),
+              eq(growthAssessments.updatedAt, existing.updatedAt),
+            ),
+          )
+          .returning({ id: growthAssessments.id })
+
+        if (!claimed) {
+          throw new PublicFormError(
+            409,
+            'SUBMISSION_IN_PROGRESS',
+            'Your assessment is already being processed. Please wait a moment and try again.',
+          )
+        }
       }
     }
-    return savedAssessmentResponse(submissionId, isPartial, fit, snapshotResult, delivery)
 
+    // Fail closed while the coordinator completes verification and workflow
+    // dependencies. Unique submission IDs make parallel retries one saved event.
+    if (!dispatchEnabled) {
+      return savedAssessmentResponse(submissionId, isPartial, fit, snapshotResult)
+    }
+
+    const ghlInput = {
+      submissionId,
+      submittedAt: submittedAt.toISOString(),
+      submissionType,
+      firstName,
+      lastName,
+      email,
+      phone,
+      businessName,
+      industry,
+      annualRevenue,
+      biggestChallenge,
+      currentMarketing,
+      monthlyBudget,
+      capacity,
+      decisionRole,
+      implementationTiming,
+      followUpOwner,
+      snapshotInput,
+      snapshotResult,
+      attribution,
+      fit,
+      consent,
+    }
+
+    let contactId = resumeMetadataContactId
+    let metadataPending = Boolean(resumeMetadataContactId)
+    try {
+      if (!contactId) {
+        const contact = await resolveGrowthAssessmentContact(ghlInput, session)
+        contactId = contact.contactId
+        metadataPending = true
+        await db
+          .update(growthAssessments)
+          .set({
+            ghlContactId: contactId,
+            status: 'crm-metadata-pending',
+            updatedAt: new Date(),
+          })
+          .where(eq(growthAssessments.id, submissionId))
+      }
+
+      try {
+        await syncGrowthAssessmentMetadata(contactId, ghlInput, session)
+      } catch (error) {
+        const cachedContactWasRemoved =
+          Boolean(resumeMetadataContactId) &&
+          contactId === resumeMetadataContactId &&
+          isGhlContactNotFoundError(error, contactId)
+
+        if (!cachedContactWasRemoved) throw error
+
+        await db
+          .update(growthAssessments)
+          .set({
+            ghlContactId: null,
+            status: 'crm-pending',
+            updatedAt: new Date(),
+          })
+          .where(eq(growthAssessments.id, submissionId))
+
+        contactId = ''
+        metadataPending = false
+
+        const contact = await resolveGrowthAssessmentContact(ghlInput, session)
+        contactId = contact.contactId
+        metadataPending = true
+        await db
+          .update(growthAssessments)
+          .set({
+            ghlContactId: contactId,
+            status: 'crm-metadata-pending',
+            updatedAt: new Date(),
+          })
+          .where(eq(growthAssessments.id, submissionId))
+
+        // This is intentionally a single recovery attempt. A second failure is
+        // recorded normally instead of looping or creating more CRM work.
+        await syncGrowthAssessmentMetadata(contactId, ghlInput, session)
+      }
+    } catch (error) {
+      const identityConflict = error instanceof GhlIdentityConflictError ||
+        (error instanceof PublicFormError && error.code === 'CONTACT_VERIFICATION_REQUIRED')
+      await db
+        .update(growthAssessments)
+        .set({
+          ghlContactId: metadataPending && contactId ? contactId : null,
+          status: identityConflict
+            ? 'contact-verification-required'
+            : metadataPending
+              ? 'crm-metadata-failed'
+              : 'crm-sync-failed',
+          updatedAt: new Date(),
+        })
+        .where(eq(growthAssessments.id, submissionId))
+
+      if (identityConflict) {
+        return savedAssessmentResponse(submissionId, isPartial, fit, snapshotResult)
+      }
+
+      console.error('GoHighLevel growth assessment sync failed')
+      return savedAssessmentResponse(submissionId, isPartial, fit, snapshotResult)
+    }
+
+    await db
+      .update(growthAssessments)
+      .set({
+        ghlContactId: contactId,
+        status: 'crm-synced',
+        updatedAt: new Date(),
+      })
+      .where(eq(growthAssessments.id, submissionId))
+
+    return isPartial
+      ? partialResponse()
+      : assessmentResultResponse(request, submissionId, fit, snapshotResult, session)
   } catch (error) {
     if (error instanceof PublicFormError) return publicFormErrorResponse(error)
     console.error('Growth assessment submission failed')

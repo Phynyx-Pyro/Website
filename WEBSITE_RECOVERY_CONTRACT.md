@@ -2,16 +2,32 @@
 
 ## Scope and release boundary
 
+**Implementation update:** the company route now uses `lib/website-dispatch.ts`,
+with durable stage/channel receipts, identity/contact locks and fail-closed
+reconciliation after uncertain writes. It supports bounded synthetic creation
+and an existing-contact acceptance mode. Existing-contact mutation requires a
+real grant; configured test recipients are not an ownership bypass. The previous
+adapter route is retained only in a regression-test fixture.
+
+Email verification is implemented through the existing authenticated GHL
+conversation-message API, subject to runtime scope/sender acceptance. Tokens are
+hashed, single-use, expire after 15 minutes and require an explicit confirmation
+POST. Recovery enrollment/exit reconciliation and booking activation are still
+separate gates. No voice execution is authorized. See `ANDREW_HANDOFF.md` for
+runtime gates, test flow and editing boundaries. This supersedes the earlier
+capture-only implementation boundary below; neither implementation nor a saved
+version by itself proves runtime delivery.
+
 Appointment booking remains the conversion. A fresh assessment/report is an
 intermediate step. Eligible completed unbooked visitors remain recovery
 candidates; foundation qualification and nurture routing do not change.
 
-This company release implements **capture and fresh reports**, with CRM dispatch
-and external tracking disabled by default. It does not implement ownership
-verification, email sending, cross-device report recovery, live enrollment,
+This company release implements **capture and fresh reports**, bounded CRM
+dispatch and single-use email verification, with independent runtime gates.
+It does not implement cross-device report recovery, the live recovery consumer,
 workflow editing, or Smart List creation. A pending response is not a delivery
-receipt. Do not enable the retained legacy adapter merely by setting its flag;
-the production dispatcher and workflow integration below still need acceptance.
+receipt. The old flag alone cannot activate CRM; the recovery integration below
+still needs acceptance. External tracking remains disabled.
 
 The company Site owner owns source, tests, saved versions and deployments. The
 coordinating manager owns GHL browser workflow configuration, Smart Lists and the
@@ -100,9 +116,11 @@ The **future live dispatcher** must additionally provide:
 6. A per-contact synchronization claim around opportunity lookup/create and
    metadata/event publication, with reconciliation for uncertain CRM outcomes.
 
-These live claims/receipts are not implemented in this capture-only checkpoint.
-The retained legacy processing lease is per submission, not a cross-submission
-enrollment lock. Do not represent it as satisfying this contract.
+CRM stage receipts and durable identity/contact claims are now implemented.
+Channel receipts record suppression/activation holds; they do not perform or
+prove external enrollment. Cross-channel execution claims, authoritative workflow
+exit acknowledgment and the recovery consumer remain activation work. The legacy
+lease is confined to the previous-route test fixture and is not the dispatcher.
 
 ## Smart List mapping
 
@@ -142,12 +160,16 @@ previous reports. Verification-pending rows are never auto-exported even if a
 configuration switch changes later.
 
 Self-service verification remains blocked on an authorized HTTP-based sender and
-reviewed integration. Hosted Sites do not support raw TCP sockets; LC SMTP alone
+reviewed integration acceptance. The new implementation uses GHL's existing
+conversation-email API (`conversations/message.write`) and does not invoke the
+Magic Link workflow. Hosted Sites do not support raw TCP sockets; LC SMTP alone
 is not a supported direct transport here. Do not add a relay/provider or cost
 without approval. The existing Magic Link Email Sender is unsafe to reuse
 unchanged: its webhook path creates/updates a contact before sending the link.
-Effective sender, token generation/validation and enforced expiry/replay behavior
-remain unverified. No message is sent or promised in this release.
+The effective GHL sender and website-token message scope require live acceptance.
+The new endpoint enforces its own token validation, expiry and replay protection;
+it does not rely on the old workflow's email wording. A returned message ID is
+an API acknowledgment, not delivery proof. No report-email delivery is promised.
 
 ## Coordinated operational update — September 15, 2026
 

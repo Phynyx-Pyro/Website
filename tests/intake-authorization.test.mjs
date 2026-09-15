@@ -41,7 +41,7 @@ async function setup(t, existing = false) {
     if(method !== 'GET') return Response.json({})
     throw new Error(`Unexpected mocked CRM request: ${method} ${path}`)
   }
-  const route = await h.load('app/api/growth-assessment/route.ts')
+  const route = await h.load('tests/fixtures/legacy-growth-assessment.ts')
   const bootstrap = await h.load('app/api/intake-session/route.ts')
   const booking = await h.load('app/api/booking-session/route.ts')
   const sessionModule = await h.load('lib/intake-session.ts')

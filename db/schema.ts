@@ -1,4 +1,4 @@
-import { index, integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { index, integer, primaryKey, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
 
 export const growthAssessments = sqliteTable(
   'growth_assessments',
@@ -92,3 +92,47 @@ export const intakeContactGrants = sqliteTable('intake_contact_grants', {
   email: text('email').notNull(),
   phone: text('phone').notNull(),
 }, (table) => [primaryKey({ columns: [table.sessionHash, table.locationId, table.contactId] })])
+
+// No backfill: only newly admitted events receive dispatch receipts.
+export const websiteDispatchReceipts = sqliteTable('website_dispatch_receipts', {
+  key: text('key').primaryKey(),
+  submissionId: text('submission_id').notNull(),
+  stage: text('stage').notNull(),
+  channel: text('channel').notNull(),
+  locationId: text('location_id').notNull(),
+  contactId: text('contact_id'),
+  opportunityId: text('opportunity_id'),
+  state: text('state').notNull(),
+  detail: text('detail'),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+}, table => [index('idx_website_dispatch_submission').on(table.submissionId)])
+
+// No expiring lease: an unknown external write outcome requires reconciliation.
+export const websiteDispatchLocks = sqliteTable('website_dispatch_locks', {
+  key: text('key').primaryKey(),
+  receiptKey: text('receipt_key').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+})
+
+// Creation receipts protect against lagging GHL search indexes across submissions.
+// These mappings never confer an ownership grant by themselves.
+export const websiteCreatedIdentities = sqliteTable('website_created_identities', {
+  key: text('key').primaryKey(),
+  contactId: text('contact_id').notNull(),
+})
+
+export const websiteVerifications = sqliteTable('website_verifications', {
+  tokenHash: text('token_hash').primaryKey(),
+  submissionId: text('submission_id').notNull(),
+  requestSessionHash: text('request_session_hash').notNull(),
+  contactId: text('contact_id').notNull(),
+  locationId: text('location_id').notNull(),
+  email: text('email').notNull(),
+  phone: text('phone').notNull(),
+  state: text('state').notNull(),
+  messageId: text('message_id'),
+  claimedSessionHash: text('claimed_session_hash'),
+  expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+}, table => [uniqueIndex('idx_website_verification_submission_once').on(table.submissionId)])

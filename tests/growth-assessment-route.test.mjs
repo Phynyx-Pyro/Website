@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { importTypeScriptModule } from './helpers/import-typescript.mjs'
 
-const moduleUrl = new URL('../app/api/growth-assessment/route.ts', import.meta.url)
+const moduleUrl = new URL('./fixtures/legacy-growth-assessment.ts', import.meta.url)
 
 function awaitedQuery(returningRows = []) {
   const promise = Promise.resolve()

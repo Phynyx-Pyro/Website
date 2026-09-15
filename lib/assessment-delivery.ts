@@ -25,16 +25,18 @@ export function savedAssessmentResponse(
   isPartial: boolean,
   fit: FitAssessment,
   snapshot: GrowthSnapshotResult | null,
+  delivery?: { synced: boolean; state: string; recovery: string },
 ) {
   return Response.json({
     success: true,
     saved: true,
     submissionId,
-    crmSynced: false,
+    crmSynced: delivery?.synced ?? false,
     bookingReady: false,
     journeyState: assessmentJourneyState(isPartial, fit),
-    recoveryState: 'verification_pending',
-    verificationAvailable: false,
+    recoveryState: delivery?.recovery ?? 'verification_pending',
+    dispatchState: delivery?.state,
+    verificationAvailable: env.WEBSITE_VERIFICATION_ENABLED === 'true',
     reportEmailSent: false,
     ...(!isPartial ? { fit: { path: fit.path, tier: fit.tier, score: fit.score, summary: fit.summary }, snapshot } : {}),
   }, { headers: { 'Cache-Control': 'no-store' } })

@@ -423,6 +423,7 @@ export function GrowthAssessmentClient() {
   const [metrics, setMetrics] = useState<MetricForm>(initialMetrics)
   const [publicCounts, setPublicCounts] = useState<PublicFunnelInput>({ inquiries: '', booked: '', attended: '' })
   const [submitting, setSubmitting] = useState(false)
+  const [verificationSubmission, setVerificationSubmission] = useState('')
   const [consent, setConsent] = useState(EMPTY_CONSENT)
   const contactSubmissionIdRef = useRef('')
   const submissionIdRef = useRef('')
@@ -551,11 +552,12 @@ export function GrowthAssessmentClient() {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ firstName: form.firstName, lastName: form.lastName, email: form.email, phone: form.phone, consent, website, submissionType: 'homepage-quick-form', submissionId: contactSubmissionIdRef.current, attribution: getAssessmentAttribution() }),
       })
-      const result = await response.json() as { saved?: boolean; crmSynced?: boolean; code?: string; message?: string }
+      const result = await response.json() as { saved?: boolean; crmSynced?: boolean; verificationAvailable?: boolean; code?: string; message?: string }
       if (!response.ok || !(result.saved || result.crmSynced)) {
         if (result.code === 'SUBMISSION_CONFLICT') contactSubmissionIdRef.current = ''
         throw new Error(result.message || 'We could not save your details. Please try again.')
       }
+      setVerificationSubmission(result.verificationAvailable && !result.crmSynced ? contactSubmissionIdRef.current : '')
       setStep(2)
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Please try again.')
@@ -592,7 +594,7 @@ export function GrowthAssessmentClient() {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...form, snapshot: snapshotInput, consent, website, submissionId: submissionIdRef.current, attribution: getAssessmentAttribution() }),
       })
-      const result = await response.json().catch(() => null) as { code?: string; message?: string; bookingReady?: boolean; fit?: AssessmentResult['fit']; snapshot?: GrowthSnapshotResult } | null
+      const result = await response.json().catch(() => null) as { code?: string; message?: string; crmSynced?: boolean; verificationAvailable?: boolean; bookingReady?: boolean; fit?: AssessmentResult['fit']; snapshot?: GrowthSnapshotResult } | null
       if (!response.ok || !result?.fit || !result.snapshot) {
         if (result?.code === 'SUBMISSION_CONFLICT') submissionIdRef.current = ''
         throw new Error(result?.message || 'We could not build your snapshot. Please try again.')
@@ -608,6 +610,7 @@ export function GrowthAssessmentClient() {
           // Keep the completed report even when the calendar handoff is offline.
         }
       }
+      setVerificationSubmission(result.verificationAvailable && !result.crmSynced ? submissionIdRef.current : '')
       setAssessmentResult({ fit: result.fit, snapshot: result.snapshot, bookingContact, handoffPending: !bookingContact })
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Something went wrong. Please try again.')
@@ -625,7 +628,8 @@ export function GrowthAssessmentClient() {
           <SnapshotResults result={assessmentResult} firstName={form.firstName} copy={journeyCopy} />
           <div className="mx-auto mt-6 max-w-[760px] text-center print:hidden">
             <button type="button" onClick={() => window.print()} className="rounded-lg border border-ink/20 px-5 py-3 text-[14px] font-semibold text-ink hover:bg-white">Save or print this report</button>
-            {assessmentResult.handoffPending ? <p role="status" className="mt-4 rounded-lg border border-ink/15 bg-white p-4 text-[15px] leading-relaxed text-ink">Your assessment is saved and this report uses only the answers you just submitted. Email verification and online booking are not available yet. No report email has been sent. Save a copy before leaving this page; you can complete a fresh assessment at any time.</p> : null}
+            {assessmentResult.handoffPending ? <p role="status" className="mt-4 rounded-lg border border-ink/15 bg-white p-4 text-[15px] leading-relaxed text-ink">Your assessment is saved and this report uses only the answers you just submitted. Online scheduling is not ready for this request. No report email has been sent. Save a copy before leaving; you can complete a fresh assessment at any time.</p> : null}
+            {verificationSubmission ? <><VerificationAction submissionId={verificationSubmission} /><button type="button" className="mt-3 font-semibold text-phoenix" onClick={() => { setAssessmentResult(null); setStep(4) }}>After verifying in this browser, return to the final step and retry the handoff</button></> : null}
           </div>
           <div className="mx-auto mt-8 max-w-[760px] text-center">
             {isFoundation ? (
@@ -660,6 +664,7 @@ export function GrowthAssessmentClient() {
             )}
             <button type="button" onClick={() => {
               contactSubmissionIdRef.current = ''
+              setVerificationSubmission('')
               submissionIdRef.current = ''
               setAssessmentResult(null)
               setCalendarVisible(false)
@@ -689,6 +694,7 @@ export function GrowthAssessmentClient() {
       </section>
 
       <section className="pb-20 md:pb-28">
+        {verificationSubmission ? <div className="mx-auto mb-5 max-w-[760px] px-5"><VerificationAction submissionId={verificationSubmission} /></div> : null}
         <form name="growth-assessment-full" onSubmit={handleSubmit} className="mx-auto max-w-[760px] px-5">
           <div className="absolute left-[-10000px] h-px w-px overflow-hidden" aria-hidden="true"><label htmlFor="assessment-website">Website</label><input id="assessment-website" name="website" type="text" tabIndex={-1} autoComplete="off" value={website} onChange={(event) => setWebsite(event.target.value)} /></div>
           {Object.entries(form).map(([name, value]) => <input key={name} type="hidden" name={name} value={value} />)}
@@ -790,6 +796,21 @@ function MetricsStep({ fields, metrics, setMetrics, snapshotPreview, canSubmit, 
 
 function SelectField({ id, label, value, onChange, options, required = false, help }: { id: string; label: string; value: string; onChange: (value: string) => void; options: Array<[string, string]>; required?: boolean; help?: string }) {
   return <div><label htmlFor={id} className="mb-1.5 block text-[13px] font-medium text-ink">{label}</label><select id={id} required={required} value={value} onChange={(event) => onChange(event.target.value)} className="w-full rounded-lg border border-ink/15 bg-ivory px-4 py-3 text-[15px] text-ink outline-none focus:border-phoenix focus:ring-1 focus:ring-phoenix"><option value="">Select one</option>{options.map(([optionValue, optionLabel]) => <option key={optionValue} value={optionValue}>{optionLabel}</option>)}</select>{help ? <p className="mt-1.5 text-[11.5px] text-warm">{help}</p> : null}</div>
+}
+
+function VerificationAction({ submissionId }: { submissionId: string }) {
+  const [busy, setBusy] = useState(false)
+  const [message, setMessage] = useState('You can finish your report now. Verify your email before linking this request to an existing contact.')
+  async function send() {
+    setBusy(true)
+    try {
+      const response = await fetch('/api/verification/request', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ submissionId }) })
+      const result = await response.json() as { message?: string }
+      setMessage(result.message || 'Verification is temporarily unavailable.')
+    } catch { setMessage('Verification could not be requested. Your assessment remains saved.') }
+    finally { setBusy(false) }
+  }
+  return <aside className="my-4 rounded-lg border border-ink/15 bg-white p-5 text-left"><p role="status" className="text-sm leading-relaxed">{message}</p><button type="button" disabled={busy} onClick={send} className="mt-3 rounded-lg bg-phoenix px-4 py-2 font-semibold text-white disabled:opacity-50">{busy ? 'Requesting…' : 'Send verification email'}</button><p className="mt-3 text-xs text-warm">Open the link, explicitly confirm, then return to this assessment in the same browser. On another device, start a fresh assessment there after verifying.</p></aside>
 }
 
 function StepButtons({ onBack, onContinue, canProceed, nextLabel }: { onBack: () => void; onContinue: () => void; canProceed: boolean; nextLabel: string }) {

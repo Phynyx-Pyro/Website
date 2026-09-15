@@ -178,7 +178,7 @@ async function incrementRateLimit(rule: RateLimitRule, now: number) {
 
 export async function enforcePublicFormRateLimit(options: {
   request: Request
-  scope: 'growth-assessment' | 'support' | 'booking-session' | 'intake-session'
+  scope: 'growth-assessment' | 'support' | 'booking-session' | 'intake-session' | 'verification'
   identity: string
 }) {
   const now = Date.now()
@@ -187,9 +187,9 @@ export async function enforcePublicFormRateLimit(options: {
   const scope = options.scope
 
   const globalLimit =
-    scope === 'growth-assessment' ? 200 : scope === 'support' ? 120 : 500
+    scope === 'verification' ? 30 : scope === 'growth-assessment' ? 200 : scope === 'support' ? 120 : 500
   const clientLimit =
-    scope === 'growth-assessment' ? 20 : scope === 'support' ? 12 : 30
+    scope === 'verification' ? 5 : scope === 'growth-assessment' ? 20 : scope === 'support' ? 12 : 30
 
   const clientKey = await hashText(`${scope}:client:${clientAddress}`)
   await incrementRateLimit(
@@ -199,7 +199,7 @@ export async function enforcePublicFormRateLimit(options: {
 
   if (identity) {
     const identityKey = await hashText(
-      `${scope}:identity:${clientAddress}:${identity}`,
+      `${scope}:identity:${scope === 'verification' ? 'all-clients' : clientAddress}:${identity}`,
     )
     await incrementRateLimit(
       { key: `${scope}:identity:${identityKey}`, limit: 5, windowMs: 60 * 60_000 },

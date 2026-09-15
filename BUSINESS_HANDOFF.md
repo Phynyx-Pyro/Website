@@ -1,5 +1,9 @@
 # Phynyx business handoff
 
+For the current bounded dispatcher/verification implementation and safe editing
+instructions, see [Andrew's handoff](ANDREW_HANDOFF.md). Live test evidence is
+reported separately from local mocked tests and deployment success.
+
 ## Current company scope (supersedes original-first deployment instructions)
 
 Company-only implementation is authorized. Save/deploy with its existing

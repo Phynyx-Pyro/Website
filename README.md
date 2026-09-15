@@ -4,18 +4,24 @@ Recovered PhynyxPro marketing and lead-generation site, adapted from the origina
 
 ## Company implementation checkpoint
 
-The company copy now saves quick capture and full assessment answers and shows a
-fresh report without requiring CRM linking. CRM dispatch and external tracking
-fail closed unless explicitly enabled; keep both disabled until the integration
-contract is implemented and accepted. Verification, emailed reports, cross-device
-resume and live recovery are not enabled in this checkpoint. Reports can be
-printed/saved in the browser. Existing contact authorization is unchanged.
+The returning-visitor adapter and single-use email verification implementation
+are described in [Andrew's handoff](ANDREW_HANDOFF.md). Runtime acceptance gates
+remain explicit; the old dispatch flag alone no longer invokes the legacy route.
+Recovery enrollment and booking activation require separate evidence. The
+capture/report behavior below remains available when those gates are closed.
+
+The company copy saves quick capture and full assessment answers and shows a
+fresh report without requiring CRM linking. Bounded CRM acceptance and email
+verification have separate runtime gates; external tracking remains disabled.
+Emailed reports, cross-device report resume and live recovery are not claimed.
+Reports can be printed/saved in the browser. Existing-contact mutations require
+a valid creation receipt or a genuine single-use email verification capability.
 
 See [Website recovery contract](WEBSITE_RECOVERY_CONTRACT.md) for event/state
 mapping, retry/concurrency requirements, Smart Lists, pending verification and
 the exact release boundary. The legacy CRM adapter described below remains for
-regression coverage; its configuration switch alone is not a production-ready
-repeat-assessment dispatcher.
+regression coverage in a test-only route fixture. Its configuration switch alone
+cannot activate the production route.
 
 The recovery preserves the complete multi-page brand experience, local imagery, responsive layouts, and lead forms while replacing the Abacus-specific runtime and PostgreSQL dependency with a Sites-compatible foundation.
 
