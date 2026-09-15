@@ -1,4 +1,5 @@
 'use client'
+import { ensureIntakeSession } from '@/lib/ensure-intake-session'
 
 import {
   useEffect,
@@ -543,6 +544,7 @@ export function GrowthAssessmentClient() {
     setSubmitting(true)
     setError('')
     try {
+      await ensureIntakeSession()
       if (!contactSubmissionIdRef.current) contactSubmissionIdRef.current = crypto.randomUUID()
       const response = await fetch('/api/growth-assessment', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -583,6 +585,7 @@ export function GrowthAssessmentClient() {
     setSubmitting(true)
     setError('')
     try {
+      await ensureIntakeSession()
       if (!submissionIdRef.current) submissionIdRef.current = crypto.randomUUID()
       const response = await fetch('/api/growth-assessment', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },

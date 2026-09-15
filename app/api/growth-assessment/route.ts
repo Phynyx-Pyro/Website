@@ -1,6 +1,7 @@
 import { getDb } from '@/db'
 import { growthAssessments } from '@/db/schema'
 import { issueBookingSession } from '@/lib/booking-session'
+import { contactVerificationRequired, readIntakeSession, requireContactGrant, type IntakeSession } from '@/lib/intake-session'
 import {
   GhlIdentityConflictError,
   isGhlContactNotFoundError,
@@ -126,6 +127,7 @@ async function assessmentResultResponse(
   submissionId: string,
   fit: FitAssessment,
   snapshot: GrowthSnapshotResult | null,
+  session: IntakeSession,
 ) {
   const responseBody = {
     success: true,
@@ -146,7 +148,7 @@ async function assessmentResultResponse(
     })
   }
 
-  const bookingCookie = await issueBookingSession(submissionId, request.url)
+  const bookingCookie = await issueBookingSession(submissionId, request.url, session)
   return Response.json(
     responseBody,
     {
@@ -302,6 +304,8 @@ export async function POST(request: Request) {
       scope: 'growth-assessment',
       identity: email,
     })
+    const session = await readIntakeSession(request)
+    if (!session) throw contactVerificationRequired()
     const submissionType = isPartial ? 'homepage-quick-form' as const : 'full-assessment' as const
     const fit = assessGrowthFit({
       annualRevenue,
@@ -361,6 +365,7 @@ export async function POST(request: Request) {
         payloadHash,
         consentSnapshot: JSON.stringify({ consent, version: CONSENT_VERSION, disclosures: CONSENT_DISCLOSURES, capturedAt: now.toISOString(), source: attribution.conversionPage }),
         ghlContactId: null,
+        intakeSessionHash: session.tokenHash,
         status: 'crm-pending',
         createdAt: now,
         updatedAt: now,
@@ -384,6 +389,13 @@ export async function POST(request: Request) {
         )
       }
 
+      // Legacy rows and another browser's UUID/payload never confer ownership.
+      // Reject without changing the other session's record or processing lease.
+      if (existing.intakeSessionHash !== session.tokenHash) throw contactVerificationRequired()
+      if (existing.ghlContactId) {
+        await requireContactGrant(session, existing.ghlContactId, email, phone)
+      }
+
       submittedAt = existing.createdAt
 
       if (existing.status === 'crm-synced' && existing.ghlContactId) {
@@ -393,6 +405,7 @@ export async function POST(request: Request) {
           existing.id,
           fit,
           snapshotResult,
+          session,
         )
       }
 
@@ -432,6 +445,9 @@ export async function POST(request: Request) {
           )
         }
       } else {
+        if (!['crm-sync-failed', 'crm-pending'].includes(existing.status)) {
+          throw contactVerificationRequired()
+        }
         const [claimed] = await db
           .update(growthAssessments)
           .set({ ghlContactId: null, status: 'crm-pending', updatedAt: now })
@@ -483,7 +499,7 @@ export async function POST(request: Request) {
     let metadataPending = Boolean(resumeMetadataContactId)
     try {
       if (!contactId) {
-        const contact = await resolveGrowthAssessmentContact(ghlInput)
+        const contact = await resolveGrowthAssessmentContact(ghlInput, session)
         contactId = contact.contactId
         metadataPending = true
         await db
@@ -497,7 +513,7 @@ export async function POST(request: Request) {
       }
 
       try {
-        await syncGrowthAssessmentMetadata(contactId, ghlInput)
+        await syncGrowthAssessmentMetadata(contactId, ghlInput, session)
       } catch (error) {
         const cachedContactWasRemoved =
           Boolean(resumeMetadataContactId) &&
@@ -518,7 +534,7 @@ export async function POST(request: Request) {
         contactId = ''
         metadataPending = false
 
-        const contact = await resolveGrowthAssessmentContact(ghlInput)
+        const contact = await resolveGrowthAssessmentContact(ghlInput, session)
         contactId = contact.contactId
         metadataPending = true
         await db
@@ -532,10 +548,11 @@ export async function POST(request: Request) {
 
         // This is intentionally a single recovery attempt. A second failure is
         // recorded normally instead of looping or creating more CRM work.
-        await syncGrowthAssessmentMetadata(contactId, ghlInput)
+        await syncGrowthAssessmentMetadata(contactId, ghlInput, session)
       }
     } catch (error) {
-      const identityConflict = error instanceof GhlIdentityConflictError
+      const identityConflict = error instanceof GhlIdentityConflictError ||
+        (error instanceof PublicFormError && error.code === 'CONTACT_VERIFICATION_REQUIRED')
       await db
         .update(growthAssessments)
         .set({
@@ -550,18 +567,10 @@ export async function POST(request: Request) {
         .where(eq(growthAssessments.id, submissionId))
 
       if (identityConflict) {
-        return Response.json(
-          {
-            success: false,
-            code: 'CRM_HANDOFF_FAILED',
-            message:
-              'Your assessment was saved, but we could not finish the secure calendar handoff. Please contact support or try again later.',
-          },
-          { status: 502, headers: { 'Cache-Control': 'no-store' } },
-        )
+        return publicFormErrorResponse(contactVerificationRequired())
       }
 
-      console.error('GoHighLevel growth assessment sync failed', error)
+      console.error('GoHighLevel growth assessment sync failed')
       return Response.json(
         {
           success: false,
@@ -584,10 +593,10 @@ export async function POST(request: Request) {
 
     return isPartial
       ? partialResponse()
-      : assessmentResultResponse(request, submissionId, fit, snapshotResult)
+      : assessmentResultResponse(request, submissionId, fit, snapshotResult, session)
   } catch (error) {
     if (error instanceof PublicFormError) return publicFormErrorResponse(error)
-    console.error('Growth assessment submission failed', error)
+    console.error('Growth assessment submission failed')
     return Response.json(
       {
         success: false,

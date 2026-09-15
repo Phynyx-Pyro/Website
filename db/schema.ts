@@ -1,4 +1,4 @@
-import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { index, integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
 export const growthAssessments = sqliteTable(
   'growth_assessments',
@@ -21,6 +21,7 @@ export const growthAssessments = sqliteTable(
     payloadHash: text('payload_hash'),
     consentSnapshot: text('consent_snapshot'),
     ghlContactId: text('ghl_contact_id'),
+    intakeSessionHash: text('intake_session_hash'),
     status: text('status').notNull().default('new'),
     createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
     updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
@@ -63,6 +64,7 @@ export const bookingHandoffs = sqliteTable(
   {
     tokenHash: text('token_hash').primaryKey(),
     submissionId: text('submission_id').notNull(),
+    intakeSessionHash: text('intake_session_hash'),
     expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
     claimedAt: integer('claimed_at', { mode: 'timestamp_ms' }),
     createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
@@ -72,3 +74,16 @@ export const bookingHandoffs = sqliteTable(
     index('idx_booking_handoffs_expires_at').on(table.expiresAt),
   ],
 )
+
+export const intakeSessions = sqliteTable('intake_sessions', {
+  tokenHash: text('token_hash').primaryKey(),
+  expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+}, (table) => [index('idx_intake_sessions_expires_at').on(table.expiresAt)])
+
+export const intakeContactGrants = sqliteTable('intake_contact_grants', {
+  sessionHash: text('session_hash').notNull().references(() => intakeSessions.tokenHash, { onDelete: 'cascade' }),
+  locationId: text('location_id').notNull(),
+  contactId: text('contact_id').notNull(),
+  email: text('email').notNull(),
+  phone: text('phone').notNull(),
+}, (table) => [primaryKey({ columns: [table.sessionHash, table.locationId, table.contactId] })])

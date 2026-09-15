@@ -1,4 +1,5 @@
 'use client'
+import { ensureIntakeSession } from '@/lib/ensure-intake-session'
 
 import { useRef, useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
@@ -44,6 +45,7 @@ export function CtaSection() {
     setSubmitting(true)
     setError('')
     try {
+      await ensureIntakeSession()
       if (!submissionId.current) submissionId.current = crypto.randomUUID()
       const response = await fetch('/api/growth-assessment', {
         method: 'POST',

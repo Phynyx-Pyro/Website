@@ -45,7 +45,10 @@ const FIELD_KEY_BY_ID = new Map(
   [...FIELD_ID_BY_KEY].map(([key, id]) => [id, key]),
 )
 
-async function loadGhlModule() {
+async function loadGhlModule(allowExisting = true) {
+  // These unit tests isolate CRM formatting/order; real capability/database
+  // enforcement is exercised in intake-authorization.test.mjs.
+  globalThis.__GHL_AUTHORIZED__ = allowExisting
   globalThis.__CONSENT_MODULE__ = await importTypeScriptModule(new URL('../lib/contact-consent.ts', import.meta.url))
   globalThis.__PHENYX_TEST_ENV__ = {
     GHL_LOCATION_ID: 'location-test',
@@ -54,6 +57,8 @@ async function loadGhlModule() {
     GHL_PRIVATE_INTEGRATION_TOKEN: 'test-token-never-sent',
   }
   return importTypeScriptModule(moduleUrl, [
+    ["import { grantCreatedContact, requireContactGrant, requireIntakeSession, type IntakeSession } from './intake-session'",
+      "const grantCreatedContact = async () => {}; const requireIntakeSession = async () => {}; const requireContactGrant = async () => { if (!globalThis.__GHL_AUTHORIZED__) throw new Error('CONTACT_VERIFICATION_REQUIRED') }"],
     ["import { CONSENT_VERSION, CONSENT_DISCLOSURES, type ContactConsent } from './contact-consent'", 'const { CONSENT_VERSION, CONSENT_DISCLOSURES } = globalThis.__CONSENT_MODULE__'],
     [
       "import { env } from 'cloudflare:workers'",
@@ -140,6 +145,7 @@ function valuesByFieldKey(customFields) {
 test.afterEach(() => {
   globalThis.fetch = originalFetch
   delete globalThis.__PHENYX_TEST_ENV__
+  delete globalThis.__GHL_AUTHORIZED__
 })
 
 test('partial capture records independent consent without clearing an existing assessment or deal', async () => {
@@ -229,7 +235,7 @@ test('nurture assessments never enroll in qualified booking recovery', async () 
   assert.ok(removedTags.includes('sales:booking-followup'))
 })
 
-test('matching existing contacts are securely resolved before metadata sync', async () => {
+test('an authorized creation-session contact is resolved before metadata sync', async () => {
   const calls = []
   globalThis.fetch = async (url, init = {}) => {
     const call = recordCall(calls, url, init)
@@ -258,7 +264,7 @@ test('matching existing contacts are securely resolved before metadata sync', as
   assert.equal(calls[0].searchParams.get('number'), '+13125550100')
 })
 
-test('an existing phone contact is resolved when the submitted email is new', async () => {
+test('a phone match without an authorized session is not sufficient for existing-contact access', async () => {
   const calls = []
   globalThis.fetch = async (url, init = {}) => {
     const call = recordCall(calls, url, init)
@@ -279,10 +285,8 @@ test('an existing phone contact is resolved when the submitted email is new', as
     throw new Error(`Unexpected request: ${url}`)
   }
 
-  const { resolveGrowthAssessmentContact } = await loadGhlModule()
-  const result = await resolveGrowthAssessmentContact(assessmentInput())
-
-  assert.deepEqual(result, { contactId: 'phone-match', isNew: false })
+  const { resolveGrowthAssessmentContact } = await loadGhlModule(false)
+  await assert.rejects(resolveGrowthAssessmentContact(assessmentInput()), /CONTACT_VERIFICATION_REQUIRED/)
   assert.deepEqual(calls.map((call) => call.method), ['GET', 'GET'])
 })
 

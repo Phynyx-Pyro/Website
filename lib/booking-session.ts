@@ -2,6 +2,7 @@ import { and, eq, gt, isNull, lt } from 'drizzle-orm'
 import { getDb } from '@/db'
 import { bookingHandoffs, growthAssessments } from '@/db/schema'
 import { hashText } from './public-form-security'
+import { contactVerificationRequired, requireContactGrant, type IntakeSession } from './intake-session'
 
 export const BOOKING_COOKIE_NAME = 'phynyx_booking'
 const BOOKING_SESSION_TTL_MS = 15 * 60_000
@@ -34,16 +35,24 @@ export function readCookie(cookieHeader: string | null, name: string) {
   return ''
 }
 
-export async function issueBookingSession(submissionId: string, requestUrl: string) {
+export async function issueBookingSession(submissionId: string, requestUrl: string, session: IntakeSession) {
   const now = new Date()
   const token = randomToken()
   const tokenHash = await hashText(token)
   const db = getDb()
+  const [assessment] = await db.select().from(growthAssessments).where(and(
+    eq(growthAssessments.id, submissionId),
+    eq(growthAssessments.intakeSessionHash, session.tokenHash),
+    eq(growthAssessments.status, 'crm-synced'),
+  )).limit(1)
+  if (!assessment?.ghlContactId) throw contactVerificationRequired()
+  await requireContactGrant(session, assessment.ghlContactId, assessment.email, assessment.phone)
 
   await db.delete(bookingHandoffs).where(lt(bookingHandoffs.expiresAt, now))
   await db.insert(bookingHandoffs).values({
     tokenHash,
     submissionId,
+    intakeSessionHash: session.tokenHash,
     expiresAt: new Date(now.getTime() + BOOKING_SESSION_TTL_MS),
     claimedAt: null,
     createdAt: now,
@@ -52,8 +61,8 @@ export async function issueBookingSession(submissionId: string, requestUrl: stri
   return serializeBookingCookie(token, requestUrl)
 }
 
-export async function claimBookingSession(token: string) {
-  if (!/^[0-9a-f]{64}$/.test(token)) return null
+export async function claimBookingSession(token: string, session: IntakeSession | null) {
+  if (!session || !/^[0-9a-f]{64}$/.test(token)) return null
 
   const tokenHash = await hashText(token)
   const now = new Date()
@@ -64,6 +73,7 @@ export async function claimBookingSession(token: string) {
     .where(
       and(
         eq(bookingHandoffs.tokenHash, tokenHash),
+        eq(bookingHandoffs.intakeSessionHash, session.tokenHash),
         isNull(bookingHandoffs.claimedAt),
         gt(bookingHandoffs.expiresAt, now),
       ),
@@ -85,11 +95,13 @@ export async function claimBookingSession(token: string) {
       and(
         eq(growthAssessments.id, claimed.submissionId),
         eq(growthAssessments.status, 'crm-synced'),
+        eq(growthAssessments.intakeSessionHash, session.tokenHash),
       ),
     )
     .limit(1)
 
   if (!assessment?.contactId) return null
+  await requireContactGrant(session, assessment.contactId, assessment.email, assessment.phone)
 
   return {
     contactId: assessment.contactId,

@@ -2,6 +2,7 @@ import { env } from 'cloudflare:workers'
 import type { AssessmentAttribution } from './assessment-attribution'
 import type { FitAssessment } from './growth-assessment'
 import { normalizePhoneForComparison } from './public-form-security'
+import { grantCreatedContact, requireContactGrant, requireIntakeSession, type IntakeSession } from './intake-session'
 import { CONSENT_VERSION, CONSENT_DISCLOSURES, type ContactConsent } from './contact-consent'
 
 const GHL_API_URL = 'https://services.leadconnectorhq.com'
@@ -63,6 +64,7 @@ export type GhlGrowthAssessment = {
 
 type ContactSummary = {
   id?: string
+  locationId?: string
   email?: string
   phone?: string
   customFields?: CustomFieldValue[]
@@ -143,7 +145,7 @@ async function ghlGet<T>(path: string, allowNotFound = false): Promise<T | null>
   return (await response.json()) as T
 }
 
-async function ghlPost<T>(path: string, body: unknown): Promise<T> {
+async function ghlPost<T>(path: string, body: unknown, requireCreated = false): Promise<T> {
   const response = await fetch(`${GHL_API_URL}${path}`, {
     method: 'POST',
     headers: ghlHeaders(true),
@@ -152,6 +154,7 @@ async function ghlPost<T>(path: string, body: unknown): Promise<T> {
   })
 
   if (!response.ok) throw new GhlRequestError(path, response.status)
+  if (requireCreated && response.status !== 201) throw new GhlIdentityConflictError()
   return (await response.json()) as T
 }
 
@@ -204,7 +207,7 @@ async function findDuplicateContact(
   return detailed?.contact ?? summary
 }
 
-async function createOrMatchContact(input: GhlGrowthAssessment, locationId: string) {
+async function createOrMatchContact(input: GhlGrowthAssessment, locationId: string, session: IntakeSession) {
   const existing = await findDuplicateContact(
     locationId,
     input.email,
@@ -214,6 +217,7 @@ async function createOrMatchContact(input: GhlGrowthAssessment, locationId: stri
     if (!existing.id || !contactMatchesPhone(existing, input.phone)) {
       throw new GhlIdentityConflictError()
     }
+    await requireContactGrant(session, existing.id, input.email, input.phone)
     return { contactId: existing.id, isNew: false }
   }
 
@@ -226,9 +230,13 @@ async function createOrMatchContact(input: GhlGrowthAssessment, locationId: stri
       phone: input.phone,
       companyName: input.businessName || undefined,
       source: 'PhynyxPro Website',
-    })
+    }, true)
     const contactId = created.contact?.id
     if (!contactId) throw new Error('GoHighLevel did not return a contact ID.')
+    if (created.contact?.locationId !== locationId ||
+      created.contact?.email?.trim().toLowerCase() !== input.email.trim().toLowerCase() ||
+      !contactMatchesPhone(created.contact, input.phone)) throw new GhlIdentityConflictError()
+    await grantCreatedContact(session, contactId, input.email, input.phone)
     return { contactId, isNew: true }
   } catch (error) {
     if (!(error instanceof GhlRequestError) || ![400, 409, 422].includes(error.status)) {
@@ -244,6 +252,7 @@ async function createOrMatchContact(input: GhlGrowthAssessment, locationId: stri
     if (!contactMatchesPhone(racedDuplicate, input.phone)) {
       throw new GhlIdentityConflictError()
     }
+    await requireContactGrant(session, racedDuplicate.id, input.email, input.phone)
     return { contactId: racedDuplicate.id, isNew: false }
   }
 }
@@ -537,11 +546,12 @@ async function syncAssessmentOpportunity(
   })
 }
 
-export async function resolveGrowthAssessmentContact(input: GhlGrowthAssessment) {
+export async function resolveGrowthAssessmentContact(input: GhlGrowthAssessment, session: IntakeSession) {
+  await requireIntakeSession(session)
   const locationId = env.GHL_LOCATION_ID?.trim()
   if (!locationId) throw new Error('GoHighLevel location ID is unavailable.')
 
-  return createOrMatchContact(input, locationId)
+  return createOrMatchContact(input, locationId, session)
 }
 
 export function isGhlContactNotFoundError(error: unknown, contactId: string) {
@@ -555,7 +565,9 @@ export function isGhlContactNotFoundError(error: unknown, contactId: string) {
 export async function syncGrowthAssessmentMetadata(
   contactId: string,
   input: GhlGrowthAssessment,
+  session: IntakeSession,
 ) {
+  await requireContactGrant(session, contactId, input.email, input.phone)
   const configuration = readGhlSyncConfiguration()
   const encodedContactId = encodeURIComponent(contactId)
   const opportunityQuery = new URLSearchParams({

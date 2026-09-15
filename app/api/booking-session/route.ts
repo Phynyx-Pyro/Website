@@ -4,6 +4,7 @@ import {
   readCookie,
   serializeBookingCookie,
 } from '@/lib/booking-session'
+import { readIntakeSession } from '@/lib/intake-session'
 import {
   PublicFormError,
   assertSameOrigin,
@@ -20,7 +21,7 @@ export async function POST(request: Request) {
       identity: '',
     })
     const token = readCookie(request.headers.get('cookie'), BOOKING_COOKIE_NAME)
-    const bookingContact = await claimBookingSession(token)
+    const bookingContact = await claimBookingSession(token, await readIntakeSession(request))
 
     if (!bookingContact) {
       return Response.json(
@@ -50,7 +51,7 @@ export async function POST(request: Request) {
     )
   } catch (error) {
     if (error instanceof PublicFormError) return publicFormErrorResponse(error)
-    console.error('Booking handoff failed', error)
+    console.error('Booking handoff failed')
     return Response.json(
       {
         success: false,

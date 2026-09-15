@@ -178,7 +178,7 @@ async function incrementRateLimit(rule: RateLimitRule, now: number) {
 
 export async function enforcePublicFormRateLimit(options: {
   request: Request
-  scope: 'growth-assessment' | 'support' | 'booking-session'
+  scope: 'growth-assessment' | 'support' | 'booking-session' | 'intake-session'
   identity: string
 }) {
   const now = Date.now()

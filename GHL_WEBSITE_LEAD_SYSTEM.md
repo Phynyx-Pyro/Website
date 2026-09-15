@@ -1,6 +1,27 @@
 # Phynyx Website Lead System
 
-Last updated: September 4, 2026
+## Current verified inventory — September 14, 2026
+
+The live folder is **Phynyx — Website Sales**. All ten workflows below were observed as published. This supersedes the older implementation-status section below; the remainder of this document is the September 4 design specification, not a claim that every proposed action exists.
+
+| Live workflow | Observed behavior |
+| --- | --- |
+| 001 - Website Intake & Routing | Submission-ID change; website/form/automation markers and pause gate; internal FYIs to Andrew and Craig. No assignment or callback-task action was present in the fitted graph. |
+| 002a - Incomplete Assessment Recovery | Incomplete tag; 15-minute delay; unbooked/pause/stop-bot/handover exclusions; activates Ember and sends recovery email. Assessment link updated to get.phynyxpro.com. |
+| 002b - Assessment Complete & Booking Recovery | Booking-followup tag; 15-minute delay and suppression gate; activates Ember and sends diagnostic-booking email. |
+| 002c - Consented Voice Outreach | 60-minute delay; booking-followup plus AI-voice consent; booked/pause/stop-bot/handover and Call-DND suppression; configured Ember outbound Voice AI action. |
+| 002d - Consented SMS Conversation | 15-minute delay; booking-followup plus SMS-marketing consent; booked/pause/stop-bot/handover and SMS-DND suppression; Ember conversation action. |
+| 002e - Reply Stops Pending Voice | Customer reply with booking-followup tag removes contact from 002c. |
+| 003a - Appointment Booked & Team Notification | Confirmed appointment on Phynyx Website - Assessment; booked/cleanup tags, team notifications, confirmation email, opportunity update, optional preparation branch. |
+| 004a - Appointment Showed & Recovery Cleanup | Showed event; removes pending recovery workflows and pauses Ember. |
+| 004b - No-Show Recovery | Clears booked flag, marks no-show, waits 15 minutes, checks suppression, recovery action, reschedule-needed opportunity branch. |
+| 004c - Cancellation Recovery | Clears booked flag, marks cancellation, waits 15 minutes, checks suppression, recovery action, reschedule-needed opportunity branch. |
+
+No new contacts were enrolled and no test email, SMS, call, or calendar booking was sent during this review. Published configuration and historical enrollment are not end-to-end delivery certification. The account displayed a missing-payment-method banner; no card was added. Confirm channel readiness and use an explicitly approved test contact before launch acceptance.
+
+Website consent is stored in the database snapshot and CRM note and projected to separate channel tags. The dedicated consent custom fields proposed later in this document are not written by the current site code. Historical/other-browser CRM contacts are held for verification under the current intake authorization policy; never manually grant a browser capability merely from matching contact details.
+
+## Historical specification — September 4, 2026
 
 This document is the operating specification for website leads in the Phynyx
 GoHighLevel location. It is intentionally separate from all legacy pipelines,

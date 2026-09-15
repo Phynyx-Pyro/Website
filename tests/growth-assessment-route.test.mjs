@@ -43,6 +43,8 @@ async function loadRoute(stubs) {
   globalThis.__CONSENT_MODULE__ = await importTypeScriptModule(new URL('../lib/contact-consent.ts', import.meta.url))
   globalThis.__GROWTH_ROUTE_TEST_STUBS__ = stubs
   return importTypeScriptModule(moduleUrl, [
+    ["import { contactVerificationRequired, readIntakeSession, requireContactGrant, type IntakeSession } from '@/lib/intake-session'",
+      "const readIntakeSession = async () => ({ tokenHash: 'authorized-test-session' }); const requireContactGrant = async () => {}; const contactVerificationRequired = () => new Error('CONTACT_VERIFICATION_REQUIRED')"],
     ["import { CONSENT_VERSION, CONSENT_DISCLOSURES, parseContactConsent } from '@/lib/contact-consent'", 'const { CONSENT_VERSION, CONSENT_DISCLOSURES, parseContactConsent } = globalThis.__CONSENT_MODULE__'],
     [
       "import { getDb } from '@/db'",
@@ -135,6 +137,7 @@ test('a retry keeps its original submission time and recovers one stale contact 
     id: submissionId,
     payloadHash: 'matching-payload-hash',
     ghlContactId: 'stale-contact',
+    intakeSessionHash: 'authorized-test-session',
     status: 'crm-metadata-failed',
     annualRevenue: '500k-1m',
     monthlyBudget: '3k-5k',
@@ -164,7 +167,7 @@ test('a retry keeps its original submission time and recovers one stale contact 
       error === staleContactError && contactId === 'stale-contact',
     resolveGrowthAssessmentContact: async (input) => {
       resolveCalls.push(input)
-      return { contactId: 'replacement-contact', isNew: false }
+      return { contactId: 'replacement-contact', isNew: true }
     },
     syncGrowthAssessmentMetadata: async (contactId, input) => {
       syncCalls.push({ contactId, input })

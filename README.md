@@ -34,7 +34,7 @@ The recovery preserves the complete multi-page brand experience, local imagery, 
 - `/client-login`
 - `/privacy-policy`, `/terms`, and `/fulfillment`
 
-The two form endpoints are `/api/growth-assessment` and `/api/support`.
+The form endpoints are `/api/growth-assessment` and `/api/support`. Assessment clients first establish an HTTP-only browser session through `/api/intake-session`; calendar prefill is claimed through `/api/booking-session`.
 
 ## Local development
 
@@ -62,13 +62,15 @@ The production build is emitted to `dist/` in the Sites-compatible Worker format
 ## Data and hosting
 
 - `.openai/hosting.json` declares the logical D1 binding as `DB`.
-- `db/schema.ts` defines growth assessments, support requests, short-lived booking handoffs, and public-form rate limits.
+- `db/schema.ts` defines growth assessments, support requests, short-lived booking handoffs, intake sessions/contact grants, and public-form rate limits.
 - Generated D1 migrations live in `drizzle/` and are packaged with each Sites version.
 - `SITE_URL` optionally overrides the canonical metadata, sitemap, and robots origin. The source default is `https://phynyxpro.com`.
 - `GHL_LOCATION_ID`, `GHL_PIPELINE_ID`, and `GHL_PIPELINE_STAGE_ID` select the production sub-account and dedicated website-lead pipeline. `GHL_PRIVATE_INTEGRATION_TOKEN` is server-only and must never be committed or prefixed with `NEXT_PUBLIC_`.
 - The GoHighLevel private integration needs `contacts.readonly`, `contacts.write`, `locations/customFields.readonly`, `opportunities.readonly`, and `opportunities.write`. Keep the token limited to the Phynyx location and rotate it if it is ever exposed.
 
-Growth Assessments are saved to D1 and classified on the server. New and matching GoHighLevel contacts receive structured website fields, additive source/form/intent/automation/fit tags, an idempotent assessment note, and one open opportunity in the dedicated website-lead pipeline. A short-lived, single-use, HTTP-only cookie authorizes the calendar prefill handoff, and the booking URL itself contains no name, email, phone number, or CRM contact identifier.
+Growth Assessments are saved to D1 and classified on the server. New contacts receive structured CRM data, consent evidence, notes, and the appropriate website-sales signals. An existing contact can be updated only by the same unexpired browser session that created it through a validated create-only API response, with the same normalized identity. Knowing a phone number, email, or submission ID is not authorization. Older records, different browsers, expired sessions, and unverified duplicates are held for team verification without changing existing CRM data. See [handoff operations](BUSINESS_HANDOFF.md).
+
+A short-lived, single-use, HTTP-only cookie and the matching intake session authorize calendar prefill. The booking URL itself contains no name, email, phone number, or CRM contact identifier. Browser sessions last two hours and require a modern browser with Web Locks; bootstrap is serialized across tabs. This is new-contact creation continuity, not verification that the visitor owns a phone number.
 
 Public form routes enforce same-origin JSON requests, streamed body-size limits, D1-backed global/client/identity rate limits, honeypot fields, and replay-safe submission IDs. Site-wide response headers provide a Content Security Policy, HTTPS enforcement, frame protection, MIME sniffing protection, a restrictive referrer policy, and a limited browser permissions policy.
 
