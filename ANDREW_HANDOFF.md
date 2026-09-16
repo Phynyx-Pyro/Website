@@ -101,3 +101,14 @@ company-only email branches and company recovery destination. Environment
 revision 11 authorizes the configured acceptance recipient only. Live CRM,
 workflow and delivery receipts remain required; configuration is not test success. The negative source-tag exclusion
 proposal was not supported by the UI and was never saved.
+
+## Expired-session same-event recovery
+
+After an intake cookie expires, the report's existing verification button may
+request proof for its saved event without making a new assessment. The request
+only sends to the validated stored email and grants no access. Successful email
+confirmation can atomically rebind a still-unlinked, verification-held event to
+the confirming browser, preserving its answers/report and original session audit.
+The existing report can then retry the same handoff. Do not extend an expired
+session or infer contact ownership from the configured test identity. No live
+email is sent by deployment; the coordinator owns the button click and test.

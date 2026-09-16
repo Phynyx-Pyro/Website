@@ -248,3 +248,40 @@ Sites saved version, deployment ID/result, environment revision and matching tre
 are recorded in the GitHub activation commit message and implementation handoff.
 The public review branch is `company/assessment-capture-checkpoint`; main remains
 unchanged. Recipient identifiers and runtime secrets are excluded from source.
+
+## September 16: expired intake-session recovery
+
+The first full-event verification request failed before GHL because the original
+two-hour intake session had expired. The saved full assessment and its session
+binding were present. The client report branch selects the full submission ID;
+request bodies were not logged, so the exact failed body was not independently
+inspected. No new verification row or email resulted from that failed request.
+
+The bounded fix permits challenge initiation for an existing saved event after
+its original session expires, including when the browser no longer sends the
+expired cookie. This does not authorize access or linking: only the validated
+stored matching email can receive the challenge; the configured acceptance
+boundary, rate limits, exact-match checks, email DND, single-use token, 15-minute
+token expiry and one-send-per-event limit remain. The request returns no saved
+answers or CRM information and accepts no recipient override. While the original
+session is active, a different browser still cannot initiate its request.
+
+Upon genuine email confirmation, token consumption and the browser's contact
+grant are committed with a conditional same-event rebind in one D1 transaction.
+Rebinding requires the original session to be expired/absent, an unlinked
+`dispatch-held` assessment and a matching CRM receipt held specifically for
+`verification_required`, with null contact/opportunity IDs. The verification row
+retains the original session hash as audit evidence; the submitted answers,
+report, payload hash, consent evidence and event ID stay unchanged. Reconciliation
+receipts and historical pending rows are not rebound or auto-exported.
+
+The coordinator can keep the existing report open, click Send verification email
+again after deployment, confirm the new link in the same browser, then retry the
+identical saved handoff. No new assessment or independent send is needed. Browser
+approval to follow the tracking domain was supplied; no tool bypass is used.
+
+The transaction uses documented [D1 batch semantics](https://developers.cloudflare.com/d1/worker-api/d1-database/#batch):
+if a statement fails, the sequence rolls back. Isolated tests cover expired/no
+cookie resume, duplicate request suppression, competing confirmations, wrong
+browser/recipient protection, grant-write rollback, and preserved uncertain or
+historical rows. These are mocked-upstream tests, not a live verification send.

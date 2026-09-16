@@ -215,3 +215,72 @@ test('nurture requires explicit approval; per-channel DND and missing affirmativ
  assert.deepEqual(h.enrollments.filter(e=>e.method==='POST').map(e=>e.path.split('/').at(-1)),[w.completed.id,w.sms.id])
  assert.equal(h.sqlite.prepare("SELECT state FROM website_dispatch_receipts WHERE submission_id=? AND channel='voice'").get(next.submissionId).state,'suppressed')
 })
+
+test('expired intake can request proof and resume the identical held event without a duplicate assessment',async t=>{
+ const h=await setup(t,'acceptance');h.seed();const p=input(true);await h.post(p)
+ const original=h.sqlite.prepare('SELECT * FROM growth_assessments WHERE id=?').get(p.submissionId)
+ h.sqlite.exec('UPDATE intake_sessions SET expires_at=0')
+ const sender=await h.load('app/api/verification/request/route.ts'),confirm=await h.load('app/api/verification/confirm/route.ts')
+ const responses=await Promise.all([sender.POST(req('verification/request',{submissionId:p.submissionId})),sender.POST(req('verification/request',{submissionId:p.submissionId}))])
+ assert.deepEqual(responses.map(r=>r.status),[200,200]);assert.equal(h.messages.length,1)
+ assert.equal(h.sqlite.prepare('SELECT count(*) n FROM intake_contact_grants').get().n,0)
+ assert.equal(h.sqlite.prepare('SELECT intake_session_hash FROM growth_assessments WHERE id=?').get(p.submissionId).intake_session_hash,original.intake_session_hash)
+ assert.equal(h.writes.filter(w=>w.path!='/conversations/messages').length,0)
+ const token=h.messages[0].html.match(/\/verify#([a-f0-9]{64})/)[1]
+ const confirmed=await confirm.POST(req('verification/confirm',{token}))
+ assert.equal(confirmed.status,200);const cookie=confirmed.headers.get('set-cookie').split(';')[0]
+ const rebound=h.sqlite.prepare('SELECT * FROM growth_assessments WHERE id=?').get(p.submissionId)
+ assert.notEqual(rebound.intake_session_hash,original.intake_session_hash)
+ for(const field of ['payload_hash','snapshot_result','submission_snapshot','created_at','consent_snapshot','status'])assert.equal(rebound[field],original[field])
+ assert.equal(h.sqlite.prepare('SELECT request_session_hash FROM website_verifications').get().request_session_hash,original.intake_session_hash)
+ const resumed=await h.route.POST(req('growth-assessment',p,cookie));assert.equal(resumed.status,200)
+ assert.equal((await resumed.json()).crmSynced,true)
+ const writes=h.writes.length;await h.route.POST(req('growth-assessment',p,cookie));assert.equal(h.writes.length,writes)
+ assert.equal(h.sqlite.prepare('SELECT count(*) n FROM growth_assessments').get().n,1);assert.equal(h.contacts.length,1);assert.equal(h.opps.length,1)
+})
+test('expired event challenge does not grant its requester access; competing confirmations authorize only one browser',async t=>{
+ const h=await setup(t,'acceptance');h.seed();const p=input(true);await h.post(p)
+ h.sqlite.exec('UPDATE intake_sessions SET expires_at=0')
+ const sender=await h.load('app/api/verification/request/route.ts'),confirm=await h.load('app/api/verification/confirm/route.ts')
+ const attacker=(await h.bootstrap.POST(req('intake-session',{}))).headers.get('set-cookie').split(';')[0]
+ assert.equal((await sender.POST(req('verification/request',{submissionId:p.submissionId,email:'attacker@owned.test'},attacker))).status,200)
+ assert.equal(h.messages[0].contactId,'contact-1');assert.equal('emailTo' in h.messages[0],false)
+ assert.equal((await h.route.POST(req('growth-assessment',p,attacker))).status,403)
+ const a=(await h.bootstrap.POST(req('intake-session',{}))).headers.get('set-cookie').split(';')[0]
+ const b=(await h.bootstrap.POST(req('intake-session',{}))).headers.get('set-cookie').split(';')[0]
+ const token=h.messages[0].html.match(/\/verify#([a-f0-9]{64})/)[1]
+ const results=await Promise.all([confirm.POST(req('verification/confirm',{token},a)),confirm.POST(req('verification/confirm',{token},b))])
+ assert.deepEqual(results.map(r=>r.status).sort(),[200,400])
+ assert.equal(h.sqlite.prepare('SELECT count(*) n FROM intake_contact_grants').get().n,1)
+ assert.equal((await h.route.POST(req('growth-assessment',p,attacker))).status,403)
+})
+test('confirmation transaction rolls back proof consumption and rebinding if grant storage fails',async t=>{
+ const h=await setup(t,'acceptance');h.seed();const p=input(true);await h.post(p)
+ const original=h.sqlite.prepare('SELECT intake_session_hash FROM growth_assessments').get().intake_session_hash
+ h.sqlite.exec('UPDATE intake_sessions SET expires_at=0')
+ const sender=await h.load('app/api/verification/request/route.ts'),confirm=await h.load('app/api/verification/confirm/route.ts')
+ await sender.POST(req('verification/request',{submissionId:p.submissionId}))
+ const token=h.messages[0].html.match(/\/verify#([a-f0-9]{64})/)[1]
+ h.failGrantWrites(1)
+ assert.equal((await confirm.POST(req('verification/confirm',{token}))).status,503)
+ assert.equal(h.sqlite.prepare('SELECT state FROM website_verifications').get().state,'sent')
+ assert.equal(h.sqlite.prepare('SELECT intake_session_hash FROM growth_assessments').get().intake_session_hash,original)
+ assert.equal(h.sqlite.prepare('SELECT count(*) n FROM intake_contact_grants').get().n,0)
+ assert.equal((await confirm.POST(req('verification/confirm',{token}))).status,200)
+ assert.equal(h.messages.length,1)
+})
+test('verification never rebinds an uncertain CRM write or auto-exports a historical pending event',async t=>{
+ for(const status of ['dispatch-reconcile','verification-pending']){
+  const h=await setup(t,'acceptance');h.seed();const p=input(true);await h.post(p)
+  const original=h.sqlite.prepare('SELECT intake_session_hash FROM growth_assessments').get().intake_session_hash
+  h.sqlite.prepare('UPDATE growth_assessments SET status=?').run(status)
+  h.sqlite.exec('UPDATE intake_sessions SET expires_at=0')
+  const sender=await h.load('app/api/verification/request/route.ts'),confirm=await h.load('app/api/verification/confirm/route.ts')
+  await sender.POST(req('verification/request',{submissionId:p.submissionId}))
+  const token=h.messages[0].html.match(/\/verify#([a-f0-9]{64})/)[1]
+  const confirmed=await confirm.POST(req('verification/confirm',{token}));assert.equal(confirmed.status,200)
+  assert.equal(h.sqlite.prepare('SELECT intake_session_hash FROM growth_assessments').get().intake_session_hash,original)
+  assert.equal(h.sqlite.prepare('SELECT status FROM growth_assessments').get().status,status)
+  assert.equal(h.opps.length,0)
+ }
+})

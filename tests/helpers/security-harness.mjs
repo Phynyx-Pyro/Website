@@ -16,7 +16,15 @@ export async function securityHarness() {
   for (const file of (await readdir(path.join(root, 'drizzle'))).filter(f => f.endsWith('.sql')).sort()) {
     sqlite.exec(await readFile(path.join(root, 'drizzle', file), 'utf8'))
   }
-  const d1 = { prepare(sql) {
+  const d1 = { async batch(statements) {
+    sqlite.exec('BEGIN')
+    try {
+      const results = []
+      for (const statement of statements) results.push(await statement.all())
+      sqlite.exec('COMMIT')
+      return results
+    } catch (error) { sqlite.exec('ROLLBACK'); throw error }
+  }, prepare(sql) {
     const statement = sqlite.prepare(sql)
     const checkFailure = () => {
       if (/insert into "intake_contact_grants"/i.test(sql) && grantWriteFailures > 0) {
@@ -25,7 +33,7 @@ export async function securityHarness() {
       }
     }
     return { bind(...args) { return {
-      async all() { return { results: statement.all(...args) } },
+      async all() { checkFailure(); return { results: statement.all(...args) } },
       async raw() { return statement.all(...args).map(row => Object.values(row)) },
       async first() { return statement.get(...args) || null },
       async run() { checkFailure(); const result = statement.run(...args); return { success: true, meta: { changes: result.changes } } },

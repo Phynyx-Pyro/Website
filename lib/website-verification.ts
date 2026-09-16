@@ -1,7 +1,7 @@
 import { env } from 'cloudflare:workers'
-import { and, eq, gt } from 'drizzle-orm'
+import { and, eq, gt, exists, notExists, isNull, sql } from 'drizzle-orm'
 import { getDb } from '@/db'
-import { growthAssessments, intakeContactGrants, websiteVerifications } from '@/db/schema'
+import { growthAssessments, intakeContactGrants, intakeSessions, websiteDispatchReceipts, websiteVerifications } from '@/db/schema'
 import { createIntakeSession, readIntakeSession, requireIntakeSession } from './intake-session'
 import { enforcePublicFormRateLimit, hashText, normalizePhone, normalizePhoneForComparison, PublicFormError } from './public-form-security'
 import { exactMatches, websiteGhlApi } from './website-dispatch'
@@ -12,12 +12,18 @@ const enabled = () => env.WEBSITE_VERIFICATION_ENABLED === 'true' && Boolean(env
 export async function requestWebsiteVerification(request: Request, submissionId: string) {
   if (!enabled()) throw invalid()
   const session = await readIntakeSession(request)
-  if (!session) throw invalid()
   const db = getDb()
-  const [submission] = await db.select().from(growthAssessments).where(and(eq(growthAssessments.id, submissionId), eq(growthAssessments.intakeSessionHash, session.tokenHash))).limit(1)
-  if (!submission) throw invalid()
-  await enforcePublicFormRateLimit({ request, scope: 'verification', identity: submission.email })
+  // Challenge initiation is not authorization. An expired browser may request
+  // one email for a known saved event; only its validated stored recipient can
+  // confirm. No submitted email/phone override, saved answers or CRM data return.
   const generic = { accepted: true, message: 'If these details are eligible, a verification link will be sent to the matching stored email. No CRM ownership is granted until you confirm it.' }
+  const [submission] = await db.select().from(growthAssessments).where(eq(growthAssessments.id, submissionId)).limit(1)
+  await enforcePublicFormRateLimit({ request, scope: 'verification', identity: submission?.email || '' })
+  if (!submission?.intakeSessionHash) return generic
+  const [originalSession] = await db.select().from(intakeSessions).where(and(
+    eq(intakeSessions.tokenHash, submission.intakeSessionHash), gt(intakeSessions.expiresAt, new Date()),
+  )).limit(1)
+  if (originalSession && session?.tokenHash !== submission.intakeSessionHash) throw invalid()
   const [prior] = await db.select().from(websiteVerifications).where(eq(websiteVerifications.submissionId, submissionId)).limit(1)
   if (prior) return generic // one send per event, including uncertain sends; a fresh assessment can request a new link
   const locationId = env.GHL_LOCATION_ID
@@ -35,7 +41,7 @@ export async function requestWebsiteVerification(request: Request, submissionId:
   const tokenHash = await hashText(token), now = new Date()
   // Fragment is never sent in the page request or referrer. No GET confirmation.
   const link = `${origin}/verify#${token}`
-  const inserted = await db.insert(websiteVerifications).values({ tokenHash, submissionId, requestSessionHash: session.tokenHash,
+  const inserted = await db.insert(websiteVerifications).values({ tokenHash, submissionId, requestSessionHash: submission.intakeSessionHash,
     contactId: contact.id, locationId, email: submission.email, phone: submission.phone,
     state: 'sending', createdAt: now, expiresAt: new Date(now.getTime() + 15 * 60_000) }).onConflictDoNothing().returning()
   if (inserted.length !== 1) return generic
@@ -71,14 +77,39 @@ export async function confirmWebsiteVerification(request: Request, token: string
   }
   if (!session) throw invalid()
   await requireIntakeSession(session)
-  const claimed = await db.update(websiteVerifications).set({ state: 'claimed', claimedSessionHash: session.tokenHash }).where(and(
-    eq(websiteVerifications.tokenHash, tokenHash), eq(websiteVerifications.state, verification.state), gt(websiteVerifications.expiresAt, new Date()),
-  )).returning()
+  const now = new Date()
+  const claimant = and(eq(websiteVerifications.tokenHash, tokenHash),
+    eq(websiteVerifications.state, 'claimed'), eq(websiteVerifications.claimedSessionHash, session.tokenHash))
+  // D1 batch is a transaction: consuming proof, granting the confirming browser
+  // and rebinding an expired/unlinked event commit together or roll back together.
+  // The verification row retains the ORIGINAL submission session hash for audit.
+  const [claimed, , rebound] = await db.batch([
+    db.update(websiteVerifications).set({ state: 'claimed', claimedSessionHash: session.tokenHash }).where(and(
+      eq(websiteVerifications.tokenHash, tokenHash), eq(websiteVerifications.state, verification.state), gt(websiteVerifications.expiresAt, now),
+    )).returning(),
+    db.insert(intakeContactGrants).select(db.select({
+      sessionHash: sql<string>`${session.tokenHash}`.as('sessionHash'), locationId: websiteVerifications.locationId,
+      contactId: websiteVerifications.contactId, email: websiteVerifications.email,
+      phone: sql<string>`${normalizePhoneForComparison(verification.phone)}`.as('phone'),
+    }).from(websiteVerifications).where(claimant)).onConflictDoNothing(),
+    db.update(growthAssessments).set({ intakeSessionHash: session.tokenHash, updatedAt: now }).where(and(
+      eq(growthAssessments.id, verification.submissionId),
+      eq(growthAssessments.intakeSessionHash, verification.requestSessionHash),
+      eq(growthAssessments.email, verification.email), eq(growthAssessments.phone, verification.phone),
+      eq(growthAssessments.status, 'dispatch-held'), isNull(growthAssessments.ghlContactId),
+      notExists(db.select({ one: sql`1` }).from(intakeSessions).where(and(
+        eq(intakeSessions.tokenHash, verification.requestSessionHash), gt(intakeSessions.expiresAt, now),
+      ))),
+      exists(db.select({ one: sql`1` }).from(websiteVerifications).where(claimant)),
+      exists(db.select({ one: sql`1` }).from(websiteDispatchReceipts).where(and(
+        eq(websiteDispatchReceipts.submissionId, verification.submissionId),
+        eq(websiteDispatchReceipts.locationId, verification.locationId), eq(websiteDispatchReceipts.channel, 'crm'),
+        eq(websiteDispatchReceipts.state, 'held'), eq(websiteDispatchReceipts.detail, 'verification_required'),
+        isNull(websiteDispatchReceipts.contactId), isNull(websiteDispatchReceipts.opportunityId),
+      ))),
+    )).returning({ id: growthAssessments.id }),
+  ])
   if (claimed.length !== 1) throw invalid()
-  // Audit retains requesting/claiming sessions and exact contact/identity scope.
-  // A session on another device is granted only through this emailed capability.
-  await db.insert(intakeContactGrants).values({ sessionHash: session.tokenHash, locationId: verification.locationId,
-    contactId: verification.contactId, email: verification.email, phone: normalizePhoneForComparison(verification.phone) }).onConflictDoNothing()
-  return Response.json({ verified: true, message: 'Verified for this browser for up to two hours. Return to your assessment here, or start a fresh assessment in this browser. No previous CRM information has been loaded.' },
+  return Response.json({ verified: true, message: rebound.length ? 'Verified. Return to your open report in this browser and retry the same saved handoff. Your answers and report were preserved; no CRM information has been loaded.' : 'Verified for this browser for up to two hours. Return to your assessment here, or start a fresh assessment in this browser. No previous CRM information has been loaded.' },
     { headers: { 'Cache-Control': 'no-store', ...(cookie ? { 'Set-Cookie': cookie } : {}) } })
 }
