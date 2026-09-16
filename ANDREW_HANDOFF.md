@@ -146,3 +146,70 @@ Calendar availability no longer determines the follow-up wording. This is a
 presentation correction only: no adapter, workflow, flags or booking-policy edits.
 Do not retry the successful live event just to see new copy in its open browser.
 Keep the existing report and inspect the contact's normal workflow history next.
+
+## Coordinator-confirmed workflow execution, September 15 CDT
+
+Independent browser evidence now confirms the authorized test contact is active
+in 002b, 002d and 002c. The coordinator observed:
+
+| Workflow | Execution evidence (CDT) |
+| --- | --- |
+| 002b booking recovery | Added 19:35:06; Wait 15 Minutes |
+| 002d SMS | Added 19:35:07; Wait 15 Minutes |
+| 002c voice | Added 19:35:09; Wait 60 Minutes |
+| 001 intake | Process website lead 19:35:05; FYI Andrew executed 19:35:07; FYI Craig executed 19:35:08; finished 19:35:09 |
+
+002c/d retain Contact timezone, weekdays 09:00–17:00. Email has no time window.
+The waits do not guarantee a send at their expiry: channel time windows,
+eligibility, replies and suppression still apply. The existing opportunity is
+confirmed unchanged in the browser: original record, Open, Nurture / Recycle,
+$0 and original owner. No repeat submission or replay was performed.
+
+This upgrades the prior acknowledgment-only evidence to confirmed active
+membership and observed 001 action execution. It does not establish FYI inbox
+delivery, recovery email/SMS delivery, voice execution or appointment conversion.
+The coordinator is checking recovery email after the normal wait. Preserve this
+test and its receipts; do not restart it for additional evidence.
+
+## Remaining inline booking and report delivery work
+
+`savedAssessmentResponse` deliberately returns `bookingReady: false`. The new
+assessment route does not call `issueBookingSession`; both issuance and claim in
+`lib/booking-session.ts` still require legacy `crm-synced`, while the new adapter
+records `dispatch-applied`. Existing `/api/booking-session` consumes a single-use
+15-minute cookie and validates the intake session/contact grant. Its old expiry
+copy asks for another assessment and must be changed when this path is integrated.
+Simply changing the boolean would not create a valid handoff.
+
+Before inline booking acceptance:
+
+1. Wire an explicit same-event booking handoff for an eligible, verified,
+   successfully linked assessment, using the new receipt state and current
+   contact grant. Recheck identity, suppression and existing appointments/sales
+   protections; retain the approved returning-nurture rule. No CRM identity
+   overwrite or duplicate opportunity is needed to issue a handoff.
+2. Preserve expiry, single-use, browser binding and origin checks. Provide
+   same-event renewal/re-verification after expiry, without replaying CRM or
+   recovery. Test wrong-browser access, copied/expired tokens and repeat clicks.
+3. Inspect the live calendar's contact matching/duplicate policy, prefill edits,
+   third-party invite and native notification effects, consent behavior, team
+   assignment, availability and meeting destinations. The existing widget sends
+   contact prefill by restricted-origin postMessage with `consent: null` and
+   `isConsentExpected: false`; that is not a new marketing opt-in. Older documented
+   calendar observations are not current acceptance evidence. No policy changes
+   are authorized by this documentation update.
+4. Run one separately coordinated booking acceptance: correct calendar, one
+   intended appointment, existing contact reused, intended ownership/stage
+   behavior, `appt:booked` and recovery exits, and expected confirmations only.
+   Include company origin/tracking isolation and verify no unrelated contact or
+   personal-site path is affected. Do not perform that booking during this test's
+   pending delivery observation.
+
+Report email is a missing implementation, not an approved substitution. The
+current path stores/displays the report and returns `reportEmailSent: false`;
+002b's company email invites diagnostic booking and does not deliver the report.
+Any later report-delivery work needs a reviewed template or secure report link,
+recipient authorization, an idempotent delivery receipt, suppression handling,
+same-event resume and actual inbox acceptance. Keep report delivery distinct from
+booking recovery without excluding eligible unbooked visitors from recovery.
+Dedicated foundation nurture execution also remains a separately flagged gap.
