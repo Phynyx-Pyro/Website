@@ -285,3 +285,35 @@ if a statement fails, the sequence rolls back. Isolated tests cover expired/no
 cookie resume, duplicate request suppression, competing confirmations, wrong
 browser/recipient protection, grant-write rollback, and preserved uncertain or
 historical rows. These are mocked-upstream tests, not a live verification send.
+
+## September 16: verified handoff and pinned API correction
+
+The coordinator observed actual inbox receipt and successful explicit confirmation
+of the full-event link. Read-only D1 evidence confirms a claimed token, matching
+contact grant and same-event browser rebind. The subsequent deployed assessment
+POST returned HTTP 200 and preserved the report, but its CRM receipt was held for
+`upstream_422`, with no opportunity receipt, channel attempts or retained locks.
+The adapter records `held` only before its first mutation; any failure after a
+write begins is `reconcile`. This attempt did not enroll recovery workflows.
+
+The opportunity search used v3 camelCase filters with the pinned `2021-07-28`
+header. The [version-specific API contract](https://marketplace.gohighlevel.com/docs/2021-07-28/ghl/opportunities/search-opportunity/index.html)
+requires `location_id`, `pipeline_id` and `contact_id`. Both the initial search
+and protective re-reads now share those parameters. The old runtime error did
+not retain an operation label, so the exact rejecting endpoint is inferred from
+the receipt checkpoint and this confirmed request defect, not an upstream body.
+Future search failures record only a fixed operation label and HTTP status.
+
+An explicit same-event retry can reclaim this pre-write 422 only with a current
+grant for the configured acceptance contact, no opportunity ID, no channel attempt
+and no retained lock. An atomic state claim and normal identity/contact locks
+serialize retries. All live protection reads run again. Processing, applied and
+uncertain-write receipts remain excluded; no background replay or historical
+export is introduced. No new email or duplicate assessment is required while
+the verified intake session remains valid.
+
+Regression tests enforce the pinned query contract across initial/protective
+reads, parallel retry idempotency, missing-proof/lock/channel refusal and permanent
+reconciliation after a write starts. These use mocked GHL responses. Corrected
+runtime CRM writes, workflow enrollment and downstream delivery await the
+coordinator's next deliberate retry; they are not yet acceptance results.

@@ -112,3 +112,20 @@ the confirming browser, preserving its answers/report and original session audit
 The existing report can then retry the same handoff. Do not extend an expired
 session or infer contact ownership from the configured test identity. No live
 email is sent by deployment; the coordinator owns the button click and test.
+
+## Verified handoff API correction
+
+Live full-event email receipt and confirmation are now observed. The next saved
+handoff stopped before CRM mutation on HTTP 422. Opportunity search now uses
+the snake_case filters required by its pinned 2021-07-28 API, including protective
+re-reads. A current ownership grant can release only the narrowly checked
+pre-write 422 hold on an explicit same-event retry; uncertain writes remain
+blocked. Keep the existing report open and let the coordinator own that retry.
+Do not resend verification or create a new event to work around a dispatch error.
+
+Environment revision 11 and audience remain unchanged. Tests are mocked upstream;
+actual corrected CRM/workflow receipts and recovery delivery remain untested.
+The generic report verification/scheduling notice alone is not authoritative
+evidence of grant state; use the correlated receipt. No booking capability is
+enabled by this correction. Release identifiers are recorded in the checkpoint
+commit message and the coordinating handoff, with no private contact data.

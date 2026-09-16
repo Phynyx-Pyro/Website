@@ -25,7 +25,10 @@ async function setup(t,mode='test'){
    if(failCreate)throw new Error('Synthetic lost create response')
    const c={...body,id:'contact-'+(contacts.length+1),customFields:[]};contacts.push(c);return Response.json({contact:c},{status:201})
   }
-  if(u.pathname==='/opportunities/search')return Response.json({opportunities:opps.filter(o=>o.contactId===u.searchParams.get('contactId')),meta:{total:opps.length}})
+  if(u.pathname==='/opportunities/search'){
+   assert.deepEqual(Object.fromEntries(u.searchParams),{location_id:'location-test',contact_id:'contact-1',pipeline_id:'pipeline-test',status:'all',limit:'100'})
+   return Response.json({opportunities:opps.filter(o=>o.contactId===u.searchParams.get('contact_id')),meta:{total:opps.length}})
+  }
   if(u.pathname==='/opportunities/'&&method==='POST'){const o={...body,id:'opp-'+(opps.length+1)};opps.push(o);return Response.json({opportunity:o},{status:201})}
   if(u.pathname.endsWith('/appointments'))return Response.json({events})
   if(u.pathname==='/conversations/messages'){messages.push(body);return Response.json({messageId:'message-'+messages.length})}
@@ -165,6 +168,60 @@ async function verifyForRecovery(h,p){
  const token=h.messages.at(-1).html.match(/\/verify#([a-f0-9]{64})/)[1]
  assert.equal((await confirm.POST(req('verification/confirm',{token},h.cookie))).status,200)
 }
+test('pinned opportunity search contract covers initial and protection reads; confirmed pre-write 422 retries once',async t=>{
+ const h=await setup(t,'acceptance');h.seed();const p=input(true)
+ await verifyForRecovery(h,p);h.writes.length=0
+ const base=globalThis.fetch;let reject=true,searches=0
+ globalThis.fetch=async(url,options)=>{
+  if(new URL(url).pathname==='/opportunities/search'){
+   searches++
+   if(reject)return Response.json({message:'Request validation failed'},{status:422})
+  }
+  return base(url,options)
+ }
+ assert.equal((await h.post(p)).crmSynced,false)
+ const receipt=h.sqlite.prepare("SELECT * FROM website_dispatch_receipts WHERE channel='crm'").get()
+ assert.equal(receipt.state,'held');assert.equal(receipt.detail,'opportunities_search_read_422')
+ assert.equal(receipt.opportunity_id,null);assert.equal(h.writes.length,0)
+ assert.equal(h.sqlite.prepare('SELECT count(*) n FROM website_dispatch_locks').get().n,0)
+ // v8 stored a generic 422; the compatibility path still needs genuine proof.
+ h.sqlite.exec("UPDATE website_dispatch_receipts SET detail='upstream_422'")
+ reject=false
+ const retried=await Promise.all([h.post(p),h.post(p)])
+ assert.ok(retried.some(r=>r.crmSynced))
+ assert.ok(searches>=4) // initial plus protection checks use the same wire contract
+ assert.equal(h.contacts.length,1);assert.equal(h.opps.length,1)
+ assert.equal(h.enrollments.filter(e=>e.method==='POST').length,1)
+ const count=h.writes.length;await h.post(p);assert.equal(h.writes.length,count)
+ assert.equal(h.messages.length,1)
+})
+test('422 holds with missing proof, channel attempts or retained locks cannot be reclaimed',async t=>{
+ const h=await setup(t,'acceptance');h.seed();const p=input(true)
+ await verifyForRecovery(h,p);h.writes.length=0
+ h.sqlite.exec("UPDATE website_dispatch_receipts SET detail='upstream_422',contact_id='contact-1'")
+ const receipt=h.sqlite.prepare("SELECT * FROM website_dispatch_receipts WHERE channel='crm'").get()
+ h.sqlite.prepare('INSERT INTO website_dispatch_locks(key,receipt_key,created_at) VALUES(?,?,?)').run('retained',receipt.key,Date.now())
+ await h.post(p);assert.equal(h.writes.length,0)
+ h.sqlite.exec('DELETE FROM website_dispatch_locks')
+ h.sqlite.prepare("INSERT INTO website_dispatch_receipts(key,submission_id,stage,channel,location_id,state,created_at,updated_at) VALUES(?,?,'completed','email','location-test','enrollment_requested',?,?)").run('channel-attempt',p.submissionId,Date.now(),Date.now())
+ await h.post(p);assert.equal(h.writes.length,0)
+ h.sqlite.exec("DELETE FROM website_dispatch_receipts WHERE channel='email'; DELETE FROM intake_contact_grants")
+ await h.post(p);assert.equal(h.writes.length,0)
+ assert.equal(h.sqlite.prepare("SELECT state FROM website_dispatch_receipts WHERE channel='crm'").get().state,'held')
+})
+test('422 after a mutation starts remains reconciliation-only and never replays',async t=>{
+ const h=await setup(t,'acceptance');h.seed();const p=input(true)
+ await verifyForRecovery(h,p);h.writes.length=0
+ const base=globalThis.fetch;let attempts=0
+ globalThis.fetch=async(url,options)=>{
+  if(options.method==='PUT'){attempts++;return Response.json({message:'Validation failed'},{status:422})}
+  return base(url,options)
+ }
+ await h.post(p)
+ assert.equal(h.sqlite.prepare("SELECT state FROM website_dispatch_receipts WHERE channel='crm'").get().state,'reconcile')
+ await h.post(p);assert.equal(attempts,1);assert.equal(h.enrollments.length,0)
+ assert.equal(h.sqlite.prepare('SELECT count(*) n FROM website_dispatch_locks').get().n,3)
+})
 test('verified returning nurture: preserves opportunity, marker precedes mutations, acknowledged exits precede each channel, retry does not restart',async t=>{
  const h=await setup(t,'acceptance'),c=h.seed();c.tags=['sales:nurture','fit:nurture','consent:sms-marketing','consent:ai-voice']
  const opp={id:'existing',contactId:c.id,pipelineId:'pipeline-test',pipelineStageId:'nurture-test',status:'open',assignedTo:'preserved-owner',monetaryValue:0};h.opps.push(opp)

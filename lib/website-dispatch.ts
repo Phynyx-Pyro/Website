@@ -39,7 +39,11 @@ export async function websiteGhlApi<T>(path: string, method = 'GET', body?: unkn
     ...(body === undefined ? {} : { body: JSON.stringify(body) }), signal: AbortSignal.timeout(10_000),
   })
   // Do not log upstream response bodies, contact details or credentials.
-  if (!response.ok || (created && response.status !== 201)) throw new DispatchHold(`upstream_${response.status}`)
+  if (!response.ok || (created && response.status !== 201)) {
+    // Fixed operation label only: never retain query values or upstream bodies.
+    const operation = method === 'GET' && path.startsWith('/opportunities/search?') ? 'opportunities_search_read' : 'upstream'
+    throw new DispatchHold(`${operation}_${response.status}`)
+  }
   return await response.json() as T
 }
 
@@ -98,8 +102,8 @@ export async function dispatchWebsiteSubmission(input: GhlGrowthAssessment, sess
     stage, channel: 'crm', locationId, state: 'processing', createdAt: now, updatedAt: now }).onConflictDoNothing().returning()
   if (!inserted) {
     const [receipt] = await db.select().from(websiteDispatchReceipts).where(eq(websiteDispatchReceipts.key, key)).limit(1)
-    // A genuine email grant may release only a verification hold. Never take
-    // over a processing/uncertain receipt or replay a historical capture.
+    // Only explicit, authenticated same-event requests can release a safe hold.
+    // Never take over processing/uncertain receipts or replay historical captures.
     let claimed = false
     if (receipt?.state === 'held' && receipt.detail === 'parallel_or_unreconciled_submission' && !receipt.contactId) {
       const rows = await db.update(websiteDispatchReceipts).set({ state: 'processing', updatedAt: now }).where(and(
@@ -115,6 +119,24 @@ export async function dispatchWebsiteSubmission(input: GhlGrowthAssessment, sess
         )).returning()
         claimed = rows.length === 1
       } catch { /* Still unverified; return only the saved submission. */ }
+    }
+    // Compatibility with the confirmed pre-write v8 API-contract failure. A
+    // held receipt is written only before mutate() starts; additionally require
+    // no opportunity, channel attempt or retained lock, and a current grant.
+    if (receipt?.state === 'held' && ['upstream_422', 'opportunities_search_read_422'].includes(receipt.detail || '') &&
+      receipt.contactId === env.WEBSITE_ACCEPTANCE_CONTACT_ID && receipt.contactId && !receipt.opportunityId) {
+      try {
+        await requireContactGrant(session, receipt.contactId, input.email, input.phone)
+        const attempts = await db.select().from(websiteDispatchReceipts).where(eq(websiteDispatchReceipts.submissionId, input.submissionId))
+        const locks = await db.select().from(websiteDispatchLocks).where(eq(websiteDispatchLocks.receiptKey, key)).limit(1)
+        if (attempts.every(r => r.key === key) && locks.length === 0) {
+          const rows = await db.update(websiteDispatchReceipts).set({ state: 'processing', updatedAt: now }).where(and(
+            eq(websiteDispatchReceipts.key, key), eq(websiteDispatchReceipts.state, 'held'),
+            eq(websiteDispatchReceipts.detail, receipt.detail!), eq(websiteDispatchReceipts.contactId, receipt.contactId),
+          )).returning()
+          claimed = rows.length === 1
+        }
+      } catch { /* Missing ownership proof or storage evidence keeps the hold. */ }
     }
     if (!claimed) return { state: `dispatch-${receipt?.state || 'reconcile'}`, synced: receipt?.state === 'applied', recovery: assessment.recoveryState || 'held' }
   }
@@ -217,7 +239,9 @@ export async function dispatchWebsiteSubmission(input: GhlGrowthAssessment, sess
       return current
     }
     contact = await readProtection()
-    const query = new URLSearchParams({ locationId, contactId, pipelineId, status: 'all', limit: '100' })
+    // 2021-07-28 uses snake_case; v3's camelCase filters are incompatible.
+    // Reuse the exact query in the protection re-read below.
+    const query = new URLSearchParams({ location_id: locationId, contact_id: contactId, pipeline_id: pipelineId, status: 'all', limit: '100' })
     const opportunities = await api<{ opportunities: Opportunity[]; meta?: { total?: number; nextPage?: unknown } }>(`/opportunities/search?${query}`)
     const opps = opportunities.opportunities
     if (!Array.isArray(opps) || opps.length > 1 || (opportunities.meta?.total ?? opps.length) > opps.length || opportunities.meta?.nextPage) throw new DispatchHold('opportunity_review_required')
