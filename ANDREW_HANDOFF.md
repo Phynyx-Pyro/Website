@@ -129,3 +129,20 @@ The generic report verification/scheduling notice alone is not authoritative
 evidence of grant state; use the correlated receipt. No booking capability is
 enabled by this correction. Release identifiers are recorded in the checkpoint
 commit message and the coordinating handoff, with no private contact data.
+
+## Live v9 result and status-copy checkpoint
+
+The verified returning-contact handoff succeeded through the deployed website:
+CRM `applied`, all four reviewed exits acknowledged, and 002b email / 002d SMS /
+002c voice enrollments acknowledged. Independent MCP readback confirms current
+event/qualification/company fields and tags, with the original open nurture
+opportunity and owner/value/history preserved. No locks or booking grants remain.
+This supersedes the prior pending-CRM result above; actual downstream delivery
+and workflow execution remain separate evidence required from the coordinator.
+
+The report now retains CRM/recovery response state and displays accepted follow-up
+without claiming delivery or asking an already-linked visitor to verify again.
+Calendar availability no longer determines the follow-up wording. This is a
+presentation correction only: no adapter, workflow, flags or booking-policy edits.
+Do not retry the successful live event just to see new copy in its open browser.
+Keep the existing report and inspect the contact's normal workflow history next.

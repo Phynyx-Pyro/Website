@@ -229,6 +229,12 @@ test('verified returning nurture: preserves opportunity, marker precedes mutatio
  Object.assign(h.env,{WEBSITE_RECOVERY_DISPATCH_ENABLED:'true',WEBSITE_RETURNING_NURTURE_APPROVED:'true',WEBSITE_RETURNING_NURTURE_STAGE_ID:'nurture-test'})
  await verifyForRecovery(h,p);h.writes.length=0
  const response=await h.post(p);assert.equal(response.crmSynced,true);assert.equal(response.recoveryState,'enrollment_acknowledged')
+ const {assessmentHandoffStatus}=await h.load('lib/assessment-handoff-status.ts')
+ const display=assessmentHandoffStatus(response)
+ assert.equal(display.verificationNeeded,false)
+ assert.match(display.message,/follow-up request has been accepted/)
+ assert.match(display.message,/delivery is not yet confirmed/)
+ assert.equal(response.bookingReady,false);assert.equal(response.reportEmailSent,false)
  assert.deepEqual(h.opps,[before]);assert.equal(h.contacts.length,1)
  assert.deepEqual(h.writes[0].body,{customFields:[{id:'contact.website_form_version',fieldValue:'company-v2'}]});assert.deepEqual(h.writes[1].body,{tags:['source:phynyx-company']})
  assert.deepEqual(h.enrollments.map(e=>e.method),['DELETE','DELETE','DELETE','DELETE','POST','POST','POST'])

@@ -317,3 +317,39 @@ reads, parallel retry idempotency, missing-proof/lock/channel refusal and perman
 reconciliation after a write starts. These use mocked GHL responses. Corrected
 runtime CRM writes, workflow enrollment and downstream delivery await the
 coordinator's next deliberate retry; they are not yet acceptance results.
+
+## September 16: v9 deployed returning-contact acceptance
+
+The coordinator retried the same verified full assessment once. At 00:35:09 UTC,
+the deployed website POST returned HTTP 200 with outcome `ok`. Read-only D1
+correlation shows CRM `applied`, recovery `enrollment_acknowledged`, and journey
+`assessment_complete_unbooked`. The receipt references the existing contact and
+existing opportunity. Four 002a–d exits and email 002b, SMS 002d and voice 002c
+enrollments were individually acknowledged. No retained dispatch locks or booking
+grants exist. Recent error-only runtime logs were empty. This is actual website
+runtime private-token execution, independently checked through MCP reads.
+
+Independent GHL readback confirms the current submission field, `company-v2`,
+company conversion URL, `source:phynyx-company`, `sales:booking-followup` and
+`fit:qualified`. Old nurture journey/fit tags were replaced for the approved
+requalification. Exactly one opportunity remains: the original open Nurture /
+Recycle opportunity, with owner, value, stage and prior update timestamp unchanged.
+Contact ownership and DND remain unchanged; established channel consent tags were
+preserved. No duplicate assessment/contact/opportunity was needed.
+
+This proves runtime CRM update and enrollment acknowledgment, not actual workflow
+membership, internal FYI execution, message delivery, AI behavior or appointment
+conversion. The available read-only MCP workflow operation provides inventory,
+not contact execution history. The coordinator should inspect this test contact's
+002b/c/d execution history, waits/eligibility, actual conversation actions and
+destination-specific delivery; check 001's Submission ID trigger separately.
+No further assessment POST or verification send is required.
+
+The report still used calendar unavailability to display generic verification
+and follow-up-pending copy, even after a successful handoff. The bounded next
+checkpoint preserves the actual response's CRM/recovery state in the client and
+distinguishes accepted follow-up from unavailable scheduling. It does not infer
+message delivery, enable booking, change flags or dispatch anything on refresh.
+The already-open report keeps its loaded copy; do not resubmit merely to update
+its wording. Inline scheduling and report-email delivery remain unimplemented
+in this response path, separately from the normal booking-recovery workflows.

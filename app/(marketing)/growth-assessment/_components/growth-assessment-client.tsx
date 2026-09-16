@@ -1,5 +1,6 @@
 'use client'
 import { ensureIntakeSession } from '@/lib/ensure-intake-session'
+import { assessmentHandoffStatus, type AssessmentHandoffState } from '@/lib/assessment-handoff-status'
 
 import {
   useEffect,
@@ -88,6 +89,7 @@ type AssessmentResult = {
   snapshot: GrowthSnapshotResult
   bookingContact: BookingContact | null
   handoffPending?: boolean
+  delivery?: AssessmentHandoffState
 }
 
 const initialForm: FormData = {
@@ -552,12 +554,12 @@ export function GrowthAssessmentClient() {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ firstName: form.firstName, lastName: form.lastName, email: form.email, phone: form.phone, consent, website, submissionType: 'homepage-quick-form', submissionId: contactSubmissionIdRef.current, attribution: getAssessmentAttribution() }),
       })
-      const result = await response.json() as { saved?: boolean; crmSynced?: boolean; verificationAvailable?: boolean; code?: string; message?: string }
+      const result = await response.json() as AssessmentHandoffState & { saved?: boolean; verificationAvailable?: boolean; code?: string; message?: string }
       if (!response.ok || !(result.saved || result.crmSynced)) {
         if (result.code === 'SUBMISSION_CONFLICT') contactSubmissionIdRef.current = ''
         throw new Error(result.message || 'We could not save your details. Please try again.')
       }
-      setVerificationSubmission(result.verificationAvailable && !result.crmSynced ? contactSubmissionIdRef.current : '')
+      setVerificationSubmission(result.verificationAvailable && assessmentHandoffStatus(result).verificationNeeded ? contactSubmissionIdRef.current : '')
       setStep(2)
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Please try again.')
@@ -594,7 +596,7 @@ export function GrowthAssessmentClient() {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...form, snapshot: snapshotInput, consent, website, submissionId: submissionIdRef.current, attribution: getAssessmentAttribution() }),
       })
-      const result = await response.json().catch(() => null) as { code?: string; message?: string; crmSynced?: boolean; verificationAvailable?: boolean; bookingReady?: boolean; fit?: AssessmentResult['fit']; snapshot?: GrowthSnapshotResult } | null
+      const result = await response.json().catch(() => null) as (AssessmentHandoffState & { code?: string; message?: string; verificationAvailable?: boolean; bookingReady?: boolean; fit?: AssessmentResult['fit']; snapshot?: GrowthSnapshotResult }) | null
       if (!response.ok || !result?.fit || !result.snapshot) {
         if (result?.code === 'SUBMISSION_CONFLICT') submissionIdRef.current = ''
         throw new Error(result?.message || 'We could not build your snapshot. Please try again.')
@@ -610,8 +612,8 @@ export function GrowthAssessmentClient() {
           // Keep the completed report even when the calendar handoff is offline.
         }
       }
-      setVerificationSubmission(result.verificationAvailable && !result.crmSynced ? submissionIdRef.current : '')
-      setAssessmentResult({ fit: result.fit, snapshot: result.snapshot, bookingContact, handoffPending: !bookingContact })
+      setVerificationSubmission(result.verificationAvailable && assessmentHandoffStatus(result).verificationNeeded ? submissionIdRef.current : '')
+      setAssessmentResult({ fit: result.fit, snapshot: result.snapshot, bookingContact, handoffPending: !bookingContact, delivery: { crmSynced: result.crmSynced, recoveryState: result.recoveryState } })
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Something went wrong. Please try again.')
     } finally {
@@ -620,6 +622,7 @@ export function GrowthAssessmentClient() {
   }
 
   if (assessmentResult) {
+    const handoff = assessmentHandoffStatus(assessmentResult.delivery || {})
     const isFoundation = assessmentResult.fit.path === 'foundation'
     const isEmerging = assessmentResult.fit.path === 'readiness-review'
     return (
@@ -659,7 +662,7 @@ export function GrowthAssessmentClient() {
                 <CalendarClock className="mx-auto h-8 w-8 text-phoenix" aria-hidden="true" />
                 <h2 className="mt-4 text-[28px] font-bold text-ink">{isEmerging ? 'There may be a practical starting point.' : 'You appear ready for a working diagnostic.'}</h2>
                 <p className="mx-auto mt-3 max-w-[620px] text-[15px] leading-[1.65] text-warm">{isEmerging ? 'You may be earlier than our typical full-build client, but your operating answers suggest a focused conversation could still be productive.' : 'Use the diagnostic to validate the visible drop-off, review the handoffs behind it, and determine the most useful next move.'}</p>
-                {assessmentResult.handoffPending ? <p className="mt-6 text-[15px] leading-relaxed text-warm">The next step is a 30-minute diagnostic. Scheduling and follow-up are pending verification availability.</p> : <button type="button" onClick={() => setCalendarVisible(true)} className="mt-6 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-4 text-[15px] font-semibold text-white shadow-lg transition-colors hover:bg-ember">Map the Fix in a 30-Minute Diagnostic <ArrowRight className="h-4 w-4" aria-hidden="true" /></button>}
+                {assessmentResult.handoffPending ? <p className="mt-6 text-[15px] leading-relaxed text-warm">The next step is a 30-minute diagnostic. {handoff.message} Online scheduling is not available on this report yet.</p> : <button type="button" onClick={() => setCalendarVisible(true)} className="mt-6 inline-flex items-center gap-2 rounded-lg bg-phoenix px-7 py-4 text-[15px] font-semibold text-white shadow-lg transition-colors hover:bg-ember">Map the Fix in a 30-Minute Diagnostic <ArrowRight className="h-4 w-4" aria-hidden="true" /></button>}
               </div>
             )}
             <button type="button" onClick={() => {

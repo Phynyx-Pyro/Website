@@ -61,6 +61,11 @@ test('quick and complete captures save immutable evidence without CRM, email, tr
   const delivery=await h.load('lib/assessment-delivery.ts')
   assert.equal(delivery.isWebsiteCrmDispatchEnabled(),false)
   assert.equal(delivery.isWebsiteExternalTrackingEnabled(),false)
+  const {assessmentHandoffStatus}=await h.load('lib/assessment-handoff-status.ts')
+  assert.equal(assessmentHandoffStatus({crmSynced:false,recoveryState:'verification_pending'}).verificationNeeded,true)
+  assert.equal(assessmentHandoffStatus({crmSynced:false,recoveryState:'held'}).verificationNeeded,false)
+  assert.equal(assessmentHandoffStatus({crmSynced:true,recoveryState:'channel_suppressed'}).verificationNeeded,false)
+  assert.doesNotMatch(assessmentHandoffStatus({crmSynced:true,recoveryState:'channel_suppressed'}).message,/request has been accepted/)
 })
 
 test('parallel retries create one event; intentional new answers create new history without parallel enrollment', async t => {
