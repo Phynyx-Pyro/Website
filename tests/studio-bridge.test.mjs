@@ -10,17 +10,30 @@ const intakeCookie = `__Host-phynyx_intake=${'a'.repeat(64)}`
 const bookingCookie = `phynyx_booking=${'b'.repeat(64)}`
 
 function testDb() {
-  const nonces = new Set()
+  const nonces = new Map()
   return {
     nonces,
     prepare(sql) {
+      if (sql === 'DELETE FROM public_form_rate_limits WHERE expires_at <= ?') {
+        return {
+          bind(now) {
+            return {
+              async run() {
+                for (const [key, expiresAt] of nonces) {
+                  if (expiresAt <= now) nonces.delete(key)
+                }
+              },
+            }
+          },
+        }
+      }
       assert.match(sql, /ON CONFLICT\(key\) DO NOTHING RETURNING key/)
       return {
-        bind(key) {
+        bind(key, expiresAt) {
           return {
             async first() {
               if (nonces.has(key)) return null
-              nonces.add(key)
+              nonces.set(key, expiresAt)
               return { key }
             },
           }
@@ -138,6 +151,21 @@ test('bad signature, mismatched browser origin, and replay never reach a handler
   await authenticateStudioBridge(await signedRequest({ nonce }))
   await assert.rejects(authenticateStudioBridge(await signedRequest({ nonce })),
     { status: 409, code: 'BRIDGE_REPLAYED' })
+})
+
+test('signed requests prune expired replay keys before a handler can rate-limit', async () => {
+  const db = testDb()
+  db.nonces.set('bridge:nonce:expired', Date.now() - 1)
+  db.nonces.set('bridge:nonce:active', Date.now() + 60_000)
+  const { authenticateStudioBridge } = await loadBridge({
+    STUDIO_BRIDGE_SECRET: secret, STUDIO_BRIDGE_ORIGIN: visitorOrigin, DB: db,
+  })
+  const request = await signedRequest({ action: 'support' })
+  const nonce = request.headers.get('x-phynyx-bridge-nonce')
+  await authenticateStudioBridge(request)
+  assert.equal(db.nonces.has('bridge:nonce:expired'), false)
+  assert.equal(db.nonces.has('bridge:nonce:active'), true)
+  assert.equal(db.nonces.has(`bridge:nonce:${nonce}`), true)
 })
 
 test('cookie allowlist and required session cookies fail closed', async () => {
