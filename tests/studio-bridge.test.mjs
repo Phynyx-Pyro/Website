@@ -45,10 +45,11 @@ async function signedRequest({
   browserOrigin = undefined,
 } = {}) {
   const bytes = Buffer.from(body)
+  const normalizedContentType = contentType.split(';', 1)[0].trim().toLowerCase()
   const hash = Buffer.from(await crypto.subtle.digest('SHA-256', bytes)).toString('hex')
   const signed = JSON.stringify([
     'phynyx-studio-bridge-v1', timestamp, nonce, action, origin,
-    clientAddress, cookie, contentType, hash,
+    clientAddress, cookie, normalizedContentType, hash,
   ])
   const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(signatureSecret),
     { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
@@ -103,7 +104,13 @@ test('signed intake and booking requests retain cookies and existing handler ori
   assert.equal(booking.internalRequest.headers.get('cookie'), bothCookies)
   assert.equal(booking.internalRequest.headers.get('cf-connecting-ip'), '203.0.113.10')
   assert.equal(booking.internalRequest.url, 'https://backend.example.test/api/booking-session')
-  assert.equal(db.nonces.size, 3)
+  const browserBooking = await authenticateStudioBridge(await signedRequest({
+    action: 'booking', body: '{}', cookie: bothCookies,
+    contentType: 'Application/JSON; charset=UTF-8',
+  }))
+  assert.equal(browserBooking.internalRequest.headers.get('content-type'), 'application/json')
+  assert.equal(await browserBooking.internalRequest.text(), '{}')
+  assert.equal(db.nonces.size, 4)
 })
 
 test('bad signature, mismatched browser origin, and replay never reach a handler twice', async () => {
@@ -145,6 +152,14 @@ test('cookie allowlist and required session cookies fail closed', async () => {
     action: 'booking', body: '', cookie: intakeCookie,
   })), { status: 403, code: 'BRIDGE_FORBIDDEN' })
   await assert.rejects(authenticateStudioBridge(await signedRequest({
+    action: 'booking', body: '{ }', cookie: `${intakeCookie}; ${bookingCookie}`,
+    contentType: 'application/json',
+  })), { status: 400, code: 'UNEXPECTED_BRIDGE_BODY' })
+  await assert.rejects(authenticateStudioBridge(await signedRequest({
+    action: 'booking', body: '{}', cookie: `${intakeCookie}; ${bookingCookie}`,
+    contentType: 'text/plain',
+  })), { status: 415, code: 'UNSUPPORTED_MEDIA_TYPE' })
+  await assert.rejects(authenticateStudioBridge(await signedRequest({
     cookie: `${intakeCookie}; ${intakeCookie}`,
   })), { status: 400, code: 'INVALID_BRIDGE_COOKIE' })
   await assert.rejects(authenticateStudioBridge(await signedRequest({
@@ -166,7 +181,14 @@ test('bridge route returns handler status and host-only Set-Cookie unchanged', a
       'Cache-Control': 'no-store',
     } }),
     assessment: async () => { throw new Error('wrong handler') },
-    booking: async () => { throw new Error('wrong handler') },
+    booking: async (request) => {
+      assert.equal(request.url, 'https://backend.example.test/api/booking-session')
+      assert.equal(await request.text(), '{}')
+      return Response.json({ success: true }, { headers: {
+        'Set-Cookie': 'phynyx_booking=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0',
+        'Cache-Control': 'no-store',
+      } })
+    },
   }
   const { POST } = await importTypeScriptModule(new URL('../app/api/studio-bridge/route.ts', import.meta.url), [
     ["import { POST as intake } from '@/app/api/intake-session/route'", 'const { intake } = globalThis.__STUDIO_BRIDGE_ROUTE_STUBS__'],
@@ -178,5 +200,12 @@ test('bridge route returns handler status and host-only Set-Cookie unchanged', a
   assert.equal(response.status, 201)
   assert.equal(response.headers.get('set-cookie'), `${intakeCookie}; Path=/; HttpOnly; Secure; SameSite=Strict`)
   assert.equal(response.headers.get('cache-control'), 'no-store')
+  const bookingResponse = await POST(await signedRequest({
+    action: 'booking', body: '{}', cookie: `${intakeCookie}; ${bookingCookie}`,
+    contentType: 'Application/JSON; charset=UTF-8',
+  }))
+  assert.equal(bookingResponse.status, 200)
+  assert.equal(bookingResponse.headers.get('set-cookie'),
+    'phynyx_booking=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0')
   delete globalThis.__STUDIO_BRIDGE_ROUTE_STUBS__
 })

@@ -105,11 +105,15 @@ export async function authenticateStudioBridge(request: Request) {
   }
 
   const contentType = headers.get('content-type')?.split(';', 1)[0]?.trim().toLowerCase()
-  if (action !== 'booking' && contentType !== 'application/json') {
+  if ((action !== 'booking' || contentType) && contentType !== 'application/json') {
     throw new StudioBridgeError(415, 'UNSUPPORTED_MEDIA_TYPE')
   }
   const body = await boundedBody(request)
-  if (action === 'booking' && body.byteLength !== 0) {
+  // The existing browser sends `{}` to claim a booking session. Accept that
+  // exact JSON body, or no body, without broadening the claim endpoint.
+  if (action === 'booking' && body.byteLength !== 0 &&
+    !(contentType === 'application/json' && body.byteLength === 2 &&
+      body[0] === 0x7b && body[1] === 0x7d)) {
     throw new StudioBridgeError(400, 'UNEXPECTED_BRIDGE_BODY')
   }
   const bodyHash = await crypto.subtle.digest('SHA-256', body)
@@ -145,7 +149,7 @@ export async function authenticateStudioBridge(request: Request) {
     action,
     internalRequest: new Request(url, {
       method: 'POST', headers: internalHeaders,
-      body: action === 'booking' ? undefined : body,
+      body: body.byteLength ? body : undefined,
     }),
   }
 }
