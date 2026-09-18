@@ -160,6 +160,15 @@ test('cookie allowlist and required session cookies fail closed', async () => {
     contentType: 'text/plain',
   })), { status: 415, code: 'UNSUPPORTED_MEDIA_TYPE' })
   await assert.rejects(authenticateStudioBridge(await signedRequest({
+    action: 'support', cookie: intakeCookie,
+  })), { status: 403, code: 'BRIDGE_FORBIDDEN' })
+  await assert.rejects(authenticateStudioBridge(await signedRequest({
+    action: 'support', origin: 'https://attacker.example.test',
+  })), { status: 403, code: 'BRIDGE_FORBIDDEN' })
+  await assert.rejects(authenticateStudioBridge(await signedRequest({
+    action: 'support', contentType: 'text/plain',
+  })), { status: 415, code: 'UNSUPPORTED_MEDIA_TYPE' })
+  await assert.rejects(authenticateStudioBridge(await signedRequest({
     cookie: `${intakeCookie}; ${intakeCookie}`,
   })), { status: 400, code: 'INVALID_BRIDGE_COOKIE' })
   await assert.rejects(authenticateStudioBridge(await signedRequest({
@@ -168,7 +177,7 @@ test('cookie allowlist and required session cookies fail closed', async () => {
   assert.equal(db.nonces.size, 0)
 })
 
-test('bridge route returns handler status and host-only Set-Cookie unchanged', async () => {
+test('bridge route preserves handler responses and dispatches support without cookies', async () => {
   const db = testDb()
   const bridge = await loadBridge({
     STUDIO_BRIDGE_SECRET: secret, STUDIO_BRIDGE_ORIGIN: visitorOrigin, DB: db,
@@ -189,11 +198,23 @@ test('bridge route returns handler status and host-only Set-Cookie unchanged', a
         'Cache-Control': 'no-store',
       } })
     },
+    support: async (request) => {
+      assert.equal(request.url, 'https://backend.example.test/api/support')
+      assert.equal(request.headers.get('origin'), 'https://backend.example.test')
+      assert.equal(request.headers.get('cookie'), null)
+      assert.deepEqual(await request.json(), {
+        submissionId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+        name: 'QA Tester', email: 'qa@example.test', message: 'Please help.',
+      })
+      return Response.json({ success: true },
+        { headers: { 'Cache-Control': 'no-store' } })
+    },
   }
   const { POST } = await importTypeScriptModule(new URL('../app/api/studio-bridge/route.ts', import.meta.url), [
     ["import { POST as intake } from '@/app/api/intake-session/route'", 'const { intake } = globalThis.__STUDIO_BRIDGE_ROUTE_STUBS__'],
     ["import { POST as assessment } from '@/app/api/growth-assessment/route'", 'const { assessment } = globalThis.__STUDIO_BRIDGE_ROUTE_STUBS__'],
     ["import { POST as booking } from '@/app/api/booking-session/route'", 'const { booking } = globalThis.__STUDIO_BRIDGE_ROUTE_STUBS__'],
+    ["import { POST as support } from '@/app/api/support/route'", 'const { support } = globalThis.__STUDIO_BRIDGE_ROUTE_STUBS__'],
     ["import { authenticateStudioBridge, StudioBridgeError } from '@/lib/studio-bridge'", 'const { authenticateStudioBridge, StudioBridgeError } = globalThis.__STUDIO_BRIDGE_ROUTE_STUBS__'],
   ])
   const response = await POST(await signedRequest())
@@ -207,5 +228,19 @@ test('bridge route returns handler status and host-only Set-Cookie unchanged', a
   assert.equal(bookingResponse.status, 200)
   assert.equal(bookingResponse.headers.get('set-cookie'),
     'phynyx_booking=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0')
+  const supportPayload = {
+    submissionId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+    name: 'QA Tester', email: 'qa@example.test', message: 'Please help.',
+  }
+  const supportResponse = await POST(await signedRequest({
+    action: 'support', body: JSON.stringify(supportPayload),
+  }))
+  assert.equal(supportResponse.status, 200)
+  assert.equal(supportResponse.headers.get('set-cookie'), null)
+  assert.equal(supportResponse.headers.get('cache-control'), 'no-store')
+  const rejectedCookieResponse = await POST(await signedRequest({
+    action: 'support', body: JSON.stringify(supportPayload), cookie: intakeCookie,
+  }))
+  assert.equal(rejectedCookieResponse.status, 403)
   delete globalThis.__STUDIO_BRIDGE_ROUTE_STUBS__
 })

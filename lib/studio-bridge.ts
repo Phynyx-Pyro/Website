@@ -6,6 +6,7 @@ const ACTION_PATHS = {
   intake: '/api/intake-session',
   assessment: '/api/growth-assessment',
   booking: '/api/booking-session',
+  support: '/api/support',
 } as const
 
 export type StudioBridgeAction = keyof typeof ACTION_PATHS
@@ -100,7 +101,8 @@ export async function authenticateStudioBridge(request: Request) {
     (headers.has('origin') && headers.get('origin') !== visitorOrigin) ||
     !/^[a-zA-Z0-9:.\-_]{1,128}$/.test(clientAddress) ||
     (action === 'assessment' && !cookie.includes('__Host-phynyx_intake=')) ||
-    (action === 'booking' && (!cookie.includes('__Host-phynyx_intake=') || !cookie.includes('phynyx_booking=')))) {
+    (action === 'booking' && (!cookie.includes('__Host-phynyx_intake=') || !cookie.includes('phynyx_booking='))) ||
+    (action === 'support' && Boolean(cookie))) {
     throw new StudioBridgeError(403, 'BRIDGE_FORBIDDEN')
   }
 
