@@ -18,5 +18,7 @@ declare namespace Cloudflare {
     WEBSITE_RECOVERY_DISPATCH_ENABLED?: string
     WEBSITE_RETURNING_NURTURE_APPROVED?: string
     WEBSITE_RETURNING_NURTURE_STAGE_ID?: string
+    STUDIO_BRIDGE_SECRET?: string
+    STUDIO_BRIDGE_ORIGIN?: string
   }
 }
