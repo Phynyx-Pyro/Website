@@ -129,8 +129,12 @@ export async function authenticateStudioBridge(request: Request) {
   const valid = await crypto.subtle.verify('HMAC', key, hexBytes(signature), new TextEncoder().encode(signed))
   if (!valid) throw new StudioBridgeError(403, 'BRIDGE_FORBIDDEN')
 
-  // The existing D1 rate-limit table provides an atomic, expiring replay key.
+  // Prune expired replay keys before dispatch. A rate-limited handler can return
+  // before its own rate-limit cleanup, so it cannot be the only cleanup path.
   const now = Date.now()
+  await env.DB.prepare('DELETE FROM public_form_rate_limits WHERE expires_at <= ?')
+    .bind(now).run()
+  // The existing D1 rate-limit table provides an atomic replay key.
   const receipt = await env.DB.prepare(
     'INSERT INTO public_form_rate_limits (key, count, expires_at, updated_at) VALUES (?, 1, ?, ?) ON CONFLICT(key) DO NOTHING RETURNING key',
   ).bind(`bridge:nonce:${nonce}`, now + MAX_CLOCK_SKEW_MS * 3, now).first<{ key: string }>()
