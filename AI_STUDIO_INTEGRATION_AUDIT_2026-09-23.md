@@ -107,6 +107,19 @@ The source editor was inspected directly after this document's initial draft:
   CTA attribution to the calendar helper. A provider appointment result has not
   yet been accepted in a live internal test.
 
+AI Studio's independent audit confirmed additional schedule boundaries: the
+browser directly calls the provider free-slot and booking endpoints; it does no
+contact lookup/upsert, duplicate matching, opportunity write, tagging, workflow
+enrollment or durable consent-evidence capture. The per-mount UUID is reused by
+the client across retries, but the provider endpoint does not expose a verified
+server-side idempotency contract, so it is not sufficient duplicate-booking
+proof. Do not bolt an intake write onto the end of this browser flow without a
+single authoritative booking/contact transaction design; post-booking CRM work
+could race native appointment contact creation and `003a`.
+
+The independent source audit also confirmed all four bridge environment values
+are absent and the current route returns `503 BRIDGE_NOT_CONFIGURED` by design.
+
 The assessment and support gaps are therefore confirmed from current source,
 not inferred from earlier AI Studio chat summaries.
 
