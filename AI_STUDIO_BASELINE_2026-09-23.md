@@ -56,6 +56,30 @@ The numbered published workflow set recorded before this snapshot is:
 9. `004b - No-Show Recovery`
 10. `004c - Cancellation Recovery`
 
+## HighLevel backup created with this snapshot
+
+Backup folder: **BACKUP — Website Sales Baseline — 2026-09-23**
+
+Folder ID: `9f131435-3d51-4ef7-aecf-6283ffdb5090`
+
+All ten numbered published workflows were duplicated on 2026-09-23 and moved
+into this folder. Every duplicate was verified as **Draft**, with zero enrolled
+and zero active contacts. The published originals remained in their original
+folder and were not edited.
+
+| Published source | Draft backup ID |
+| --- | --- |
+| `001 - Website Intake & Routing` | `ddab0397-3bd3-4c75-b5a3-735f05c5b520` |
+| `002a - Incomplete Assessment Recovery` | `b547090b-5c27-44de-9100-c46dd515c1a6` |
+| `002b - Assessment Complete & Booking Recovery` | `1abff77b-5a3a-47fc-979c-79697d8a97b3` |
+| `002c - Consented Voice Outreach` | `a28b5324-8b55-4968-a01d-2622628b87d0` |
+| `002d - Consented SMS Conversation` | `2b2f83fb-00ea-4dbe-a4df-9136d4e5e34b` |
+| `002e - Reply Stops Pending Voice` | `7297e689-f3cd-49f4-ae25-86818dd5b37d` |
+| `003a - Appointment Booked & Team Notification` | `c3bff222-a857-4f37-8dc1-04950ad4a45c` |
+| `004a - Appointment Showed & Recovery Cleanup` | `daefe49f-cc4d-4132-8cd1-037cdf6d7c75` |
+| `004b - No-Show Recovery` | `becd03ec-e4a1-45b5-96d3-9044ac06bf06` |
+| `004c - Cancellation Recovery` | `1ad20a74-ba39-4a88-a05f-92ab333f2383` |
+
 `001` is location-wide: a change to Website Submission ID can enroll any
 contact. The workflow does not establish source by itself. Eligibility depends
 on its internal safety gate. The website/backend must commit structured CRM
@@ -170,4 +194,3 @@ No earlier state substitutes for a later one.
   messages, or create appointments without the relevant explicit approval.
 - Use synthetic or expressly approved test identities and preserve execution
   IDs, CRM IDs and provider evidence without committing private contact data.
-
