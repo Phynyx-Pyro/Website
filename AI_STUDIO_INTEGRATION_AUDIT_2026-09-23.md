@@ -161,3 +161,13 @@ approved. Do not send to customers during acceptance.
 - Direct booking acceptance: not proven.
 - Published workflow edits in this pass: none.
 - Customer communication in this pass: none.
+
+## Prepared bridge branch
+
+The signed receiver was ported onto the newer company checkpoint in a separate
+branch: `codex/ai-studio-company-bridge` (head `cc0a341`). The only merge
+conflict was the environment type declaration; both the company runtime flags
+and the two Worker-side bridge bindings were preserved. On this combined
+branch, all 118 tests pass and the production build completes with
+`/api/studio-bridge` included. The branch is pushed but not deployed and no pull
+request was opened.
