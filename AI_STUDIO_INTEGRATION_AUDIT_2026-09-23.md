@@ -85,6 +85,31 @@ approved internal recipients.
 6. Keep the AI Studio project unpublished until the internal acceptance matrix
    below passes.
 
+## Current AI Studio source readback
+
+The source editor was inspected directly after this document's initial draft:
+
+- `src/components/GrowthAssessmentFunnel.tsx` explicitly says no backend exists
+  yet. Its snapshot action intentionally reaches an unavailable state, and the
+  UI permits visitors to explore later steps without saving.
+- `src/routes/support.tsx` explicitly has no backend, submission, workflow or
+  message action. Its submit handler waits 600 ms and then displays unavailable.
+- `src/routes/api/phynyx-bridge.ts` exposes a server-only POST handler for
+  `intake`, `assessment`, `booking` and `support`, but its own source marks the
+  paired receiver as undeployed and instructs that forms not be wired yet.
+- `src/lib/calendar.ts` calls the HighLevel Vibe booking service directly. It
+  uses location `DsRnzA2tcoiwklSgjBtR`, calendar `NX2pJFAx51yOcaNIdNjL`, the
+  appointment-text-consent field `Unplv0vwJSkik0mQ9owj`, and CTA-source field
+  `XrmJih7R59gZYuIH888w`. Booking requires a caller-managed stable `sessionId`,
+  a non-empty provider appointment ID and a booked start time before showing
+  success; 409 is treated as a taken slot.
+- `src/components/ScheduleForm.tsx` is the native contact/slot UI and forwards
+  CTA attribution to the calendar helper. A provider appointment result has not
+  yet been accepted in a live internal test.
+
+The assessment and support gaps are therefore confirmed from current source,
+not inferred from earlier AI Studio chat summaries.
+
 ## Internal acceptance matrix
 
 For each test, retain evidence for every applicable layer:
@@ -123,4 +148,3 @@ approved. Do not send to customers during acceptance.
 - Direct booking acceptance: not proven.
 - Published workflow edits in this pass: none.
 - Customer communication in this pass: none.
-
