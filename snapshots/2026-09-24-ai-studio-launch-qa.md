@@ -12,10 +12,10 @@ Ungated 3-number check -> baseline contact capture -> 001 intake -> lead
 Complete 8-metric snapshot -> result + .txt download -> 001b completion routing
 Direct schedule contact capture -----------------------> 001b direct routing
                                                           |
-                                                          +-> 002b clean email booking recovery + activate Ember bot
+                                                          +-> 002b clean email recovery + assign Ember bot*
                                                           +-> 002c AI voice, affirmative voice consent only
                                                           +-> 002d SMS/AI, affirmative marketing-SMS consent only
-Reply -> 002e stop pending cadence; active Ember bot is intended to answer;
+Reply -> 002e stop pending cadence; Ember reply still requires channel deployment*;
 STOP -> 005a opt-out;
 human handover -> 005b pause bot and notify staff.
 Confirmed calendar booking -> 003a stop recovery, assign owner, advance opportunity;
@@ -33,13 +33,15 @@ The measurable acquisition goal is a confirmed 30-minute call with Craig or Andr
 | 001 intake `36118464-ea4a-4a5b-b5ab-a2cd614c2063` | Exact Growth Snapshot Intake trigger, version/source/incomplete tags and internal FYI | Internal initial capture completed the workflow and created a New Website Lead opportunity. |
 | 001b completion/direct `ba5b5d85-e78f-442e-bd5c-d91881496ca7` | Two exact AI Studio form triggers; sets version/source/booking-followup, removes incomplete recovery | Fresh direct-only and completed-snapshot fixtures finished this workflow. |
 | 002a incomplete `7780711c-043e-40a6-8d49-92210c96fcd9` | 15m/day2/day7 finite email cadence, current AI Studio assessment link, rechecks incomplete/unbooked/engagement; workflow-level Mon–Fri 9 AM–5 PM in contact timezone | Earlier controlled consent-off contact received its first email in AgentMail. Later cadence not yet elapsed. |
-| 002b clean booking `19f5a2a8-a30d-4296-beea-09a56bf21610` | 15m/day2/day7 finite email cadence, weekday business-hour window, unbooked/unpaused/unengaged guards. A September 24 repair now assigns `Ember - Website Sales Concierge` and sets its status to `Active` on the eligible branch before the first email. | Bot action, exact bot and active status were read back after reload; workflow remained published. Completed-snapshot and fresh direct-only fixtures passed their first 15-minute wait and eligibility gates before this repair and are now `Waiting for window time` on the first email at Sep 24, 9:00 AM CDT. They may not traverse the newly inserted bot step. Provider email delivery and bot response are not yet verified. |
+| 002b clean booking `19f5a2a8-a30d-4296-beea-09a56bf21610` | 15m/day2/day7 finite email cadence, weekday business-hour window, unbooked/unpaused/unengaged guards. A September 24 repair now assigns `Ember - Website Sales Concierge` and sets its contact status to `Active` on the eligible branch before the first email. | Bot action, exact bot and active contact status were read back after reload; workflow remained published. However, the bot's Agents List says **Assigned channels: Not configured** and its Deploy tab offers **Configure** for Email and SMS. Thus the action does not establish a working AI reply channel. The two earlier fixtures may not traverse the new action. Provider email delivery and bot response are not yet verified. |
 | 002c/002d | Voice after 1 day only with affirmative AI Voice Marketing Consent; SMS at 15m/day2 only with affirmative Marketing SMS Consent; each rechecks booking, pause, handoff and DND. Both workflows already had a Mon–Fri, 9 AM–5 PM **workflow-level** communication window in the contact's timezone. | Active pending enrollments inspected: all were labeled internal QA contacts. A consent-off 002d fixture completed its wait, took the `None` branch and ended without an SMS action. Workflow-level windows and contact timezone were read back after reload; no consent-on call/SMS delivery test yet. |
 | 002e/005a/005b | Replies stop pending nurture; opt-out applies DND/pause; handoff pauses bot and notifies Craig/Andrew | Configuration saved/published. Handoff/opt-out runtime test remains pending. |
 | 003a + calendar | Exact confirmed assessment calendar; stops recovery, assigns owner and updates opportunity. Calendar equal-distribution round robin and native contact booking/reschedule/24h/1h email; workflow customer confirmation disabled | Configuration inspected and saved; no new synthetic booking, owner assignment, or provider delivery test in this pass. |
 | 004a/b/c | Exact showed/no-show/cancelled calendar statuses; no-show/cancelled email recovery after guarded 15m wait | Config inspected; no lifecycle status-transition runtime test in this pass. |
 
 The older draft `002b` (`2bf5b127-8c2d-4200-973c-aec295397aaa`) remains unpublished and superseded. The clean replacement is published; it was added to removal actions in 002e, 003a, 005a and 005b. No destructive deletion was performed.
+
+*HighLevel's current [channel-routing documentation](https://help.gohighlevel.com/support/solutions/articles/155000008266-how-to-manage-conversation-ai-bot-channels-and-routing) distinguishes direct contact assignment from channel deployment. The website concierge bot is Auto-Pilot on `OpenAI GPT-5.4 Mini`, but has no deployed channels. Its Email deployment dialog was inspected and cancelled unchanged. Do not turn on a broad Email/SMS channel during internal-only QA: the published intake workflows assign this bot to contacts, and direct assignment can take priority over tag routing. A bounded internal test and explicit release gate are needed before bot replies reach non-test leads. The 5.4 Mini choice is proportionate for this narrowly scripted nurture role; no higher-cost bot model was selected.*
 
 ## Website verification
 
@@ -62,7 +64,7 @@ The latest exported source passed `tsc --noEmit`, client and SSR production buil
 ## Release gates still open
 
 1. Book one labeled internal appointment through the live site, then verify the appointment ID/status, Craig/Andrew assignment, opportunity stage, single customer confirmation, reminder ownership, and no residual acquisition messages. Avoid customer traffic before this.
-2. Verify first 002b email sends in the configured business-hour window and reaches the controlled inbox. Workflow enrollment alone is not delivery. Separately test a fresh post-repair enrollment and an inbound reply to prove Ember answers; the two earlier fixtures may have already passed the insertion point.
+2. Verify first 002b email sends in the configured business-hour window and reaches the controlled inbox. Workflow enrollment alone is not delivery. Before promising AI replies, safely deploy and test the concierge's Email channel with an internal-only routing plan; the channel is currently **not configured**. Then test a fresh post-repair enrollment and an inbound reply; the two earlier fixtures may have already passed the insertion point.
 3. Test opt-out and human handoff on internal fixtures; confirm bot pause/DND and no later messages. Test SMS and voice only with explicit test consent and a controlled destination.
 4. Resolve the site domain. AI Studio currently publishes only on `vibepreview.app`; no custom domain is connected. Do not assume the old `get.phynyxpro.com` URL runs this build.
 5. Repair or explicitly retire `/support` before describing the entire website as functional. Full-project formatting lint remains open, but is not a lead-capture blocker.
@@ -74,6 +76,6 @@ Channel-hours correction: an internal 002c enrollment showed its **wait** due at
 
 ## Release decision at this checkpoint
 
-**Controlled QA only; not yet approved for paid traffic.** Capture, calculator/result, native form event, routing and first-email delivery of the incomplete path have direct runtime evidence. The clean booking-recovery bot-activation gap is repaired and saved, but a real AI reply is unproven. Both earlier clean booking-recovery fixtures advanced past their first eligibility gates and queued their first emails for the 9 AM business-hour window. Booking, those emails' provider delivery, consented channel-specific outbound, and customer reminder/provider delivery remain unproven.
+**Controlled QA only; not yet approved for paid traffic.** Capture, calculator/result, native form event, routing and first-email delivery of the incomplete path have direct runtime evidence. The clean booking-recovery workflow now assigns an active bot, but its Email/SMS channels are not deployed, so AI replies cannot be represented as working. Both earlier clean booking-recovery fixtures advanced past their first eligibility gates and queued their first emails for the 9 AM business-hour window. Booking, those emails' provider delivery, consented channel-specific outbound, and customer reminder/provider delivery remain unproven.
 
 A one-time thread follow-up was scheduled for 9:15 AM CDT September 24 to verify that queued booking-recovery email and consent-off branches read-only. Live booking and human-handoff tests await action-time approval because they create an appointment and staff notifications, respectively.
