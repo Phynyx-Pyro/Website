@@ -64,6 +64,8 @@ The latest exported source passed `tsc --noEmit`, client and SSR production buil
 5. Repair or explicitly retire `/support` before describing the entire website as functional. Full-project formatting lint remains open, but is not a lead-capture blocker.
 6. Retest stale appointment-status edge: an old no-show/cancelled event can clear contact-wide `appt:booked` after a replacement booking. The normal immediate rebooking path is guarded, but this edge is not proven safe.
 
+Post-publication readback: AI Studio's Domains page still says `No custom domains connected yet.` The published preview URL is the only listed project URL. A fresh read of published 004b confirms `Clear Prior Booked Flag` precedes the 15-minute wait and the `appt:booked` exclusion. Its condition picker exposes the contact's `Last appointment at`, but no appointment-ID comparison or safe dynamic date comparison was verified. An exploratory condition edit was cancelled; 004b remained saved and published unchanged. Do not claim the stale-event edge repaired without an appointment-pair test.
+
 ## Release decision at this checkpoint
 
 **Controlled QA only; not yet approved for paid traffic.** Capture, calculator/result, native form event, routing and first-email delivery of the incomplete path have direct runtime evidence. Both clean booking-recovery fixtures advanced past their first eligibility gates and queued their first emails for the 9 AM business-hour window. Booking, those emails' provider delivery, consented channel-specific outbound, and customer reminder/provider delivery remain unproven.
