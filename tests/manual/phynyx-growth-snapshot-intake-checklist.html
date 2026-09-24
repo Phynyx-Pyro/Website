@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Testing checklist</title>
+  <style>
+    :root { color-scheme: light; --ink:#182333; --muted:#526176; --line:#cbd5e1; --bg:#f5f7fb; --card:#fff; --blue:#174f9e; --focus:#f59e0b; }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.48 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    a { color:var(--blue); text-underline-offset:2px; }
+    :focus-visible { outline:3px solid var(--focus); outline-offset:3px; }
+    .skip-link { position:absolute; top:-80px; left:12px; z-index:10; padding:8px 12px; background:#fff; }
+    .skip-link:focus { top:10px; }
+    .wrap { width:min(1200px,calc(100% - 36px)); margin:0 auto; }
+    .hero { background:#14243c; color:#fff; padding:36px 0 32px; }
+    .hero p { color:#d7e1ef; max-width:75ch; }
+    .hero .eyebrow { margin:0 0 6px; color:#a9d2ff; font-size:.78rem; font-weight:750; letter-spacing:.14em; text-transform:uppercase; }
+    h1,h2,h3,h4,p { margin-top:0; }
+    h1 { font-size:clamp(1.8rem,3.2vw,2.8rem); line-height:1.12; margin-bottom:10px; }
+    h2 { font-size:1.45rem; line-height:1.2; }
+    h3 { font-size:1.16rem; line-height:1.25; }
+    h4 { font-size:.85rem; text-transform:uppercase; letter-spacing:.06em; margin-bottom:7px; }
+    section { scroll-margin-top:20px; }
+    .stack { display:grid; gap:18px; margin:22px auto 42px; }
+    .panel,.case,.page { background:var(--card); border:1px solid var(--line); border-radius:12px; box-shadow:0 2px 8px rgba(15,34,62,.04); }
+    .panel { padding:20px; }
+    .panel h2 { margin-bottom:12px; }
+    .muted { color:var(--muted); }
+    .small { font-size:.88rem; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(175px,1fr)); gap:10px; }
+    .stat { background:#edf3fb; border-radius:9px; padding:12px 14px; }
+    .stat strong { display:block; font-size:1.55rem; line-height:1.2; }
+    .stat span { color:#31435a; font-size:.85rem; }
+    .meta { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:8px 22px; margin:0; }
+    .meta div { padding:6px 0; border-bottom:1px solid #e5eaf0; min-width:0; }
+    .meta dt { font-size:.76rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+    .meta dd { margin:3px 0 0; overflow-wrap:anywhere; }
+    .toolbar { display:flex; flex-wrap:wrap; gap:10px; align-items:end; }
+    .field { display:grid; gap:4px; min-width:170px; flex:1; }
+    .field.search { flex:2; min-width:230px; }
+    label { font-weight:650; font-size:.88rem; }
+    input,select,textarea,button { font:inherit; }
+    input[type="search"],select,textarea { width:100%; border:1px solid #aebdd0; border-radius:7px; background:#fff; color:var(--ink); padding:8px 10px; }
+    button,.file-button { display:inline-flex; align-items:center; justify-content:center; min-height:42px; border:1px solid #9bb1ce; border-radius:7px; background:#fff; color:#153e73; font-weight:650; padding:8px 13px; cursor:pointer; }
+    button:hover,.file-button:hover { background:#eaf2fd; }
+    .file-button input { position:absolute; width:1px; height:1px; opacity:0; }
+    .file-button:focus-within { outline:3px solid var(--focus); outline-offset:3px; }
+    .buttons { display:flex; flex-wrap:wrap; gap:8px; }
+    .notice { border-left:4px solid #1764b2; padding:9px 12px; background:#eaf2fd; border-radius:4px; }
+    .notice.error { border-left-color:#af2637; background:#fff0f1; }
+    .page { padding:20px; }
+    .page-head { display:flex; flex-wrap:wrap; align-items:start; justify-content:space-between; gap:10px; }
+    .page-head p { margin-bottom:3px; }
+    .page-link { white-space:nowrap; }
+    .pill { display:inline-block; padding:3px 9px; border-radius:100px; background:#e9eef5; color:#334762; font-size:.77rem; font-weight:700; }
+    .pill.available,.pill.observed-ui { background:#e2f5ea; color:#17653d; }
+    .pill.assisted,.pill.source-only { background:#fff0ca; color:#805900; }
+    .pill.blocked,.pill.not-found { background:#ffe5e5; color:#9b2631; }
+    .pill.unimplemented,.pill.documented-only { background:#ece8fb; color:#54389a; }
+    .page-section { margin-top:19px; }
+    .page-section h3 { padding-bottom:6px; border-bottom:1px solid var(--line); }
+    .table-wrap { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; font-size:.9rem; }
+    th,td { text-align:left; vertical-align:top; border-bottom:1px solid #dfe5ed; padding:9px 10px 9px 0; }
+    th { color:#394a60; font-size:.76rem; text-transform:uppercase; letter-spacing:.04em; }
+    td { overflow-wrap:anywhere; }
+    .gap { color:#a02835; font-weight:700; }
+    .status-warning { color:#a02835; font-size:.85rem; font-weight:700; margin:5px 0 0; }
+    .case-list { display:grid; gap:12px; }
+    .case { padding:17px; box-shadow:none; }
+    .case-head { display:flex; justify-content:space-between; align-items:start; gap:12px; }
+    .case h4 { color:#516176; margin:0 0 4px; }
+    .case h3 { margin:0 0 8px; }
+    .badges { display:flex; flex-wrap:wrap; gap:5px; }
+    .case-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:13px 22px; margin-top:16px; }
+    .case-grid > div { min-width:0; }
+    .case-grid p { margin:0; }
+    ol,ul { padding-left:20px; margin:0; }
+    li { margin:3px 0; }
+    .case-foot { display:grid; grid-template-columns:minmax(190px,250px) minmax(0,1fr); gap:14px; align-items:start; margin-top:17px; padding-top:14px; border-top:1px solid #dfe5ed; }
+    .case-foot textarea { min-height:85px; resize:vertical; }
+    .context-edit { min-height:55px; resize:vertical; margin-top:4px; }
+    .print-note,.print-status,.print-context { display:none; white-space:pre-wrap; overflow-wrap:anywhere; }
+    .source { margin:12px 0 0; font-size:.8rem; color:var(--muted); overflow-wrap:anywhere; }
+    .empty { color:var(--muted); font-style:italic; }
+    .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+    @media(max-width:700px) { .wrap { width:min(100% - 24px,1200px); } .hero { padding:28px 0; } .panel,.page { padding:16px; } .case-grid,.case-foot { grid-template-columns:1fr; } .case-head { display:block; } .badges { margin-top:8px; } }
+    @media print { @page { margin:14mm; } body { background:#fff; color:#000; font-size:10pt; } .hero { color:#000; background:#fff; padding:0; } .hero p,.hero .eyebrow { color:#000; } .stack { margin:0; gap:10px; } .panel,.page,.case { box-shadow:none; border-color:#aaa; break-inside:avoid; } .toolbar,.buttons,.skip-link,.screen-only { display:none!important; } .print-note,.print-status,.print-context { display:block; } .page { break-before:page; } .page:first-of-type { break-before:auto; } a { color:#000; text-decoration:underline; } .pill { border:1px solid #aaa; background:#fff!important; color:#000!important; } textarea,select { display:none; } .stat { background:#fff; border:1px solid #aaa; } }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to checklist</a>
+  <header class="hero"><div class="wrap"><p class="eyebrow">Test execution worksheet</p><h1 id="suite-title">Testing checklist</h1><p id="suite-description"></p></div></header>
+  <main id="main" class="wrap stack">
+    <section class="panel" aria-labelledby="summary-heading"><h2 id="summary-heading">Summary</h2><div id="summary" class="grid" aria-live="polite"></div><p id="coverage-note" class="small muted"></p></section>
+    <section class="panel" aria-labelledby="context-heading"><h2 id="context-heading">Scope and test context</h2><dl id="context" class="meta"></dl></section>
+    <section class="panel screen-only" aria-labelledby="controls-heading"><h2 id="controls-heading">Work with this checklist</h2><div class="toolbar"><div class="field search"><label for="search">Find a test</label><input id="search" type="search" placeholder="Search ID, title, steps or source"></div><div class="field"><label for="page-filter">Page</label><select id="page-filter"><option value="">All pages</option></select></div><div class="field"><label for="status-filter">Run status</label><select id="status-filter"><option value="">All statuses</option><option>Not run</option><option>Pass</option><option>Fail</option><option>Blocked</option><option>Skipped</option></select></div></div><div class="buttons" style="margin-top:13px"><button id="export" type="button">Export results JSON</button><label class="file-button" for="import">Import results JSON<input id="import" type="file" accept="application/json,.json"></label><button id="print" type="button">Print checklist</button></div><p id="save-message" class="small muted" aria-live="polite">Run statuses and notes are stored only in this browser. Export JSON to keep or share a copy.</p></section>
+    <nav class="panel" aria-labelledby="contents-heading"><h2 id="contents-heading">Pages</h2><ul id="contents"></ul></nav>
+    <div id="pages"></div>
+  </main>
+  <script id="checklist-data" type="application/json">{"schemaVersion":1,"suite":{"id":"phynyx-growth-snapshot-intake","title":"Phynyx Growth Snapshot intake and recovery checklist","description":"Manual release checks for the first Growth Snapshot contact checkpoint, native AI Studio CRM capture, Workflow 001 routing, and Workflow 002a incomplete-assessment recovery.","generatedFrom":"AI Studio project 1789733833642057228 published 2026-09-23; Workflow 001 saved 2026-09-23","scope":"Published /growth-assessment first contact checkpoint, CRM contact mapping, Workflow 001, and the complete first-email pass through Workflow 002a as Ember staff in the Phynyx sub-account.","limitations":["The custom production domain was not changed; the published AI Studio vibepreview.app domain was tested.","The 15-minute recovery email was delivered to the controlled AgentMail fixture; delivery to real customer mailboxes was not tested.","SMS and voice consent-positive delivery tests were not run; all executed fixtures left those permissions off.","Conflicting-identifier preservation (same phone with new email or vice versa) is a documented P1 gap, not a release-blocking claim.","Exact mobile visual parity and accessibility coverage are outside this intake-routing checklist."]},"context":{"Environment":"https://phynyxpro-website.vibepreview.app","Build":"AI Studio project 1789733833642057228 and Workflow 001 current published versions on 2026-09-23","Role":"Ember HighLevel staff","Browser/device":"Codex in-app browser, desktop viewport","Test data":"Synthetic internal contacts using reserved 202-555-01xx numbers and ember-001 plus-address fixtures","Inspection date":"2026-09-23"},"pages":[{"id":"ga-live-page","title":"Published Growth Snapshot","url":"https://phynyxpro-website.vibepreview.app/growth-assessment?cta=manual_qa\u0026industry=chiropractic","inspection":"Observed live on 2026-09-23 through the calculator and first contact checkpoint.","source":"AI Studio project 1789733833642057228; published runtime"},{"id":"crm-contact-view","title":"HighLevel contact record","url":"https://app.phynyxpro.com/v2/location/DsRnzA2tcoiwklSgjBtR/contacts/smart_list/All","inspection":"Observed contacts created by External Form with mapped standard and custom fields on 2026-09-23.","source":"HighLevel sub-account DsRnzA2tcoiwklSgjBtR"},{"id":"workflow-001-view","title":"001 - Website Intake \u0026 Routing","url":"https://app.phynyxpro.com/v2/location/DsRnzA2tcoiwklSgjBtR/automation/workflow/36118464-ea4a-4a5b-b5ab-a2cd614c2063","inspection":"Builder, settings, and live execution logs inspected on 2026-09-23.","source":"Published HighLevel workflow 36118464-ea4a-4a5b-b5ab-a2cd614c2063"},{"id":"workflow-002a-view","title":"002a - Incomplete Assessment Recovery","url":"https://app.phynyxpro.com/v2/location/DsRnzA2tcoiwklSgjBtR/automation/workflow/7780711c-043e-40a6-8d49-92210c96fcd9","inspection":"Trigger, eligibility gate, settings, 15-minute wait completion, recovery-email execution, contact conversation, and controlled inbox delivery inspected on 2026-09-23.","source":"Published HighLevel workflow 7780711c-043e-40a6-8d49-92210c96fcd9"}],"inventory":[{"id":"ga-calculator-skip","pageId":"ga-live-page","kind":"button","label":"Continue Without Numbers","source":"Observed published UI","testIds":["ga-intake-valid-new-lead"]},{"id":"ga-business-field","pageId":"ga-live-page","kind":"required field","label":"Business Name","source":"Observed published UI","testIds":["ga-intake-valid-new-lead","ga-intake-required-empty"]},{"id":"ga-first-name-field","pageId":"ga-live-page","kind":"required field","label":"First Name","source":"Observed published UI","testIds":["ga-intake-valid-new-lead","ga-intake-required-empty"]},{"id":"ga-last-name-field","pageId":"ga-live-page","kind":"required field","label":"Last Name","source":"Observed published UI after deployment; missing Last Name focused the field and blocked advancement","testIds":["ga-intake-valid-new-lead","ga-intake-required-empty"]},{"id":"ga-email-field","pageId":"ga-live-page","kind":"required email field","label":"Work Email","source":"Observed published UI","testIds":["ga-intake-valid-new-lead","ga-intake-invalid-email-phone"]},{"id":"ga-phone-field","pageId":"ga-live-page","kind":"required phone field","label":"Phone","source":"Observed published UI","testIds":["ga-intake-valid-new-lead","ga-intake-invalid-email-phone"]},{"id":"ga-service-sms-consent","pageId":"ga-live-page","kind":"optional checkbox","label":"Appointment texts","source":"Observed published UI, unchecked","testIds":["ga-consent-default-unchecked","ga-consent-appointment-sms-only"]},{"id":"ga-marketing-sms-consent","pageId":"ga-live-page","kind":"optional checkbox","label":"Marketing texts","source":"Observed published UI, unchecked","testIds":["ga-consent-default-unchecked","ga-consent-marketing-sms-only"]},{"id":"ga-voice-consent","pageId":"ga-live-page","kind":"optional checkbox","label":"AI phone calls","source":"Observed published UI, unchecked","testIds":["ga-consent-default-unchecked","ga-consent-ai-voice-only"]},{"id":"ga-submit-checkpoint","pageId":"ga-live-page","kind":"button and background event","label":"Continue to Practice Baseline","source":"Observed published UI and immediate External Form contact creation","testIds":["ga-intake-valid-new-lead"]},{"id":"crm-standard-mapping","pageId":"crm-contact-view","kind":"background persistence","label":"Business, first name, last name, email, and phone mapping","source":"Observed on Ember Snapshot QA and Ember Workflow QA contacts","testIds":["crm-contact-field-mapping"]},{"id":"crm-consent-mapping","pageId":"crm-contact-view","kind":"custom fields","label":"Three separate consent fields","source":"Observed each as Not consented on the live fixture","testIds":["crm-consent-field-mapping"]},{"id":"crm-cta-mapping","pageId":"crm-contact-view","kind":"custom field","label":"CTA Source Attribution","source":"Observed internal_qa on the live fixture","testIds":["ga-attribution-growth-assessment"]},{"id":"wf001-ai-studio-trigger","pageId":"workflow-001-view","kind":"workflow trigger","label":"AI Studio \u2014 Growth Snapshot Intake Submitted","source":"Observed exact project, form, path, and domain filters","testIds":["ga-workflow-filter-isolation","ga-later-completion-no-double-intake"]},{"id":"wf001-routing-actions","pageId":"workflow-001-view","kind":"workflow actions","label":"Set v1, apply four tags, send two internal FYIs","source":"Observed live execution rows at 8:59 PM CDT","testIds":["ga-001-internal-fyi-delivery"]},{"id":"wf002a-trigger-wait","pageId":"workflow-002a-view","kind":"workflow trigger and wait","label":"sales:assessment-incomplete plus v1, then Wait 15 Minutes","source":"Observed Ember Workflow QA enroll, finish the wait, pass eligibility, execute the email, and finish","testIds":["ga-abandon-after-first-checkpoint","ga-no-unconsented-sms","ga-no-unconsented-voice"]},{"id":"wf002a-eligibility","pageId":"workflow-002a-view","kind":"if/else gate","label":"Incomplete, not booked, not paused, no stop or handover","source":"Observed builder conditions","testIds":["ga-abandon-after-first-checkpoint"]}],"cases":[{"id":"ga-intake-valid-new-lead","pageId":"ga-live-page","title":"Create and route a valid lead at the first checkpoint","area":"Lead capture","availability":"available","availabilityReason":"Published site and isolated internal fixtures are available.","implementation":"observed-ui","source":"Live run on 2026-09-23; contact 0Rf8Zg4kLMy5aavQyMtp; Workflow 001 execution at 8:59 PM CDT","prerequisites":["Use a unique synthetic email and reserved 202-555-01xx phone","Leave all optional consent boxes unchecked"],"steps":["Open the published Growth Snapshot URL with a QA cta value","Click Continue Without Numbers","Enter business name, first name, last name, valid email, and valid phone","Click Continue to Practice Baseline","Open the resulting CRM contact","Open Workflow 001 execution logs"],"expected":["The page advances immediately to Practice Baseline","Exactly one CRM contact exists with all five supplied values","Workflow 001 enrolls once and executes the gate, version update, tag action, and both FYIs","The form does not wait for assessment completion or booking"],"observed":["Ember Workflow QA advanced to Step 2 of 4","The External Form contact was created with the five mapped values","Workflow 001 executed every configured action and finished"]},{"id":"ga-intake-required-empty","pageId":"ga-live-page","title":"Block submission when required fields are empty","area":"Validation","availability":"available","availabilityReason":"No downstream side effect is expected.","implementation":"observed-ui","source":"Published UI inspected 2026-09-23","prerequisites":["Open a clean Growth Snapshot session","Advance to Save Your Snapshot"],"steps":["Leave the form empty","Click Continue to Practice Baseline","Repeat with each required field empty while the other required fields are valid"],"expected":["Browser or inline validation focuses the missing required field","The page remains on the contact checkpoint","No CRM contact or workflow enrollment is created"],"observed":["An empty submit focused Business Name and did not advance; downstream absence still needs a fresh isolated run for each individual field"]},{"id":"ga-intake-invalid-email-phone","pageId":"ga-live-page","title":"Reject malformed email and phone identifiers","area":"Validation","availability":"available","availabilityReason":"Synthetic invalid values can be used safely.","implementation":"observed-ui","source":"Email is a required email input and phone is a required tel input in the published UI","prerequisites":["Open the contact checkpoint"],"steps":["Enter an invalid email with otherwise valid fields and submit","Enter an invalid phone with otherwise valid fields and submit","Inspect CRM and Workflow 001 logs"],"expected":["A clear validation error blocks each invalid submission","No contact is created or updated","Workflow 001 does not enroll"],"observed":["Not executed in the initial live run"]},{"id":"ga-consent-default-unchecked","pageId":"ga-live-page","title":"Keep all consent choices separate and off by default","area":"Consent","availability":"available","availabilityReason":"A clean browser session and isolated fixture are available.","implementation":"observed-ui","source":"Published UI and CRM custom fields inspected 2026-09-23","prerequisites":["Open a clean Growth Snapshot session"],"steps":["Advance to Save Your Snapshot","Confirm all three checkboxes are unchecked","Submit without selecting any consent","Inspect the three CRM consent fields"],"expected":["Appointment texts, Marketing texts, and AI phone calls are separate and unchecked","Each CRM field reads Not consented","Lead capture still succeeds"],"observed":["All three were unchecked on load and each stored Not consented while the lead was captured"]},{"id":"ga-consent-appointment-sms-only","pageId":"ga-live-page","title":"Store appointment SMS consent without granting marketing or voice consent","area":"Consent","availability":"available","availabilityReason":"Use an internal controlled fixture; do not run a marketing action.","implementation":"observed-ui","source":"Separate published checkbox and registered contact custom field","prerequisites":["Use an internal controlled fixture"],"steps":["Select only Appointment texts","Submit the first checkpoint","Inspect all three consent fields"],"expected":["Appointment Non-Marketing SMS Consent is Consented","Marketing SMS Consent and AI Voice Marketing Consent remain Not consented","No marketing SMS or call action runs"],"observed":["Not executed in the initial live run"]},{"id":"ga-consent-marketing-sms-only","pageId":"ga-live-page","title":"Keep marketing SMS consent channel-specific","area":"Consent","availability":"assisted","availabilityReason":"Requires a controlled internal recipient if downstream SMS delivery is exercised.","implementation":"observed-ui","source":"Separate published checkbox and registered contact custom field","prerequisites":["Use an internal controlled fixture"],"steps":["Select only Marketing texts","Submit","Inspect all consent fields and downstream workflow eligibility"],"expected":["Marketing SMS Consent is Consented","Appointment SMS and voice remain Not consented","Voice outreach remains ineligible"],"observed":["Not executed in the initial live run"]},{"id":"ga-consent-ai-voice-only","pageId":"ga-live-page","title":"Keep AI voice consent channel-specific","area":"Consent","availability":"assisted","availabilityReason":"Requires a controlled internal number if a call is exercised.","implementation":"observed-ui","source":"Separate published checkbox and registered contact custom field","prerequisites":["Use an internal controlled fixture"],"steps":["Select only AI phone calls","Submit","Inspect all consent fields and downstream workflow eligibility"],"expected":["AI Voice Marketing Consent is Consented","Both SMS consents remain Not consented","SMS outreach remains ineligible"],"observed":["Not executed in the initial live run"]},{"id":"crm-contact-field-mapping","pageId":"crm-contact-view","title":"Persist all five contact fields on one CRM record","area":"CRM mapping","availability":"available","availabilityReason":"The synthetic contact can be inspected directly in CRM.","implementation":"observed-ui","source":"Ember Snapshot QA and Ember Workflow QA contact records observed 2026-09-23","prerequisites":["Submit a unique valid first-checkpoint fixture"],"steps":["Search CRM by the exact fixture email","Open the contact record","Inspect business name, first name, last name, email, and phone","Confirm the contact source and created time"],"expected":["Exactly one matching contact exists","All five values match the submission","Contact source is external_form","The created time follows the submit event immediately"],"observed":["Both executed fixtures created one External Form contact with all five supplied values"]},{"id":"crm-consent-field-mapping","pageId":"crm-contact-view","title":"Persist each consent choice in its own CRM field","area":"CRM consent mapping","availability":"available","availabilityReason":"The contact custom fields are visible to Ember staff.","implementation":"observed-ui","source":"Appointment Non-Marketing SMS Consent, Marketing SMS Consent, and AI Voice Marketing Consent observed on the live fixture","prerequisites":["Submit a fixture with all consent boxes off"],"steps":["Open the resulting contact","Search each consent field by name","Compare each value with the submitted choices"],"expected":["All three fields exist independently","Each field reads Not consented","No field implies consent from the successful lead capture alone"],"observed":["All three independent fields read Not consented on Ember Snapshot QA"]},{"id":"ga-attribution-growth-assessment","pageId":"crm-contact-view","title":"Preserve the page and CTA origin","area":"Attribution","availability":"available","availabilityReason":"CTA query values are controllable on the published URL.","implementation":"observed-ui","source":"CTA Source Attribution and exact Workflow 001 filters observed 2026-09-23","prerequisites":["Use a unique contact fixture","Add a short safe cta query value"],"steps":["Open /growth-assessment with a QA cta value","Submit the contact checkpoint","Inspect CTA Source Attribution","Inspect Workflow 001 trigger filters"],"expected":["CTA Source Attribution stores the query value","Workflow 001 is filtered to PhynyxPro Website, Get My Free Growth Snapshot Intake, /growth-assessment, and phynyxpro-website.vibepreview.app"],"observed":["internal_qa was stored on the first fixture","The trigger shows all four exact filters"]},{"id":"ga-workflow-filter-isolation","pageId":"workflow-001-view","title":"Do not route unrelated AI Studio forms into Workflow 001","area":"Routing isolation","availability":"assisted","availabilityReason":"Requires a separate connected AI Studio form and an internal fixture.","implementation":"observed-ui","source":"Exact project, form, path, and domain filters inspected in Workflow 001","prerequisites":["Choose a different internal AI Studio form or project"],"steps":["Submit the unrelated form with an internal fixture","Inspect Workflow 001 execution logs"],"expected":["The unrelated submission follows its own normal path","Workflow 001 has no enrollment or FYI for that contact"],"observed":["Filter configuration is present; a negative runtime submission has not been executed"]},{"id":"ga-abandon-after-first-checkpoint","pageId":"workflow-002a-view","title":"Enroll an abandoned lead in incomplete-assessment recovery","area":"Recovery","availability":"available","availabilityReason":"The live fixture can stop at Practice Baseline.","implementation":"observed-ui","source":"Workflow 002a execution logs for Ember Workflow QA from 8:59 PM through 9:14 PM CDT","prerequisites":["Submit a unique first-checkpoint contact","Do not complete the remaining assessment or book"],"steps":["Stop at Practice Baseline","Inspect the contact tags and Website Form Version","Inspect Workflow 002a logs immediately","Recheck after the 15-minute wait"],"expected":["The contact has sales:assessment-incomplete and Website Form Version v1","002a enrolls and waits 15 minutes","Eligibility is rechecked before any recovery action","Booked, paused, stopped, or handed-over contacts do not continue"],"observed":["The fixture received all four routing tags plus owner:ember-ai","Website Form Version is v1","002a enrolled and entered Wait 15 Minutes","The wait finished at 9:14:52 PM CDT, the incomplete-eligibility gate executed, the v1 recovery branch ran, and the workflow finished","The recovery email executed at 9:14:56 PM CDT and reached the controlled AgentMail inbox at the same timestamp"]},{"id":"ga-no-unconsented-sms","pageId":"workflow-002a-view","title":"Do not dispatch SMS without SMS consent","area":"Consent enforcement","availability":"available","availabilityReason":"The current fixture has both SMS consent fields set to Not consented.","implementation":"observed-ui","source":"CRM consent fields, completed 002a execution logs, and contact conversation inspected 2026-09-23","prerequisites":["Use a fixture with both SMS consent fields off","Allow the relevant recovery window to finish"],"steps":["Inspect all workflow execution rows after the wait","Inspect the contact conversation and provider/message record for the defined window"],"expected":["No SMS action is scheduled or executed","No provider SMS record exists for the fixture"],"observed":["Post-wait execution contained the eligibility branch, conversation-AI/status update, recovery email, and end; no SMS action executed","The contact conversation contained only the recovery email in the test window; a separate carrier-console audit was not performed"]},{"id":"ga-no-unconsented-voice","pageId":"workflow-002a-view","title":"Do not dispatch an AI voice call without voice consent","area":"Consent enforcement","availability":"available","availabilityReason":"The current fixture has AI Voice Marketing Consent set to Not consented.","implementation":"observed-ui","source":"CRM consent field, completed 002a execution logs, and contact conversation inspected 2026-09-23","prerequisites":["Use a fixture with AI Voice Marketing Consent off","Allow the relevant recovery window to finish"],"steps":["Inspect workflow rows after the wait","Inspect provider/call records for the defined window"],"expected":["No outbound voice action is scheduled or executed","No provider call record exists for the fixture"],"observed":["Post-wait execution contained no voice-call action","The contact conversation contained only the recovery email in the test window; a separate call-provider console audit was not performed"]},{"id":"ga-001-internal-fyi-delivery","pageId":"workflow-001-view","title":"Deliver both internal new-lead alerts with accurate stage language","area":"Internal notification","availability":"assisted","availabilityReason":"Andrew and Craig are the configured internal recipients.","implementation":"observed-ui","source":"Workflow 001 execution logs and action content inspected 2026-09-23","prerequisites":["Submit a controlled internal lead"],"steps":["Confirm both FYI actions execute","Open each recipient's notification center","Verify the title and body"],"expected":["Both internal notifications are present","The body says the lead started the Growth Snapshot rather than completed an assessment","Name, phone, and email resolve correctly"],"observed":["Both FYI workflow actions executed; recipient-visible delivery still needs direct notification-center confirmation"]},{"id":"ga-later-completion-no-double-intake","pageId":"workflow-001-view","title":"Avoid a second intake when the same lead later completes the assessment","area":"Duplicate prevention","availability":"available","availabilityReason":"The old Website Submission ID trigger was removed and an internal fixture can complete later steps.","implementation":"observed-ui","source":"Workflow 001 builder inspected after removal of the Contact Changed trigger","prerequisites":["Capture a lead at the first checkpoint","Record its initial Workflow 001 execution"],"steps":["Complete the remaining assessment for the same contact","Inspect CRM contact count","Inspect Workflow 001 executions and FYIs"],"expected":["The same CRM contact is updated","Completion does not create a second contact","Website Submission ID changes do not trigger a duplicate Workflow 001 intake or FYI"],"observed":["The duplicate completion trigger is absent; the completion runtime case has not yet been executed"]}]}</script>
+  <script>
+  (() => {
+    'use strict';
+    const data = JSON.parse(document.getElementById('checklist-data').textContent);
+    const statuses = ['Not run','Pass','Fail','Blocked','Skipped'];
+    const storageKey = `testing-checklist:v1:${JSON.stringify([data.suite.id,data.suite.generatedFrom])}`;
+    const pageById = new Map(data.pages.map(page => [page.id,page]));
+    const caseById = new Map(data.cases.map(test => [test.id,test]));
+    const statusState = {};
+    const noteState = {};
+    const contextState = Object.assign(Object.create(null),data.context);
+    const $ = id => document.getElementById(id);
+    function node(tag, className, content) {
+      const result = document.createElement(tag);
+      if (className) result.className = className;
+      if (content !== undefined) result.textContent = content;
+      return result;
+    }
+    function append(parent, ...children) { children.forEach(child => parent.appendChild(child)); return parent; }
+    function valueText(value) { return Array.isArray(value) ? value.join('; ') : String(value ?? ''); }
+    function textList(items, ordered) {
+      if (!items.length) return node('p','empty','None recorded.');
+      const list = node(ordered ? 'ol' : 'ul');
+      items.forEach(item => append(list,node('li','',item)));
+      return list;
+    }
+    function pill(text, css) { return node('span',`pill ${css || ''}`,text); }
+    function showMessage(message, error=false) {
+      const target = $('save-message');
+      target.textContent = message;
+      target.className = error ? 'notice error small' : 'notice small';
+    }
+    function readSaved() {
+      try {
+        let saved = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        if (saved.generatedFrom !== data.suite.generatedFrom) saved = {};
+        for (const test of data.cases) {
+          const result = saved.results && saved.results[test.id];
+          statusState[test.id] = statuses.includes(result?.status) ? result.status : 'Not run';
+          noteState[test.id] = typeof result?.note === 'string' ? result.note.slice(0,20000) : '';
+        }
+        for (const key of Object.keys(data.context)) {
+          if (saved.context && Object.hasOwn(saved.context,key) && typeof saved.context[key] === 'string') contextState[key] = saved.context[key].slice(0,20000);
+        }
+      } catch (error) {
+        data.cases.forEach(test => { statusState[test.id]='Not run'; noteState[test.id]=''; });
+        showMessage('Saved results could not be read. Export a copy if needed before recording new results.',true);
+      }
+    }
+    function snapshot() {
+      const results = {};
+      data.cases.forEach(test => { results[test.id] = {status:statusState[test.id], note:noteState[test.id]}; });
+      return {schemaVersion:1, suiteId:data.suite.id, generatedFrom:data.suite.generatedFrom, exportedAt:new Date().toISOString(), context:{...contextState}, results};
+    }
+    function save() {
+      try { localStorage.setItem(storageKey,JSON.stringify(snapshot())); }
+      catch (error) { showMessage('Browser storage is unavailable or full. Export results JSON to keep your work.',true); }
+    }
+    function updateSummary() {
+      const counts = Object.fromEntries(statuses.map(status => [status,0]));
+      data.cases.forEach(test => counts[statusState[test.id]]++);
+      const summary = $('summary'); summary.replaceChildren();
+      [['Total tests',data.cases.length],['Pass',counts.Pass],['Fail',counts.Fail],['Blocked',counts.Blocked],['Skipped',counts.Skipped],['Not run',counts['Not run']]].forEach(([label,count]) => {
+        const box=node('div','stat'); append(box,node('strong','',String(count)),node('span','',label)); summary.appendChild(box);
+      });
+      const covered = data.inventory.filter(item => item.testIds.length > 0).length;
+      const gap = data.inventory.length - covered;
+      const unmapped = data.cases.filter(test => !data.inventory.some(item => item.testIds.includes(test.id))).length;
+      $('coverage-note').textContent = `${covered} of ${data.inventory.length} inventoried items link to tests; ${gap} recorded gap${gap===1?'':'s'}. ${unmapped} test${unmapped===1?'':'s'} are not linked from inventory. This is manifest coverage, not proof that the entire product was inspected.`;
+    }
+    function renderContext() {
+      document.title = `${data.suite.title} · Testing checklist`;
+      $('suite-title').textContent = data.suite.title;
+      $('suite-description').textContent = data.suite.description;
+      const entries = [['Suite ID',data.suite.id],['Generated from',data.suite.generatedFrom],['Scope',data.suite.scope],['Limitations',valueText(data.suite.limitations)]];
+      const target = $('context'); target.replaceChildren();
+      entries.forEach(([key,value]) => { const row=node('div'); append(row,node('dt','',key),node('dd','',value || 'Not recorded')); target.appendChild(row); });
+      Object.keys(data.context).forEach((key,index) => {
+        const row=node('div'); const term=node('dt');
+        const label=node('label','',key); label.htmlFor=`context-${index}`; term.appendChild(label);
+        const description=node('dd');
+        const input=node('textarea','context-edit'); input.id=`context-${index}`; input.maxLength=20000; input.value=contextState[key];
+        const printed=node('span','print-context',contextState[key] || 'Not recorded');
+        input.addEventListener('input',() => { contextState[key]=input.value; printed.textContent=input.value || 'Not recorded'; save(); });
+        append(description,input,printed); append(row,term,description); target.appendChild(row);
+      });
+    }
+    function renderNav() {
+      const select=$('page-filter'), contents=$('contents');
+      data.pages.forEach(page => {
+        const option=node('option','',page.title); option.value=page.id; select.appendChild(option);
+        const item=node('li'); const anchor=node('a','',page.title); anchor.href=`#page-${page.id}`; item.appendChild(anchor); contents.appendChild(item);
+      });
+    }
+    function renderInventory(pageId) {
+      const items=data.inventory.filter(item => item.pageId===pageId);
+      if (!items.length) return node('p','empty','No UI inventory recorded for this page.');
+      const wrap=node('div','table-wrap');
+      const table=node('table');
+      const caption=node('caption','sr-only',`Inventoried controls and functions for ${pageById.get(pageId).title}`);
+      const head=node('thead'); const row=node('tr');
+      ['ID','Kind','Control or function','Test coverage','Inspection source'].forEach(label => row.appendChild(node('th','',label)));
+      head.appendChild(row); append(table,caption,head);
+      const body=node('tbody');
+      items.forEach(item => {
+        const tr=node('tr');
+        append(tr,node('td','',item.id),node('td','',item.kind),node('td','',item.label));
+        const coverage=node('td');
+        if (item.testIds.length) {
+          item.testIds.forEach((id,index) => {
+            if (index) coverage.appendChild(document.createTextNode(', '));
+            const link=node('a','',id); link.href=`#case-${id}`; coverage.appendChild(link);
+          });
+        } else coverage.appendChild(node('span','gap',`Gap: ${item.gapReason}`));
+        append(tr,coverage,node('td','',item.source)); body.appendChild(tr);
+      });
+      table.appendChild(body); wrap.appendChild(table); return wrap;
+    }
+    function labeledBlock(label, content) { const block=node('div'); block.appendChild(node('h4','',label)); block.appendChild(content); return block; }
+    function renderReferences(references) {
+      const list=node('ul');
+      references.forEach(reference => {
+        const item=node('li');
+        const link=node('a','',reference.label); link.href=reference.url; link.target='_blank'; link.rel='noopener noreferrer';
+        item.appendChild(link);
+        if (reference.note) item.appendChild(document.createTextNode(` — ${reference.note}`));
+        list.appendChild(item);
+      });
+      return list;
+    }
+    function renderCase(test) {
+      const article=node('article','case'); article.id=`case-${test.id}`;
+      const head=node('div','case-head');
+      const titleArea=node('div'); append(titleArea,node('h4','',`${test.id} · ${test.area}`),node('h3','',test.title));
+      const badges=node('div','badges'); append(badges,pill(test.availability,test.availability),pill(test.implementation,test.implementation));
+      append(head,titleArea,badges); article.appendChild(head);
+      if (test.availabilityReason) article.appendChild(node('p','small',`Availability: ${test.availabilityReason}`));
+      const grid=node('div','case-grid');
+      append(grid,labeledBlock('Prerequisites',textList(test.prerequisites,false)),labeledBlock('Actions',textList(test.steps,true)),labeledBlock('Expected result',textList(test.expected,false)),labeledBlock('Observed evidence',textList(test.observed,false)));
+      article.appendChild(grid);
+      if (test.references?.length) {
+        const block=node('div','page-section'); block.appendChild(node('h4','','Screenshots and references')); block.appendChild(renderReferences(test.references)); article.appendChild(block);
+      }
+      const foot=node('div','case-foot');
+      const statusField=node('div','field');
+      const statusLabel=node('label','',`Run status for ${test.id}`); statusLabel.htmlFor=`status-${test.id}`;
+      const select=node('select'); select.id=`status-${test.id}`;
+      statuses.forEach(status => { const option=node('option','',status); option.value=status; select.appendChild(option); });
+      select.value=statusState[test.id];
+      const printStatus=node('div','print-status',`Run status: ${statusState[test.id]}`);
+      const noteWarning=node('p','status-warning'); noteWarning.setAttribute('aria-live','polite');
+      const needsExplanation=() => ['Blocked','Skipped'].includes(statusState[test.id]) && !noteState[test.id].trim();
+      const updateNoteWarning=() => { noteWarning.textContent=needsExplanation() ? 'Add a note explaining this status.' : ''; };
+      updateNoteWarning();
+      select.addEventListener('change',() => { statusState[test.id]=select.value; printStatus.textContent=`Run status: ${select.value}`; updateNoteWarning(); save(); updateSummary(); if ($('status-filter').value && !needsExplanation()) renderPages(); });
+      append(statusField,statusLabel,select,printStatus,noteWarning);
+      const noteField=node('div','field');
+      const noteLabel=node('label','',`Tester notes for ${test.id}`); noteLabel.htmlFor=`note-${test.id}`;
+      const notes=node('textarea'); notes.id=`note-${test.id}`; notes.maxLength=20000; notes.placeholder='Record evidence, defect links, dates, or why this test is blocked or skipped.'; notes.value=noteState[test.id];
+      const printNote=node('div','print-note',notes.value ? `Notes: ${notes.value}` : 'Notes:');
+      notes.addEventListener('input',() => { noteState[test.id]=notes.value; printNote.textContent=notes.value ? `Notes: ${notes.value}` : 'Notes:'; updateNoteWarning(); save(); if ($('status-filter').value && !needsExplanation() && statusState[test.id]!==$('status-filter').value) renderPages(); });
+      append(noteField,noteLabel,notes,printNote); append(foot,statusField,noteField); article.appendChild(foot);
+      article.appendChild(node('p','source',`Inspection source: ${test.source}`));
+      return article;
+    }
+    function matchingTests(pageId) {
+      const query=$('search').value.trim().toLocaleLowerCase();
+      const filterStatus=$('status-filter').value;
+      return data.cases.filter(test => test.pageId===pageId && (!filterStatus || statusState[test.id]===filterStatus) && (!query || [test.id,test.title,test.area,test.source,test.availabilityReason,...test.prerequisites,...test.steps,...test.expected,...test.observed,...(test.references||[]).flatMap(reference => [reference.label,reference.note])].join(' ').toLocaleLowerCase().includes(query)));
+    }
+    function renderPages() {
+      const target=$('pages'); target.replaceChildren();
+      const pageFilter=$('page-filter').value;
+      let visible=0;
+      data.pages.filter(page => !pageFilter || page.id===pageFilter).forEach(page => {
+        const tests=matchingTests(page.id);
+        if (($('search').value || $('status-filter').value) && !tests.length) return;
+        visible += tests.length;
+        const section=node('section','page'); section.id=`page-${page.id}`;
+        const head=node('div','page-head');
+        const title=node('div'); append(title,node('h2','',page.title),node('p','small muted',`Inspection: ${page.inspection}`));
+        head.appendChild(title);
+        if (page.url) { const link=node('a','page-link','Open page ↗'); link.href=page.url; link.target='_blank'; link.rel='noopener noreferrer'; head.appendChild(link); }
+        section.appendChild(head);
+        section.appendChild(node('p','source',`Page source: ${page.source}`));
+        const inventoryBlock=node('div','page-section'); inventoryBlock.appendChild(node('h3','','UI inventory and coverage')); inventoryBlock.appendChild(renderInventory(page.id)); section.appendChild(inventoryBlock);
+        const testsBlock=node('div','page-section'); testsBlock.appendChild(node('h3','',`Test cases (${tests.length})`));
+        const list=node('div','case-list');
+        if (!tests.length) list.appendChild(node('p','empty','No test cases recorded for this page.'));
+        tests.forEach(test => list.appendChild(renderCase(test)));
+        testsBlock.appendChild(list); section.appendChild(testsBlock); target.appendChild(section);
+      });
+      if (!target.childNodes.length) target.appendChild(node('p','panel empty','No tests match the current filters.'));
+    }
+    function exportResults() {
+      const blob=new Blob([JSON.stringify(snapshot(),null,2)+'\n'],{type:'application/json'});
+      const url=URL.createObjectURL(blob);
+      const link=node('a'); link.href=url; link.download=`${data.suite.id}-results.json`;
+      document.body.appendChild(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url),1000);
+      showMessage('Results JSON downloaded. It contains your notes; review it before sharing.');
+    }
+    async function importResults(file) {
+      if (!file) return;
+      try {
+        if (file.size > 5_000_000) throw new Error('File is too large.');
+        const imported=JSON.parse(await file.text());
+        if (imported.schemaVersion !== 1 || imported.suiteId !== data.suite.id || !imported.results || typeof imported.results !== 'object' || Array.isArray(imported.results)) throw new Error('Results JSON does not match this suite.');
+        let knownResults=0;
+        for (const [id,result] of Object.entries(imported.results)) {
+          if (!caseById.has(id)) continue;
+          if (!result || !statuses.includes(result.status) || typeof result.note !== 'string' || result.note.length > 20000) throw new Error(`Invalid result for ${id}.`);
+          knownResults++;
+        }
+        let knownContext=0;
+        if (imported.context !== undefined) {
+          if (!imported.context || typeof imported.context !== 'object' || Array.isArray(imported.context)) throw new Error('Invalid context object.');
+          for (const [key,value] of Object.entries(imported.context)) {
+            if (!Object.hasOwn(data.context,key)) continue;
+            if (typeof value !== 'string' || value.length > 20000) throw new Error(`Invalid context value for ${key}.`);
+            knownContext++;
+          }
+        }
+        const sameBuild=imported.generatedFrom === data.suite.generatedFrom;
+        if (sameBuild) {
+          if (!knownResults && !knownContext) throw new Error('No matching test results or context fields were found.');
+          if (!window.confirm(`Merge ${knownResults} test result(s) and ${knownContext} context field(s) from this build into the current browser state?`)) return;
+          for (const [id,result] of Object.entries(imported.results)) {
+            if (!caseById.has(id)) continue;
+            statusState[id]=result.status; noteState[id]=result.note;
+          }
+          if (imported.context) for (const [key,value] of Object.entries(imported.context)) if (Object.hasOwn(data.context,key)) contextState[key]=value;
+          save(); renderContext(); updateSummary(); renderPages(); showMessage('Matching results and context merged and saved in this browser.');
+        } else {
+          const transferable=Object.entries(imported.results).filter(([id,result]) => caseById.has(id) && result.note.trim());
+          if (!transferable.length) throw new Error('This file is from another or unknown build and has no matching notes to carry forward.');
+          if (!window.confirm(`This file is from another or unknown build. Import ${transferable.length} matching note(s) only? Current test statuses and run context will stay unchanged.`)) return;
+          const source=typeof imported.generatedFrom === 'string' ? imported.generatedFrom.slice(0,160) : 'unknown';
+          for (const [id,result] of transferable) noteState[id]=(`[Prior build notes: ${source}]\n`+result.note).slice(0,20000);
+          save(); renderPages(); showMessage('Prior-build notes imported. Current test statuses and run context were preserved.');
+        }
+      } catch (error) { showMessage(`Import failed: ${error.message}`,true); }
+      finally { $('import').value=''; }
+    }
+    readSaved(); renderContext(); renderNav(); updateSummary(); renderPages();
+    ['search','page-filter','status-filter'].forEach(id => $(id).addEventListener(id==='search'?'input':'change',renderPages));
+    $('export').addEventListener('click',exportResults);
+    $('import').addEventListener('change',event => importResults(event.target.files?.[0]));
+    $('print').addEventListener('click',() => window.print());
+    let printFilters=null;
+    window.addEventListener('beforeprint',() => {
+      if (printFilters) return;
+      printFilters={search:$('search').value,page:$('page-filter').value,status:$('status-filter').value};
+      $('search').value=''; $('page-filter').value=''; $('status-filter').value=''; renderPages();
+    });
+    window.addEventListener('afterprint',() => {
+      if (!printFilters) return;
+      $('search').value=printFilters.search; $('page-filter').value=printFilters.page; $('status-filter').value=printFilters.status;
+      printFilters=null; renderPages();
+    });
+  })();
+  </script>
+</body>
+</html>
