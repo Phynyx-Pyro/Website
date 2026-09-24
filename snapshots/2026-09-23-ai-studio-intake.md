@@ -71,7 +71,7 @@ Workflow 002a is published and enrolls a contact when:
 - `sales:assessment-incomplete` is added; and
 - `Website Form Version` is `v1`.
 
-It waits 15 minutes and then rechecks that the contact is still incomplete, is not booked, and does not carry pause, stop-bot, or human-handover controls. The `v1` branch is email-only; no SMS or AI voice action is present in that branch.
+It waits 15 minutes and then rechecks that the contact is still incomplete, is not booked, and does not carry pause, stop-bot, or human-handover controls. The `v1` branch assigns `Ember - Website Sales Concierge`, sets the Conversation AI bot to `Active`, and sends the recovery email. No SMS or AI voice action is present in that branch.
 
 The recovery email currently links to `https://get.phynyxpro.com/growth-assessment`. That production URL should remain unchanged until the custom-domain cutover to the AI Studio build is deliberately completed.
 

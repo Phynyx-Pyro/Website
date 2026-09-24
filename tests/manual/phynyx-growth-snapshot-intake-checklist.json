@@ -238,7 +238,7 @@
       "prerequisites": ["Submit a unique first-checkpoint contact", "Do not complete the remaining assessment or book"],
       "steps": ["Stop at Practice Baseline", "Inspect the contact tags and Website Form Version", "Inspect Workflow 002a logs immediately", "Recheck after the 15-minute wait"],
       "expected": ["The contact has sales:assessment-incomplete and Website Form Version v1", "002a enrolls and waits 15 minutes", "Eligibility is rechecked before any recovery action", "Booked, paused, stopped, or handed-over contacts do not continue"],
-      "observed": ["The fixture received all four routing tags plus owner:ember-ai", "Website Form Version is v1", "002a enrolled and entered Wait 15 Minutes", "The wait finished at 9:14:52 PM CDT, the incomplete-eligibility gate executed, the v1 recovery branch ran, and the workflow finished", "The recovery email executed at 9:14:56 PM CDT and reached the controlled AgentMail inbox at the same timestamp"]
+      "observed": ["The fixture received all four routing tags plus owner:ember-ai", "Website Form Version is v1", "002a enrolled and entered Wait 15 Minutes", "The wait finished at 9:14:52 PM CDT, the incomplete-eligibility gate executed, and the workflow finished", "The v1 branch assigned Ember - Website Sales Concierge, set the Conversation AI bot to Active, and executed the recovery email", "The recovery email executed at 9:14:56 PM CDT and reached the controlled AgentMail inbox at the same timestamp"]
     },
     {
       "id": "ga-no-unconsented-sms",
@@ -252,7 +252,7 @@
       "prerequisites": ["Use a fixture with both SMS consent fields off", "Allow the relevant recovery window to finish"],
       "steps": ["Inspect all workflow execution rows after the wait", "Inspect the contact conversation and provider/message record for the defined window"],
       "expected": ["No SMS action is scheduled or executed", "No provider SMS record exists for the fixture"],
-      "observed": ["Post-wait execution contained the eligibility branch, conversation-AI/status update, recovery email, and end; no SMS action executed", "The contact conversation contained only the recovery email in the test window; a separate carrier-console audit was not performed"]
+      "observed": ["Post-wait execution assigned Ember - Website Sales Concierge, set the bot Active, sent the recovery email, and ended; no SMS action executed", "The contact conversation contained only the recovery email in the test window; a separate carrier-console audit was not performed"]
     },
     {
       "id": "ga-no-unconsented-voice",
