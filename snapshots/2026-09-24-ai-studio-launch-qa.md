@@ -33,7 +33,7 @@ The measurable acquisition goal is a confirmed 30-minute call with Craig or Andr
 | 001b completion/direct `ba5b5d85-e78f-442e-bd5c-d91881496ca7` | Two exact AI Studio form triggers; sets version/source/booking-followup, removes incomplete recovery | Fresh direct-only and completed-snapshot fixtures finished this workflow. |
 | 002a incomplete `7780711c-043e-40a6-8d49-92210c96fcd9` | 15m/day2/day7 finite email cadence, current AI Studio assessment link, rechecks incomplete/unbooked/engagement | Earlier controlled consent-off contact received its first email in AgentMail. Later cadence not yet elapsed. |
 | 002b clean booking `19f5a2a8-a30d-4296-beea-09a56bf21610` | 15m/day2/day7 finite email cadence, weekday business-hour window, unbooked/unpaused/unengaged guards | Completed-snapshot and fresh direct-only fixtures enrolled and were waiting at 15m. First email/provider delivery not yet verified at this writing. |
-| 002c/002d | Voice after 1 day only with affirmative AI Voice Marketing Consent; SMS at 15m/day2 only with affirmative Marketing SMS Consent; each rechecks booking, pause, handoff and DND | No internal consent-on call/SMS test yet; consent-off fixtures should not execute these channels. |
+| 002c/002d | Voice after 1 day only with affirmative AI Voice Marketing Consent; SMS at 15m/day2 only with affirmative Marketing SMS Consent; each rechecks booking, pause, handoff and DND | Active pending enrollments inspected: all were labeled internal QA contacts. A consent-off 002d fixture completed its wait, took the `None` branch and ended without an SMS action. No consent-on call/SMS test yet. |
 | 002e/005a/005b | Replies stop pending nurture; opt-out applies DND/pause; handoff pauses bot and notifies Craig/Andrew | Configuration saved/published. Handoff/opt-out runtime test remains pending. |
 | 003a + calendar | Exact confirmed assessment calendar; stops recovery, assigns owner and updates opportunity. Calendar equal-distribution round robin and native contact booking/reschedule/24h/1h email; workflow customer confirmation disabled | Configuration inspected and saved; no new synthetic booking, owner assignment, or provider delivery test in this pass. |
 | 004a/b/c | Exact showed/no-show/cancelled calendar statuses; no-show/cancelled email recovery after guarded 15m wait | Config inspected; no lifecycle status-transition runtime test in this pass. |
@@ -48,6 +48,7 @@ The older draft `002b` (`2bf5b127-8c2d-4200-973c-aec295397aaa`) remains unpublis
 - Direct booking contact capture emits the correct native `Growth Call Booking Intake` event before slot selection. It is not a booked appointment; appointment success requires a provider appointment ID and booked start.
 - A separate source audit found `/support` is an openly disclosed non-submitting draft form and the legacy bridge route is fail-closed. Neither is evidence of a functioning support intake.
 - Source archive `backups/ai-studio/2026-09-23-pre-routing-fixes.zip` preserves the pre-fix export; `backups/ai-studio/2026-09-24-published-connected.zip` preserves the current published-source export. The latter includes the corrected `external_form_submission` event. These are **site source backups**, not HighLevel workflow exports.
+- HighLevel's `BACKUP — Website Sales Baseline — 2026-09-23` folder contains ten unpublished/draft clones of the original 001–004c workflow set, each with zero enrollments. The later 001b/005a/005b and clean 002b were created after that baseline snapshot and are not misrepresented as part of it.
 
 ## Automated source checks
 
@@ -64,4 +65,6 @@ The latest exported source built successfully in both client and SSR modes. Vite
 
 ## Release decision at this checkpoint
 
-**Controlled QA only; not yet approved for paid traffic.** Capture, calculator/result, native form event, routing and first-email delivery of the incomplete path have direct runtime evidence. Booking, new booking-recovery delivery, channel-specific outbound, and customer reminder/provider delivery remain unproven.
+**Controlled QA only; not yet approved for paid traffic.** Capture, calculator/result, native form event, routing and first-email delivery of the incomplete path have direct runtime evidence. The clean booking recovery advanced past its first eligibility gate and queued the first email for the 9 AM business-hour window. Booking, that email's provider delivery, channel-specific outbound, and customer reminder/provider delivery remain unproven.
+
+A one-time thread follow-up was scheduled for 9:15 AM CDT September 24 to verify that queued booking-recovery email and consent-off branches read-only. Live booking and human-handoff tests await action-time approval because they create an appointment and staff notifications, respectively.
