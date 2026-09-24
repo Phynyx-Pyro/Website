@@ -46,13 +46,14 @@ The older draft `002b` (`2bf5b127-8c2d-4200-973c-aec295397aaa`) remains unpublis
 - The 8-metric result showed correct five conversion rates and an illustrative +2.1 starts scenario. Completion now saves on **Show My Growth Snapshot**, with no second submit click. The controlled contact entered 001b and 002b after that action.
 - `Download My Snapshot` produced `/Users/craigcapurso/Downloads/my-growth-snapshot.txt` with matching input values and calculations. The site explicitly promises a browser-generated `.txt`, not an emailed PDF.
 - Direct booking contact capture emits the correct native `Growth Call Booking Intake` event before slot selection. It is not a booked appointment; appointment success requires a provider appointment ID and booked start.
+- The live `/schedule` source had a dead availability-error Retry button (it did not retrigger the slot effect) and allowed repeated clicks on Confirm while a booking request was pending. The published September 24 update adds an explicit availability reload key and an in-flight booking guard. These reduce avoidable failures and duplicate-click risk; they do **not** prove server-side booking idempotency or a completed appointment. AI Studio reported the published build `Up to date`, and the public `/schedule` URL rendered after publication.
 - A separate source audit found `/support` is an openly disclosed non-submitting draft form and the legacy bridge route is fail-closed. Neither is evidence of a functioning support intake.
-- Source archive `backups/ai-studio/2026-09-23-pre-routing-fixes.zip` preserves the pre-fix export; `backups/ai-studio/2026-09-24-published-connected.zip` preserves the current published-source export. The latter includes the corrected `external_form_submission` event. These are **site source backups**, not HighLevel workflow exports.
+- Source archive `backups/ai-studio/2026-09-23-pre-routing-fixes.zip` preserves the pre-fix export; `backups/ai-studio/2026-09-24-published-connected.zip` preserves the earlier connected export; `backups/ai-studio/2026-09-24-published-booking-hardening.zip` preserves the latest published export with the booking and snapshot-form fixes. These are **site source backups**, not HighLevel workflow exports.
 - HighLevel's `BACKUP — Website Sales Baseline — 2026-09-23` folder contains ten unpublished/draft clones of the original 001–004c workflow set, each with zero enrollments. The later 001b/005a/005b and clean 002b were created after that baseline snapshot and are not misrepresented as part of it.
 
 ## Automated source checks
 
-The latest exported source built successfully in both client and SSR modes. Vitest passed **50/50 tests in 3 files**. ESLint failed on **27 Prettier formatting errors** (mostly test-file line wrapping, plus one funnel line and Vite config) and reported six Fast Refresh warnings; no functional lint failure was identified. The source ZIP itself was not changed by the offline test.
+The latest exported source passed `tsc --noEmit`, client and SSR production builds, **50/50 Vitest tests in 3 files**, and targeted ESLint for the two changed components. Full-project ESLint still fails on **26 pre-existing Prettier-only formatting errors** in test files and Vite config, with six Fast Refresh warnings in shared UI components. The source ZIP itself was not changed by the offline checks.
 
 ## Release gates still open
 
@@ -60,7 +61,7 @@ The latest exported source built successfully in both client and SSR modes. Vite
 2. Verify first 002b email sends in the configured business-hour window and reaches the controlled inbox. Workflow enrollment alone is not delivery.
 3. Test opt-out and human handoff on internal fixtures; confirm bot pause/DND and no later messages. Test SMS and voice only with explicit test consent and a controlled destination.
 4. Resolve the site domain. AI Studio currently publishes only on `vibepreview.app`; no custom domain is connected. Do not assume the old `get.phynyxpro.com` URL runs this build.
-5. Repair or explicitly retire `/support` before describing the entire website as functional. Fix formatting lint separately; it is not a lead-capture blocker.
+5. Repair or explicitly retire `/support` before describing the entire website as functional. Full-project formatting lint remains open, but is not a lead-capture blocker.
 6. Retest stale appointment-status edge: an old no-show/cancelled event can clear contact-wide `appt:booked` after a replacement booking. The normal immediate rebooking path is guarded, but this edge is not proven safe.
 
 ## Release decision at this checkpoint
