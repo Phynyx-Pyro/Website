@@ -19,7 +19,7 @@ As of September 25, 2026. This is a high-level snapshot suitable for the public 
 
 ## Checks before broad traffic
 
-- The published AI Studio build is at `https://phynyxpro-website.vibepreview.app/`; the branded apex/www domain still serves the older website. Do not direct visitors to the branded domain expecting this build until a separate domain migration is completed and verified.
+- The published AI Studio build is at `https://phynyxpro-website.vibepreview.app/`; the branded apex/www domain still serves the older website. Its primary `Book a Demo` CTA enters a separate older form, **not** this AI Studio intake. Do not direct visitors to the branded domain expecting this build until a separate domain migration or explicit CTA handoff is completed and verified.
 - Verify consented SMS provider delivery, the queued consented voice branch, the one-hour calendar reminder, later nurture suppression, and the day-seven review task/final email at their scheduled times. Workflow configuration or an executed action is not itself proof of delivery.
 - Verify the concierge's normal website-tag routing on a fresh contact without historical direct assignment. Keep automatic no-show/cancellation reactivation unpublished until its exact-appointment safeguard is proven.
 
