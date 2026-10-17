@@ -3017,12 +3017,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@radix-ui/react-progress@npm:1.1.0":
-  version: 1.1.0
-  resolution: "@radix-ui/react-progress@npm:1.1.0"
+"@radix-ui/react-progress@npm:1.1.16":
+  version: 1.1.16
+  resolution: "@radix-ui/react-progress@npm:1.1.16"
   dependencies:
-    "@radix-ui/react-context": "npm:1.1.0"
-    "@radix-ui/react-primitive": "npm:2.0.0"
+    "@radix-ui/react-context": "npm:1.2.2"
+    "@radix-ui/react-primitive": "npm:2.1.10"
   peerDependencies:
     "@types/react": "*"
     "@types/react-dom": "*"
@@ -3033,7 +3033,7 @@ __metadata:
       optional: true
     "@types/react-dom":
       optional: true
-  checksum: 10c0/36b722fe274f843162cea186993bc8254ab034341becc88d031e44e1fd3a31dd3c3e7b8fb64e19a02d04da842e3f3b5a7638ed4924cf70f50925889d4439e3ed
+  checksum: 10c0/250f9e888d252473d8a56097ec98e5564157baffc93de66c870ee59e92365fbcca841efe130e0a01fcc5863ee0b56a137fbb82f1aee12987202846c251a22852
   languageName: node
   linkType: hard
 
@@ -7717,7 +7717,7 @@ __metadata:
     "@radix-ui/react-menubar": "npm:1.1.1"
     "@radix-ui/react-navigation-menu": "npm:1.2.0"
     "@radix-ui/react-popover": "npm:1.1.1"
-    "@radix-ui/react-progress": "npm:1.1.0"
+    "@radix-ui/react-progress": "npm:1.1.16"
     "@radix-ui/react-radio-group": "npm:1.2.0"
     "@radix-ui/react-scroll-area": "npm:1.1.0"
     "@radix-ui/react-select": "npm:2.1.1"
